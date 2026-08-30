@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function Waitlist() {
   const [role, setRole] = useState("comensal");
   const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
   const [state, setState] = useState({ status: "idle", message: "" });
 
   async function onSubmit(event) {
@@ -15,7 +16,7 @@ export default function Waitlist() {
       const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role }),
+        body: JSON.stringify({ email, role, company }),
       });
       const body = await response.json();
 
@@ -59,6 +60,18 @@ export default function Waitlist() {
           </label>
         ))}
       </div>
+
+      {/* Trampa para bots: invisible y fuera del recorrido de teclado. */}
+      <input
+        type="text"
+        name="company"
+        value={company}
+        onChange={(event) => setCompany(event.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="trap"
+      />
 
       <div className="form">
         <input

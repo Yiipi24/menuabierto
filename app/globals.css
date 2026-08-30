@@ -480,3 +480,12 @@ section { scroll-margin-top: 80px; }
   .roles { display: flex; }
   .role { padding: 8px 12px; font-size: 13.5px; }
 }
+
+.trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
