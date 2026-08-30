@@ -94,8 +94,8 @@ export default function Home() {
             <a className="hide-sm" href="#restaurantes">
               Para restaurantes
             </a>
-            <a className="btn btn-sm" href="#lista">
-              Únete
+            <a className="btn btn-sm" href="/entrar">
+              Entrar
             </a>
           </div>
         </div>
