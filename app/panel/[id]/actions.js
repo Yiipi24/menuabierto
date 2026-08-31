@@ -1,0 +1,299 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { supabaseSession } from "../../../lib/supabase";
+
+const BUCKET_FOTOS = "restaurantes";
+const MAX_FOTO_BYTES = 5 * 1024 * 1024;
+const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+
+// Todo lo de esta página exige ser el dueño. Se comprueba aquí además de en la
+// RLS para poder responder con un mensaje claro en vez de un update vacío.
+async function sesionYRestaurante(id) {
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) redirect("/entrar");
+
+  const { data: restaurante } = await supabase
+    .from("restaurants")
+    .select("id")
+    .eq("id", id)
+    .eq("owner_id", auth.user.id)
+    .maybeSingle();
+
+  return { supabase, user: auth.user, restaurante };
+}
+
+function aSlug(texto) {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+function limpio(formData, campo) {
+  const valor = String(formData.get(campo) ?? "").trim();
+  return valor || null;
+}
+
+export async function guardarRestaurante(_prevState, formData) {
+  const id = String(formData.get("id") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) {
+    return { status: "error", message: "Ese restaurante no es tuyo." };
+  }
+
+  const nombre = String(formData.get("name") ?? "").trim();
+  const ciudad = String(formData.get("city") ?? "").trim();
+  const nivel = Number(formData.get("price_level") ?? 2);
+
+  if (nombre.length < 2) {
+    return { status: "error", message: "El nombre es obligatorio." };
+  }
+  if (ciudad.length < 2) {
+    return { status: "error", message: "La ciudad es obligatoria." };
+  }
+  if (!Number.isInteger(nivel) || nivel < 1 || nivel > 4) {
+    return { status: "error", message: "Elige un rango de precio." };
+  }
+
+  const sitio = limpio(formData, "website");
+  // Sin esquema el enlace se resuelve contra menuabierto.com y no lleva a
+  // ningún lado; añadirlo nosotros evita pedírselo al dueño.
+  const website = sitio && !/^https?:\/\//i.test(sitio) ? `https://${sitio}` : sitio;
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({
+      name: nombre,
+      summary: limpio(formData, "summary"),
+      description: limpio(formData, "description"),
+      city: ciudad,
+      neighborhood: limpio(formData, "neighborhood"),
+      street: limpio(formData, "street"),
+      state: limpio(formData, "state"),
+      postal_code: limpio(formData, "postal_code"),
+      phone: limpio(formData, "phone"),
+      website,
+      price_level: nivel,
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("guardar restaurante", error.message);
+    return { status: "error", message: "No pudimos guardar los cambios." };
+  }
+
+  const errorCategorias = await guardarCategorias(supabase, id, formData);
+  if (errorCategorias) return errorCategorias;
+
+  const errorHorarios = await guardarHorarios(supabase, id, formData);
+  if (errorHorarios) return errorHorarios;
+
+  revalidatePath("/panel");
+  revalidatePath(`/panel/${id}`);
+  return { status: "ok", message: "Cambios guardados." };
+}
+
+// Categorías y horarios se reescriben enteros en vez de calcular el diff: son
+// pocas filas y así el estado guardado es exactamente lo que muestra el form.
+async function guardarCategorias(supabase, id, formData) {
+  const slugs = formData.getAll("cuisines").map(String).filter(Boolean);
+
+  await supabase.from("restaurant_cuisines").delete().eq("restaurant_id", id);
+
+  if (!slugs.length) return null;
+
+  const { data: catalogo } = await supabase
+    .from("cuisines")
+    .select("id")
+    .in("slug", slugs);
+
+  if (!catalogo?.length) return null;
+
+  const { error } = await supabase.from("restaurant_cuisines").insert(
+    catalogo.map((c) => ({ restaurant_id: id, cuisine_id: c.id })),
+  );
+
+  if (error) {
+    console.error("guardar categorias", error.message);
+    return { status: "error", message: "No pudimos guardar las categorías." };
+  }
+  return null;
+}
+
+async function guardarHorarios(supabase, id, formData) {
+  const filas = [];
+
+  for (let dia = 0; dia < 7; dia += 1) {
+    const abre = String(formData.get(`opens_${dia}`) ?? "").trim();
+    const cierra = String(formData.get(`closes_${dia}`) ?? "").trim();
+    // Un día sin horas es un día cerrado, no un error: es lo que hace el
+    // dueño que solo abre de martes a domingo.
+    if (!abre || !cierra) continue;
+    filas.push({ restaurant_id: id, weekday: dia, opens: abre, closes: cierra });
+  }
+
+  await supabase.from("restaurant_hours").delete().eq("restaurant_id", id);
+
+  if (!filas.length) return null;
+
+  const { error } = await supabase.from("restaurant_hours").insert(filas);
+  if (error) {
+    console.error("guardar horarios", error.message);
+    return { status: "error", message: "No pudimos guardar los horarios." };
+  }
+  return null;
+}
+
+export async function crearCategoria(_prevState, formData) {
+  const id = String(formData.get("id") ?? "");
+  const { supabase, user, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) {
+    return { status: "error", message: "Ese restaurante no es tuyo." };
+  }
+
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  if (nombre.length < 3) {
+    return { status: "error", message: "Escribe el nombre de la categoría." };
+  }
+  if (nombre.length > 40) {
+    return { status: "error", message: "Usa un nombre más corto." };
+  }
+
+  const slug = aSlug(nombre);
+  if (!slug) {
+    return { status: "error", message: "Ese nombre no sirve como categoría." };
+  }
+
+  // Se busca antes de insertar en vez de usar upsert: bajo RLS un ON CONFLICT
+  // necesita leer la fila en conflicto, y aquí basta con reutilizar la que ya
+  // exista para que "BBQ" y "bbq" no se conviertan en dos categorías.
+  const { data: existente } = await supabase
+    .from("cuisines")
+    .select("slug, name")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (existente) {
+    return {
+      status: "ok",
+      message: `"${existente.name}" ya estaba en la lista. Márcala.`,
+      slug: existente.slug,
+    };
+  }
+
+  const { data: creada, error } = await supabase
+    .from("cuisines")
+    .insert({ slug, name: nombre, created_by: user.id })
+    .select("slug, name")
+    .single();
+
+  if (error) {
+    console.error("crear categoria", error.message);
+    return { status: "error", message: "No pudimos crear la categoría." };
+  }
+
+  revalidatePath(`/panel/${id}`);
+  return {
+    status: "ok",
+    message: `"${creada.name}" agregada. Ya puedes marcarla.`,
+    slug: creada.slug,
+  };
+}
+
+export async function subirFotos(_prevState, formData) {
+  const id = String(formData.get("id") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) {
+    return { status: "error", message: "Ese restaurante no es tuyo." };
+  }
+
+  const archivos = formData
+    .getAll("fotos")
+    .filter((f) => typeof f === "object" && f.size > 0);
+
+  if (!archivos.length) {
+    return { status: "error", message: "Elige al menos una foto." };
+  }
+
+  const { data: ultima } = await supabase
+    .from("restaurant_media")
+    .select("position")
+    .eq("restaurant_id", id)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let posicion = (ultima?.position ?? -1) + 1;
+
+  for (const archivo of archivos) {
+    if (!TIPOS_FOTO.includes(archivo.type)) {
+      return { status: "error", message: "Solo JPG, PNG, WebP o AVIF." };
+    }
+    if (archivo.size > MAX_FOTO_BYTES) {
+      return { status: "error", message: "Cada foto debe pesar menos de 5 MB." };
+    }
+
+    // La primera carpeta de la ruta es el id del restaurante: de ahí saca el
+    // permiso la política de Storage.
+    const extension = archivo.type.split("/")[1].replace("jpeg", "jpg");
+    const ruta = `${id}/${crypto.randomUUID()}.${extension}`;
+
+    const { error: errorSubida } = await supabase.storage
+      .from(BUCKET_FOTOS)
+      .upload(ruta, archivo, { contentType: archivo.type, upsert: false });
+
+    if (errorSubida) {
+      console.error("subir foto", errorSubida.message);
+      return { status: "error", message: "No pudimos subir la foto." };
+    }
+
+    const { error: errorFila } = await supabase.from("restaurant_media").insert({
+      restaurant_id: id,
+      kind: "foto",
+      storage_path: ruta,
+      position: posicion,
+    });
+
+    if (errorFila) {
+      console.error("registrar foto", errorFila.message);
+      // El archivo sin fila sería basura invisible en el bucket.
+      await supabase.storage.from(BUCKET_FOTOS).remove([ruta]);
+      return { status: "error", message: "No pudimos guardar la foto." };
+    }
+
+    posicion += 1;
+  }
+
+  revalidatePath(`/panel/${id}`);
+  return {
+    status: "ok",
+    message: archivos.length === 1 ? "Foto subida." : "Fotos subidas.",
+  };
+}
+
+export async function borrarFoto(formData) {
+  const id = String(formData.get("id") ?? "");
+  const fotoId = String(formData.get("foto") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) return;
+
+  const { data: foto } = await supabase
+    .from("restaurant_media")
+    .select("storage_path")
+    .eq("id", fotoId)
+    .eq("restaurant_id", id)
+    .maybeSingle();
+
+  if (!foto) return;
+
+  await supabase.storage.from(BUCKET_FOTOS).remove([foto.storage_path]);
+  await supabase.from("restaurant_media").delete().eq("id", fotoId);
+
+  revalidatePath(`/panel/${id}`);
+}

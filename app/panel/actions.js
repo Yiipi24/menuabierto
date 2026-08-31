@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../lib/supabase";
 
+const BUCKET_FOTOS = "restaurantes";
+
+const ESTADOS = ["borrador", "publicado", "oculto"];
+
 export async function cerrarSesion() {
   const supabase = await supabaseSession();
   await supabase.auth.signOut();
@@ -85,6 +89,64 @@ export async function crearRestaurante(_prevState, formData) {
       );
     }
   }
+
+  revalidatePath("/panel");
+  // Directo a la ficha: recien creada le faltan telefono, horarios y fotos, y
+  // volver a la lista deja al dueno sin ver donde cargarlos.
+  redirect(`/panel/${creado.id}`);
+}
+
+// Publicar / ocultar. El estado lo manda el formulario porque el mismo botón
+// sirve para los dos sentidos y así no hay que adivinar el actual.
+export async function cambiarEstado(formData) {
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) redirect("/entrar");
+
+  const id = String(formData.get("id") ?? "");
+  const estado = String(formData.get("status") ?? "");
+  if (!ESTADOS.includes(estado)) return;
+
+  // La RLS ya exige ser el dueño; el filtro explícito evita mandar un update
+  // que no toca ninguna fila y deja clara la intención.
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ status: estado })
+    .eq("id", id)
+    .eq("owner_id", auth.user.id);
+
+  if (error) console.error("cambiar estado", error.message);
+
+  revalidatePath("/panel");
+}
+
+export async function borrarRestaurante(formData) {
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) redirect("/entrar");
+
+  const id = String(formData.get("id") ?? "");
+
+  // Las fotos viven en Storage y no se van solas con la fila: hay que
+  // borrarlas antes de perder la lista de rutas.
+  const { data: fotos } = await supabase
+    .from("restaurant_media")
+    .select("storage_path")
+    .eq("restaurant_id", id);
+
+  if (fotos?.length) {
+    await supabase.storage
+      .from(BUCKET_FOTOS)
+      .remove(fotos.map((f) => f.storage_path));
+  }
+
+  const { error } = await supabase
+    .from("restaurants")
+    .delete()
+    .eq("id", id)
+    .eq("owner_id", auth.user.id);
+
+  if (error) console.error("borrar restaurante", error.message);
 
   revalidatePath("/panel");
   redirect("/panel");

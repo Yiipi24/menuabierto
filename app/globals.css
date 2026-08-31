@@ -859,3 +859,103 @@ section { scroll-margin-top: 80px; }
 @media (prefers-reduced-motion: reduce) {
   .hueso { animation: none; }
 }
+
+/* ---------- acciones de cada ficha ---------- */
+
+.fila-botones { display: flex; align-items: center; gap: 14px; }
+
+.btn-chico { padding: 8px 16px; font-size: 14px; }
+
+.btn-peligro { color: var(--ink-faint); }
+
+.btn-peligro:hover { color: #b3261e; }
+
+/* ---------- edición de la ficha ---------- */
+
+.campo textarea { resize: vertical; min-height: 96px; }
+
+.horarios { display: grid; gap: 8px; }
+
+.horario {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.horario-dia { font-size: 14.5px; color: var(--ink-soft); }
+
+.horario-a { font-size: 14px; color: var(--ink-faint); }
+
+.horario input {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.horario input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+@media (max-width: 480px) {
+  .horario { grid-template-columns: 1fr; gap: 4px; }
+  .horario-a { display: none; }
+}
+
+.categoria-nueva {
+  margin-top: 12px;
+  padding: 18px 20px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.categoria-nueva .campo { margin-bottom: 12px; }
+
+/* ---------- fotos ---------- */
+
+.bloque-fotos { margin-top: 40px; }
+
+.galeria {
+  list-style: none;
+  margin: 16px 0 20px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.galeria-foto { position: relative; }
+
+.galeria-foto img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.galeria-borrar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.galeria-borrar:hover { background: rgba(0, 0, 0, 0.82); }
+
+.form-fotos .campo input[type="file"] {
+  padding: 10px;
+  font-size: 14.5px;
+}

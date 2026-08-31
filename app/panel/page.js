@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../lib/supabase";
-import { cerrarSesion } from "./actions";
+import { cerrarSesion, cambiarEstado, borrarRestaurante } from "./actions";
 import Brand from "../brand";
+import BorrarRestaurante from "./borrar";
 
 export const metadata = { title: "Tu panel — Menú Abierto" };
 
@@ -92,6 +93,26 @@ export default async function Panel() {
                       ? `★ ${r.rating_avg} · ${r.rating_count}`
                       : "Sin reseñas"}
                   </span>
+                  <div className="fila-botones">
+                    <Link className="btn-texto" href={`/panel/${r.id}`}>
+                      Seguir editando
+                    </Link>
+                    <form action={cambiarEstado}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <input
+                        type="hidden"
+                        name="status"
+                        value={r.status === "publicado" ? "oculto" : "publicado"}
+                      />
+                      <button
+                        className={r.status === "publicado" ? "btn-texto" : "btn btn-chico"}
+                        type="submit"
+                      >
+                        {r.status === "publicado" ? "Ocultar" : "Publicar"}
+                      </button>
+                    </form>
+                    <BorrarRestaurante id={r.id} nombre={r.name} />
+                  </div>
                 </div>
               </li>
             ))}
