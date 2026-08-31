@@ -53,8 +53,15 @@ asunto) porque el panel guarda el HTML en su propia base, no en el repo.
 
 El workflow `plantillas-correo.yml` las aplica solo: cada push a `main` que
 toque `templates/` o `config.toml` llama a la Management API con el secret
-`SUPABASE_ACCESS_TOKEN` del repo (un token con permiso *Auth Config:
-read-write* sobre este proyecto y nada más). El repo es la fuente de verdad;
+`SUPABASE_ACCESS_TOKEN` del repo.
+
+Ese secret tiene que ser un **legacy token** de Supabase. Los tokens con
+alcance por proyecto no sirven aquí: su capability *Auth Config: read-write*
+cubre el `GET` de la config y los endpoints de SSO y third-party-auth, pero no
+el `PATCH /v1/projects/{ref}/config/auth`, que es el que escribe las
+plantillas. Se intentó y responde 403. Como el legacy token da acceso a toda
+la cuenta, conviene renovarlo con vencimiento corto en lugar de dejarlo
+abierto un año. El repo es la fuente de verdad;
 si alguien edita una plantilla en el panel, el siguiente push la pisa. Para
 revisar sin enviar nada: `python3 scripts/aplicar-plantillas-correo.py
 --dry-run`.
