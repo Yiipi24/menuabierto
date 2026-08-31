@@ -42,5 +42,5 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/", "/panel/:path*", "/entrar"],
+  matcher: ["/", "/panel/:path*", "/entrar", "/reclamar"],
 };

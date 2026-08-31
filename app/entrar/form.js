@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
-import { requestMagicLink } from "./actions";
+import { useActionState, useState } from "react";
+import { requestMagicLink, signInWithPassword } from "./actions";
 
 const inicial = { status: "idle", message: "" };
 
-export default function EntrarForm() {
+function Enlace({ next }) {
   const [state, action, pending] = useActionState(requestMagicLink, inicial);
 
   if (state.status === "sent") {
@@ -14,7 +14,7 @@ export default function EntrarForm() {
         <h2>Revisa tu correo</h2>
         <p>
           Te mandamos un enlace para entrar. Ábrelo en este mismo dispositivo:
-          el enlace solo funciona en el navegador desde el que lo pediste.
+          solo funciona en el navegador desde el que lo pediste.
         </p>
         <p className="aviso-nota">
           Si no llega en un par de minutos, revisa la carpeta de spam.
@@ -24,7 +24,9 @@ export default function EntrarForm() {
   }
 
   return (
-    <form action={action} className="entrar-form">
+    <form action={action}>
+      <input type="hidden" name="next" value={next} />
+
       <label className="campo">
         <span>Tu correo</span>
         <input
@@ -55,6 +57,79 @@ export default function EntrarForm() {
           {state.message}
         </p>
       ) : null}
+
+      <p className="ayuda">
+        No necesitas contraseña. Si es tu primera vez, la cuenta se crea al
+        abrir el enlace.
+      </p>
     </form>
+  );
+}
+
+function Contrasena({ next }) {
+  const [state, action, pending] = useActionState(signInWithPassword, inicial);
+
+  return (
+    <form action={action}>
+      <input type="hidden" name="next" value={next} />
+
+      <label className="campo">
+        <span>Tu correo</span>
+        <input type="email" name="email" required autoComplete="email" />
+      </label>
+
+      <label className="campo">
+        <span>Contraseña</span>
+        <input
+          type="password"
+          name="password"
+          required
+          autoComplete="current-password"
+        />
+      </label>
+
+      <button className="btn btn-block" type="submit" disabled={pending}>
+        {pending ? "Entrando…" : "Entrar"}
+      </button>
+
+      {state.status === "error" ? (
+        <p className="form-msg err" role="alert">
+          {state.message}
+        </p>
+      ) : null}
+
+      <p className="ayuda">
+        La contraseña se crea desde tu panel, después de entrar la primera vez
+        con el enlace.
+      </p>
+    </form>
+  );
+}
+
+export default function EntrarForm({ next = "/panel" }) {
+  const [modo, setModo] = useState("enlace");
+
+  return (
+    <>
+      <div className="roles" role="tablist" aria-label="Cómo quieres entrar">
+        {[
+          ["enlace", "Con un enlace"],
+          ["contrasena", "Con contraseña"],
+        ].map(([valor, texto]) => (
+          <button
+            key={valor}
+            type="button"
+            role="tab"
+            aria-selected={modo === valor}
+            className={modo === valor ? "role role-on" : "role"}
+            onClick={() => setModo(valor)}
+          >
+            {texto}
+          </button>
+        ))}
+      </div>
+
+      {modo === "enlace" ? <Enlace next={next} /> : <Contrasena next={next} />}
+    </>
   );
 }

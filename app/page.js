@@ -88,12 +88,6 @@ export default function Home() {
             Menú Abierto
           </a>
           <div className="nav-links">
-            <a className="hide-sm" href="#comensales">
-              Para comensales
-            </a>
-            <a className="hide-sm" href="#restaurantes">
-              Para restaurantes
-            </a>
             <a className="btn btn-sm" href="/entrar">
               Entrar
             </a>

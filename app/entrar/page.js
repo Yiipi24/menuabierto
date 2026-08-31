@@ -8,7 +8,11 @@ export const metadata = {
   description: "Entra a tu cuenta para administrar tu restaurante.",
 };
 
-export default async function Entrar() {
+export default async function Entrar({ searchParams }) {
+  const params = await searchParams;
+  const pedido = String(params?.next ?? "");
+  const next = pedido.startsWith("/") && !pedido.startsWith("//") ? pedido : "/panel";
+
   if (await currentUser()) {
     redirect("/panel");
   }
@@ -27,7 +31,7 @@ export default async function Entrar() {
           recordar ni que perder.
         </p>
 
-        <EntrarForm />
+        <EntrarForm next={next} />
 
         <p className="panel-pie">
           ¿Todavía no publicas tu restaurante? Con este mismo enlace creas tu

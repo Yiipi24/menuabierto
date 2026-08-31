@@ -32,7 +32,9 @@ export default async function Panel() {
           Menú Abierto
         </Link>
         <div className="panel-top-derecha">
-          <span className="panel-correo">{auth.user.email}</span>
+          <Link className="btn-texto" href="/panel/cuenta">
+            {auth.user.email}
+          </Link>
           <form action={cerrarSesion}>
             <button className="btn-texto" type="submit">
               Salir
@@ -44,9 +46,14 @@ export default async function Panel() {
       <main className="wrap panel-main">
         <div className="panel-encabezado">
           <h1>Tus restaurantes</h1>
-          <Link className="btn" href="/panel/nuevo">
-            Agregar restaurante
-          </Link>
+          <div className="panel-acciones">
+            <Link className="btn-texto" href="/reclamar">
+              Reclamar uno existente
+            </Link>
+            <Link className="btn" href="/panel/nuevo">
+              Agregar restaurante
+            </Link>
+          </div>
         </div>
 
         {error ? (
