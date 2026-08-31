@@ -50,3 +50,11 @@ asunto) porque el panel guarda el HTML en su propia base, no en el repo.
   de correo ignoran las hojas de estilo y muchos ignoran flex y grid.
 - Se mantiene `{{ .ConfirmationURL }}` también en texto plano abajo, para
   quien tenga los botones bloqueados.
+
+El workflow `plantillas-correo.yml` las aplica solo: cada push a `main` que
+toque `templates/` o `config.toml` llama a la Management API con el secret
+`SUPABASE_ACCESS_TOKEN` del repo (un token con permiso *Auth Config:
+read-write* sobre este proyecto y nada más). El repo es la fuente de verdad;
+si alguien edita una plantilla en el panel, el siguiente push la pisa. Para
+revisar sin enviar nada: `python3 scripts/aplicar-plantillas-correo.py
+--dry-run`.
