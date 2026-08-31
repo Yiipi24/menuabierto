@@ -34,3 +34,19 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   sus dueños.
 - PostGIS, `unaccent` y `pg_trgm` instalados en el esquema `public`: moverlos
   rompería las referencias existentes a cambio de nada.
+
+# Correos de autenticación
+
+Las plantillas de `templates/` reemplazan las de fábrica de Supabase, que
+llegan en inglés y sin logo. `config.toml` las conecta con su asunto para el
+entorno local; en el proyecto hospedado hay que pegarlas en
+**Authentication → Emails → Templates** (una pestaña por plantilla, con su
+asunto) porque el panel guarda el HTML en su propia base, no en el repo.
+
+- El logo se enlaza como PNG absoluto (`https://menuabierto.com/logo-email.png`,
+  generado desde `public/logo.svg`). Gmail y Outlook no dibujan SVG ni rutas
+  relativas dentro de un correo.
+- Todo el estilo va en atributos `style` en línea y sobre tablas: los clientes
+  de correo ignoran las hojas de estilo y muchos ignoran flex y grid.
+- Se mantiene `{{ .ConfirmationURL }}` también en texto plano abajo, para
+  quien tenga los botones bloqueados.
