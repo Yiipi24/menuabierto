@@ -37,7 +37,16 @@ export async function middleware(request) {
     },
   });
 
-  await supabase.auth.getUser();
+  // Sin cookie de sesion no hay nada que refrescar, y validar contra Supabase
+  // costaria un viaje de red en cada visita anonima a la portada.
+  const tieneSesion = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+
+  if (tieneSesion) {
+    await supabase.auth.getUser();
+  }
+
   return response;
 }
 

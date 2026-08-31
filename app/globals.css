@@ -838,3 +838,24 @@ section { scroll-margin-top: 80px; }
 }
 
 .panel-pie a { color: var(--accent); font-weight: 600; }
+
+/* Esqueletos de carga. Un bloque que late comunica "ya voy" mucho mejor que
+   una pantalla en blanco, aunque el tiempo real sea el mismo. */
+.hueso {
+  border-radius: 10px;
+  background: var(--line);
+  animation: latido 1.4s ease-in-out infinite;
+}
+
+.hueso-titulo { height: 34px; width: 240px; margin-bottom: 28px; }
+
+.hueso-fila { height: 84px; margin-bottom: 12px; }
+
+@keyframes latido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hueso { animation: none; }
+}
