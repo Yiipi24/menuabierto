@@ -59,8 +59,8 @@ function Enlace({ next }) {
       ) : null}
 
       <p className="ayuda">
-        No necesitas contraseña. Si es tu primera vez, la cuenta se crea al
-        abrir el enlace.
+        Te mandamos un enlace de un solo uso. Sirve aunque no recuerdes tu
+        contraseña.
       </p>
     </form>
   );
@@ -99,22 +99,22 @@ function Contrasena({ next }) {
       ) : null}
 
       <p className="ayuda">
-        La contraseña se crea desde tu panel, después de entrar la primera vez
-        con el enlace.
+        ¿Olvidaste tu contraseña? Entra con un enlace y cámbiala desde tu
+        cuenta.
       </p>
     </form>
   );
 }
 
 export default function EntrarForm({ next = "/panel" }) {
-  const [modo, setModo] = useState("enlace");
+  const [modo, setModo] = useState("contrasena");
 
   return (
     <>
       <div className="roles" role="tablist" aria-label="Cómo quieres entrar">
         {[
-          ["enlace", "Con un enlace"],
           ["contrasena", "Con contraseña"],
+          ["enlace", "Con un enlace"],
         ].map(([valor, texto]) => (
           <button
             key={valor}

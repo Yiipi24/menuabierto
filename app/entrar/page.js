@@ -25,17 +25,15 @@ export default async function Entrar({ searchParams }) {
           Menú Abierto
         </Link>
 
-        <h1>Entra sin contraseña</h1>
+        <h1>Entra a tu cuenta</h1>
         <p className="panel-lead">
-          Escribe tu correo y te mandamos un enlace. No hay contraseña que
-          recordar ni que perder.
+          Con tu contraseña, o con un enlace por correo si no la recuerdas.
         </p>
 
         <EntrarForm next={next} />
 
         <p className="panel-pie">
-          ¿Todavía no publicas tu restaurante? Con este mismo enlace creas tu
-          cuenta y lo das de alta.
+          ¿No tienes cuenta? <Link href="/registro">Crea una</Link>.
         </p>
       </div>
     </main>

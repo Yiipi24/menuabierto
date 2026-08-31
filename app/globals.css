@@ -81,13 +81,15 @@ a { color: inherit; }
 
 .nav-links { display: flex; align-items: center; gap: 28px; }
 
-.nav-links a {
+/* :not(.btn) en ambas reglas: el boton trae su propio color claro sobre
+   fondo oscuro, y sin esto la navegacion se lo pisaba por especificidad. */
+.nav-links a:not(.btn) {
   text-decoration: none;
   color: var(--ink-soft);
   font-size: 15px;
 }
 
-.nav-links a:hover { color: var(--ink); }
+.nav-links a:not(.btn):hover { color: var(--ink); }
 
 @media (max-width: 640px) {
   .nav-links a.hide-sm { display: none; }
@@ -786,8 +788,58 @@ section { scroll-margin-top: 80px; }
 }
 
 .roles button.role {
-  background: none;
   border: 0;
-  font: inherit;
+  font-family: inherit;
+  font-size: 14.5px;
   font-weight: 550;
+  background: transparent;
+  color: var(--ink-soft);
 }
+
+/* Va despues del reset a proposito: la pestana activa tiene que ganarle. */
+.roles button.role.role-on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.elecciones { display: grid; gap: 10px; }
+
+.eleccion {
+  display: grid;
+  gap: 3px;
+  padding: 15px 17px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  cursor: pointer;
+  background: var(--paper);
+}
+
+.eleccion input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.eleccion strong { font-size: 15.5px; font-weight: 650; }
+
+.eleccion span { font-size: 14px; color: var(--ink-faint); }
+
+.eleccion-on {
+  border-color: var(--ink);
+  background: var(--paper-warm);
+}
+
+.eleccion:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pista {
+  display: block;
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+}
+
+.panel-pie a { color: var(--accent); font-weight: 600; }

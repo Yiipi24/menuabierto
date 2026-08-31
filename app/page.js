@@ -88,8 +88,11 @@ export default function Home() {
             Menú Abierto
           </a>
           <div className="nav-links">
-            <a className="btn btn-sm" href="/entrar">
+            <a className="hide-sm" href="/entrar">
               Entrar
+            </a>
+            <a className="btn btn-sm" href="/registro">
+              Crear cuenta
             </a>
           </div>
         </div>
