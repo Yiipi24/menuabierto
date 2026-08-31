@@ -39,6 +39,9 @@ def payload():
 
 
 def main():
+    # Sin esto, un fallo temprano sale en stderr antes que el listado de stdout
+    # y el log de CI queda al reves.
+    sys.stdout.reconfigure(line_buffering=True)
     seco = "--dry-run" in sys.argv
     token = os.environ.get("SUPABASE_ACCESS_TOKEN")
     if not token and not seco:
@@ -57,6 +60,9 @@ def main():
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
+            # Sin User-Agent propio, Cloudflare corta la peticion con un 403
+            # (error 1010) antes de que llegue a la API.
+            "User-Agent": "menuabierto-plantillas-correo",
         },
         method="PATCH",
     )
