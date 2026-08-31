@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
 import ReclamarForm from "./form";
+import Brand from "../brand";
 
 export const metadata = {
   title: "Reclama tu restaurante — Menú Abierto",
@@ -18,10 +19,7 @@ export default async function Reclamar() {
   return (
     <div className="panel-wrap">
       <header className="panel-top">
-        <Link className="brand" href="/panel">
-          <span className="brand-mark">M</span>
-          Menú Abierto
-        </Link>
+        <Brand href="/panel" />
         <Link className="btn-texto" href="/panel">
           Volver
         </Link>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
 import RegistroForm from "./form";
+import Brand from "../brand";
 
 export const metadata = {
   title: "Crear cuenta — Menú Abierto",
@@ -14,10 +15,7 @@ export default async function Registro() {
   return (
     <main className="panel-shell">
       <div className="panel-card">
-        <Link className="brand" href="/">
-          <span className="brand-mark">M</span>
-          Menú Abierto
-        </Link>
+        <Brand href="/" />
 
         <h1>Crea tu cuenta</h1>
         <p className="panel-lead">

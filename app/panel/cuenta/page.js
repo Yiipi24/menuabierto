@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import CuentaForm from "./form";
+import Brand from "../../brand";
 
 export const metadata = { title: "Tu cuenta — Menú Abierto" };
 
@@ -19,10 +20,7 @@ export default async function Cuenta() {
   return (
     <div className="panel-wrap">
       <header className="panel-top">
-        <Link className="brand" href="/panel">
-          <span className="brand-mark">M</span>
-          Menú Abierto
-        </Link>
+        <Brand href="/panel" />
         <Link className="btn-texto" href="/panel">
           Volver
         </Link>

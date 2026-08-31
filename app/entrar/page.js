@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
 import EntrarForm from "./form";
+import Brand from "../brand";
 
 export const metadata = {
   title: "Entrar — Menú Abierto",
@@ -20,14 +21,11 @@ export default async function Entrar({ searchParams }) {
   return (
     <main className="panel-shell">
       <div className="panel-card">
-        <Link className="brand" href="/">
-          <span className="brand-mark">M</span>
-          Menú Abierto
-        </Link>
+        <Brand href="/" />
 
         <h1>Entra a tu cuenta</h1>
         <p className="panel-lead">
-          Con tu contraseña, o con un enlace por correo si no la recuerdas.
+          Con el correo y la contraseña que registraste.
         </p>
 
         <EntrarForm next={next} />

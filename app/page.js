@@ -84,7 +84,13 @@ export default function Home() {
       <nav className="nav">
         <div className="wrap nav-inner">
           <a className="brand" href="#top">
-            <span className="brand-mark">M</span>
+            <img
+              className="brand-mark"
+              src="/logo.svg"
+              alt=""
+              width={28}
+              height={28}
+            />
             Menú Abierto
           </a>
           <div className="nav-links">

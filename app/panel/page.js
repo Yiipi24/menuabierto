@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../lib/supabase";
 import { cerrarSesion } from "./actions";
+import Brand from "../brand";
 
 export const metadata = { title: "Tu panel — Menú Abierto" };
 
@@ -27,10 +28,7 @@ export default async function Panel() {
   return (
     <div className="panel-wrap">
       <header className="panel-top">
-        <Link className="brand" href="/">
-          <span className="brand-mark">M</span>
-          Menú Abierto
-        </Link>
+        <Brand href="/" />
         <div className="panel-top-derecha">
           <Link className="btn-texto" href="/panel/cuenta">
             {auth.user.email}
