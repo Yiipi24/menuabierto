@@ -1,6 +1,10 @@
 import Waitlist from "./waitlist";
+import { supabaseServer } from "../lib/supabase";
 
-const RESULTS = [
+// Mientras no haya ninguna ficha publicada, el teléfono de la portada enseña
+// estos ejemplos. En cuanto exista el primer restaurante real, se muestran los
+// reales y estos dejan de usarse.
+const DEMO_RESULTS = [
   {
     name: "Taquería La Esquina",
     kind: "Tacos · $$",
@@ -26,6 +30,48 @@ const RESULTS = [
     tag: "A 1.2 km",
   },
 ];
+
+// La portada se genera estática; sin esto el primer restaurante publicado no
+// aparecería hasta el siguiente despliegue.
+export const revalidate = 300;
+
+const PRECIO = ["", "$", "$$", "$$$", "$$$$"];
+
+// La portada es pública, así que basta el cliente sin sesión: la RLS deja ver
+// a cualquiera los restaurantes en estado 'publicado'.
+async function restaurantesPublicados() {
+  try {
+    const supabase = supabaseServer();
+    const { data, error } = await supabase
+      .from("restaurants")
+      .select(
+        "id, slug, name, summary, city, neighborhood, price_level, rating_avg, rating_count, restaurant_cuisines(cuisines(name))",
+      )
+      .eq("status", "publicado")
+      .order("created_at", { ascending: false })
+      .limit(4);
+
+    if (error) return [];
+    return data ?? [];
+  } catch {
+    // Sin variables de entorno (build local, previsualización) la portada
+    // sigue funcionando con los ejemplos.
+    return [];
+  }
+}
+
+function aResultado(r) {
+  const cocina = r.restaurant_cuisines?.[0]?.cuisines?.name;
+  const precio = PRECIO[r.price_level] ?? "";
+  const kind = [cocina || r.summary, precio].filter(Boolean).join(" · ");
+
+  return {
+    name: r.name,
+    kind: kind || "Restaurante",
+    rating: r.rating_count > 0 && r.rating_avg ? String(r.rating_avg) : null,
+    tag: [r.neighborhood, r.city].filter(Boolean).join(", ") || "Nuevo",
+  };
+}
 
 const DINER = [
   {
@@ -78,7 +124,11 @@ const STEPS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const publicados = await restaurantesPublicados();
+  const hayPublicados = publicados.length > 0;
+  const results = hayPublicados ? publicados.map(aResultado) : DEMO_RESULTS;
+
   return (
     <>
       <nav className="nav">
@@ -107,7 +157,11 @@ export default function Home() {
       <header className="hero" id="top">
         <div className="wrap hero-grid">
           <div>
-            <span className="eyebrow">Muy pronto en México</span>
+            <span className="eyebrow">
+              {hayPublicados
+                ? "Ya hay restaurantes en Menú Abierto"
+                : "Muy pronto en México"}
+            </span>
             <h1>
               Encuentra dónde comer. <em>Haz que te encuentren.</em>
             </h1>
@@ -127,10 +181,14 @@ export default function Home() {
           <div className="phone" aria-hidden="true">
             <div className="phone-head">
               <strong>Buscar cerca de mí</strong>
-              <span>Tacos · abierto ahora · 4.5+</span>
+              <span>
+                {hayPublicados
+                  ? "Restaurantes publicados en Menú Abierto"
+                  : "Tacos · abierto ahora · 4.5+"}
+              </span>
             </div>
             <div className="phone-body">
-              {RESULTS.map((r) => (
+              {results.map((r) => (
                 <div className="result" key={r.name}>
                   <div className="result-thumb" />
                   <div className="result-text">
@@ -138,7 +196,9 @@ export default function Home() {
                     <div className="dish-desc">{r.kind}</div>
                     <div className="result-tag">{r.tag}</div>
                   </div>
-                  <div className="result-rating">★ {r.rating}</div>
+                  {r.rating ? (
+                    <div className="result-rating">★ {r.rating}</div>
+                  ) : null}
                 </div>
               ))}
             </div>
