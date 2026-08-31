@@ -1,0 +1,34 @@
+name: Plantillas de correo
+
+# Supabase guarda el HTML de los correos en su panel, fuera del repo. Sin este
+# workflow las dos copias se separan en silencio y nadie se entera hasta que a
+# un usuario le llega el correo viejo.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/config.toml"
+      - "supabase/templates/**"
+      - "scripts/aplicar-plantillas-correo.py"
+      - ".github/workflows/plantillas-correo.yml"
+  workflow_dispatch:
+
+# Dos pushes seguidos no deben pelearse por cual queda aplicado al final.
+concurrency:
+  group: plantillas-correo
+  cancel-in-progress: false
+
+jobs:
+  aplicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Aplicar plantillas
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: python3 scripts/aplicar-plantillas-correo.py
