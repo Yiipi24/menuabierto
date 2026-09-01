@@ -20,7 +20,7 @@ const OPCIONES = [
   },
 ];
 
-export default function RegistroForm() {
+export default function RegistroForm({ next = "/" }) {
   const [state, action, pending] = useActionState(registrar, inicial);
   const [intent, setIntent] = useState("comensal");
 
@@ -41,6 +41,8 @@ export default function RegistroForm() {
 
   return (
     <form action={action}>
+      <input type="hidden" name="next" value={next} />
+
       <fieldset className="grupo">
         <legend>¿Qué te trae por aquí?</legend>
         <div className="elecciones">

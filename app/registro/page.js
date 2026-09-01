@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { rutaInterna } from "../../lib/rutas";
 import { currentUser } from "../../lib/supabase";
 import RegistroForm from "./form";
 import Brand from "../brand";
@@ -9,8 +10,11 @@ export const metadata = {
   description: "Crea tu cuenta en Menú Abierto.",
 };
 
-export default async function Registro() {
-  if (await currentUser()) redirect("/panel");
+export default async function Registro({ searchParams }) {
+  const params = await searchParams;
+  const next = rutaInterna(params?.next, "/");
+
+  if (await currentUser()) redirect(next);
 
   return (
     <main className="panel-shell">
@@ -23,10 +27,11 @@ export default async function Registro() {
           restaurante.
         </p>
 
-        <RegistroForm />
+        <RegistroForm next={next} />
 
         <p className="panel-pie">
-          ¿Ya tienes cuenta? <Link href="/entrar">Entra aquí</Link>.
+          ¿Ya tienes cuenta?{" "}
+          <Link href={`/entrar?next=${encodeURIComponent(next)}`}>Entra aquí</Link>.
         </p>
       </div>
     </main>

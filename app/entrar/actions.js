@@ -1,21 +1,15 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { rutaInterna } from "../../lib/rutas";
 import { supabaseSession } from "../../lib/supabase";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Solo rutas internas: un destino con host ajeno convertiria el inicio de
-// sesion en un puente hacia sitios de phishing con la marca de Menu Abierto.
-function destinoSeguro(valor) {
-  const v = String(valor ?? "");
-  return v.startsWith("/") && !v.startsWith("//") ? v : "/panel";
-}
-
 export async function signInWithPassword(_prevState, formData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const next = destinoSeguro(formData.get("next"));
+  const next = rutaInterna(formData.get("next"));
 
   if (!EMAIL.test(email) || !password) {
     return { status: "error", message: "Revisa tu correo y tu contraseña." };
