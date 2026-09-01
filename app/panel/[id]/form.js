@@ -231,63 +231,81 @@ export default function EditarForm({
           </label>
         </div>
 
-        {/* Sin coordenadas la ficha no puede ordenarse por cercanía: sale en
-            las búsquedas por colonia o ciudad, pero nunca con su distancia.
-            Es el campo que hacía que "Cerca de mí" no sirviera de nada. */}
-        <div className="campo-par">
-          <label className="campo">
-            <span>Latitud <em>(opcional)</em></span>
-            <input
-              type="text"
-              name="lat"
-              inputMode="decimal"
-              maxLength={24}
-              value={punto.lat}
-              onChange={(e) => escribirLat(e.target.value)}
-              placeholder="25.79000"
-            />
-          </label>
-          <label className="campo">
-            <span>Longitud <em>(opcional)</em></span>
-            <input
-              type="text"
-              name="lng"
-              inputMode="decimal"
-              maxLength={24}
-              value={punto.lng}
-              onChange={(e) => setPunto((antes) => ({ ...antes, lng: e.target.value }))}
-              placeholder="-100.31500"
-            />
-          </label>
-        </div>
+        {/* La ubicación se calcula sola desde la dirección de arriba, así que
+            estos campos van plegados: el dueño no tiene por qué copiar
+            coordenadas de ningún lado. Quedan para el caso en que el
+            geocodificador se equivoque, que en colonias nuevas pasa. */}
+        <details className="avanzado">
+          <summary>Ubicación exacta <em>(opcional)</em></summary>
 
-        <div className="campo-acciones">
-          <button
-            className="btn btn-chico"
-            type="button"
-            onClick={usarMiUbicacion}
-            disabled={ubicando}
-          >
-            {ubicando ? "Buscando…" : "Usar mi ubicación actual"}
-          </button>
-          {punto.lat || punto.lng ? (
+          <p className="campo-pista">
+            Si dejas esto vacío calculamos el punto solo, a partir de la
+            dirección, al guardar. Llénalo únicamente si el mapa te ubica mal.
+          </p>
+
+          <div className="campo-par">
+            <label className="campo">
+              <span>Latitud</span>
+              <input
+                type="text"
+                name="lat"
+                inputMode="decimal"
+                maxLength={24}
+                value={punto.lat}
+                onChange={(e) => escribirLat(e.target.value)}
+                placeholder="25.79000"
+              />
+            </label>
+            <label className="campo">
+              <span>Longitud</span>
+              <input
+                type="text"
+                name="lng"
+                inputMode="decimal"
+                maxLength={24}
+                value={punto.lng}
+                onChange={(e) => setPunto((antes) => ({ ...antes, lng: e.target.value }))}
+                placeholder="-100.31500"
+              />
+            </label>
+          </div>
+
+          <div className="campo-acciones">
             <button
-              className="btn-texto"
+              className="btn btn-chico"
               type="button"
-              onClick={() => {
-                setPunto({ lat: "", lng: "" });
-                setAvisoPunto("");
-              }}
+              onClick={usarMiUbicacion}
+              disabled={ubicando}
             >
-              Quitar las coordenadas
+              {ubicando ? "Buscando…" : "Usar mi ubicación actual"}
             </button>
-          ) : null}
-        </div>
+            {punto.lat || punto.lng ? (
+              <button
+                className="btn-texto"
+                type="button"
+                onClick={() => {
+                  setPunto({ lat: "", lng: "" });
+                  setAvisoPunto("");
+                }}
+              >
+                Vaciar
+              </button>
+            ) : null}
+          </div>
 
-        <p className="campo-pista">
-          {avisoPunto ||
-            "Ábrelo desde el local, o copia el par de números de Google Maps y pégalo en Latitud."}
-        </p>
+          <p className="campo-pista">
+            {avisoPunto ||
+              "Ábrelo desde el local para tomar el punto exacto, o pega aquí el par de números de Google Maps."}
+          </p>
+
+          <p className="campo-credito">
+            La ubicación automática se calcula con{" "}
+            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+              OpenStreetMap
+            </a>
+            .
+          </p>
+        </details>
 
         <fieldset className="grupo">
           <legend>Rango de precio</legend>

@@ -23,6 +23,17 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   Cuando la mayoría tenga punto conviene volver a apretar esto.
 - **El lugar escrito manda sobre el radio.** Buscar "Escobedo" con la ubicación
   puesta tiene que traer Escobedo, no la intersección vacía de las dos cosas.
+- **El punto se calcula desde la dirección, con Nominatim (OpenStreetMap).**
+  Pedirle coordenadas al dueño de un restaurante era pedirle que copiara
+  números de un mapa para poder aparecer en "Cerca de mí". Los campos de
+  latitud y longitud siguen ahí, plegados, y ganan si los llena: un
+  geocodificador se equivoca en colonias nuevas. No se usa el de Google porque
+  sus términos restringen guardar las coordenadas de forma permanente, y aquí
+  el punto vive en la base; los datos de OSM son ODbL y sí se pueden almacenar
+  dando atribución. Se consulta solo cuando la dirección cambió o no hay punto,
+  y va al final del guardado: un servicio ajeno lento no puede dejar la ficha
+  sin categorías ni horarios. `NOMINATIM_URL` apunta a otra instancia si el
+  volumen crece, que es lo que su política pide.
 - **El panel escribe el punto por `set_restaurant_location`**, no con un
   `update` normal: mandar EWKT en texto y confiar en el cast es más frágil que
   una función que recibe dos números y los valida. Se lee con

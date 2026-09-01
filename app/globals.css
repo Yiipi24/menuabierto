@@ -707,6 +707,55 @@ section { scroll-margin-top: 80px; }
   margin: -4px 0 8px;
 }
 
+/* Bloque plegado para lo que casi nadie necesita tocar: la ubicacion se
+   calcula sola, y estos campos solo existen para corregirla. */
+.avanzado {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 18px;
+  margin-bottom: 22px;
+  background: var(--paper);
+}
+
+.avanzado > summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  list-style: none;
+}
+
+.avanzado > summary::-webkit-details-marker { display: none; }
+
+.avanzado > summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1.1em;
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+
+.avanzado[open] > summary::before { content: "–"; }
+
+.avanzado > summary em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.avanzado[open] > summary { border-bottom: 1px solid var(--line); }
+
+.avanzado > *:not(summary):first-of-type { margin-top: 16px; }
+
+.avanzado > *:last-child { margin-bottom: 18px; }
+
+.campo-credito {
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.campo-credito a { color: inherit; }
+
 .campo-pista {
   font-size: 14px;
   color: var(--ink-faint);

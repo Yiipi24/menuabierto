@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
+import { geocodificar, mismaDireccion } from "../../../lib/geocodificar";
 
 const BUCKET_FOTOS = "restaurantes";
 const MAX_FOTO_BYTES = 5 * 1024 * 1024;
@@ -15,9 +16,13 @@ async function sesionYRestaurante(id) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth?.user) redirect("/entrar");
 
+  // Se traen también la dirección y el punto actuales: con ellos se decide si
+  // hace falta volver a preguntarle a Nominatim o si ya está resuelto.
+  // `location` es geography y PostgREST la manda en hexadecimal; aquí solo
+  // interesa si viene o no, no su contenido.
   const { data: restaurante } = await supabase
     .from("restaurants")
-    .select("id")
+    .select("id, street, neighborhood, city, state, postal_code, location")
     .eq("id", id)
     .eq("owner_id", auth.user.id)
     .maybeSingle();
@@ -73,6 +78,14 @@ export async function guardarRestaurante(_prevState, formData) {
   const punto = leerUbicacion(formData);
   if (punto.error) return { status: "error", message: punto.error };
 
+  const direccion = {
+    street: limpio(formData, "street"),
+    neighborhood: limpio(formData, "neighborhood"),
+    city: ciudad,
+    state: limpio(formData, "state"),
+    postal_code: limpio(formData, "postal_code"),
+  };
+
   const sitio = limpio(formData, "website");
   // Sin esquema el enlace se resuelve contra menuabierto.com y no lleva a
   // ningún lado; añadirlo nosotros evita pedírselo al dueño.
@@ -84,11 +97,7 @@ export async function guardarRestaurante(_prevState, formData) {
       name: nombre,
       summary: limpio(formData, "summary"),
       description: limpio(formData, "description"),
-      city: ciudad,
-      neighborhood: limpio(formData, "neighborhood"),
-      street: limpio(formData, "street"),
-      state: limpio(formData, "state"),
-      postal_code: limpio(formData, "postal_code"),
+      ...direccion,
       phone: limpio(formData, "phone"),
       website,
       price_level: nivel,
@@ -108,6 +117,13 @@ export async function guardarRestaurante(_prevState, formData) {
 
   const errorHorarios = await guardarHorarios(supabase, id, formData);
   if (errorHorarios) return errorHorarios;
+
+  // Al final, y a propósito: preguntarle a un servicio de terceros es lo único
+  // aquí que puede tardar segundos. Si va antes y se atora, la ficha se queda
+  // sin categorías ni horarios por culpa de algo que ni siquiera es nuestro.
+  if (punto.lat === null) {
+    await completarUbicacion(supabase, id, direccion, restaurante);
+  }
 
   revalidatePath("/panel");
   revalidatePath(`/panel/${id}`);
@@ -144,10 +160,16 @@ function leerUbicacion(formData) {
   return { lat, lng };
 }
 
+// Un punto escrito a mano gana siempre: el dueño conoce su local mejor que
+// cualquier geocodificador. Se escribe aquí, junto al resto de la ficha,
+// porque es una llamada rápida y su fallo sí es un error que contar.
+//
 // El punto no se escribe con un update normal porque `location` es geography:
 // habría que mandar EWKT en texto y confiar en el cast. La función de la base
 // recibe dos números, los valida otra vez y arma el punto ella.
 async function guardarUbicacion(supabase, id, punto) {
+  if (punto.lat === null) return null;
+
   const { error } = await supabase.rpc("set_restaurant_location", {
     rid: id,
     lat: punto.lat,
@@ -159,6 +181,33 @@ async function guardarUbicacion(supabase, id, punto) {
     return { status: "error", message: "No pudimos guardar la ubicación." };
   }
   return null;
+}
+
+// Cuando el dueño no escribió coordenadas, se calculan desde su dirección.
+// Nadie debería tener que copiar números de un mapa para salir en "Cerca de mí".
+//
+// Es "mejor esfuerzo" y no devuelve error a propósito: si Nominatim no contesta
+// o no reconoce la dirección, la ficha se guarda igual y sale en las búsquedas
+// por colonia y ciudad, solo que sin distancia. Decirle al dueño que su
+// guardado falló, cuando sí se guardó, sería mentirle.
+async function completarUbicacion(supabase, id, direccion, antes) {
+  // Preguntar en cada guardado sería maltratar un servicio gratuito: si la
+  // dirección no cambió y el punto ya está puesto, no hay nada que resolver.
+  const yaTienePunto = Boolean(antes?.location);
+  if (yaTienePunto && mismaDireccion(antes, direccion)) return;
+
+  const calculado = await geocodificar(direccion);
+  // Sin dirección reconocible no se borra un punto que ya existía: sería perder
+  // un dato bueno por una consulta fallida.
+  if (!calculado) return;
+
+  const { error } = await supabase.rpc("set_restaurant_location", {
+    rid: id,
+    lat: calculado.lat,
+    lng: calculado.lng,
+  });
+
+  if (error) console.error("guardar ubicacion calculada", error.message);
 }
 
 // Categorías y horarios se reescriben enteros en vez de calcular el diff: son
