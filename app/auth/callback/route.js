@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rutaInterna } from "../../../lib/rutas";
 import { supabaseSession } from "../../../lib/supabase";
 
 // Destino del enlace del correo. Cambia el código de un solo uso por una
@@ -20,8 +21,5 @@ export async function GET(request) {
     return NextResponse.redirect(`${origin}/entrar?error=enlace-invalido`);
   }
 
-  // Solo rutas internas: un `next` con host ajeno convertiría este callback
-  // en un redirector abierto hacia sitios de phishing.
-  const destino = next.startsWith("/") && !next.startsWith("//") ? next : "/panel";
-  return NextResponse.redirect(`${origin}${destino}`);
+  return NextResponse.redirect(`${origin}${rutaInterna(next)}`);
 }

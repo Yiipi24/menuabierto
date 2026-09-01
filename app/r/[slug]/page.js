@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { supabaseServer } from "../../../lib/supabase";
+import { currentUser, supabaseServer } from "../../../lib/supabase";
 import Brand from "../../brand";
+import Resenas from "./resenas";
 
 export const dynamic = "force-dynamic";
 
@@ -30,14 +31,14 @@ async function cargar(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, rating_avg, rating_count",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, rating_avg, rating_count",
     )
     .eq("slug", slug)
     .maybeSingle();
 
   if (!r) return null;
 
-  const [cocinas, horarios, fotos, secciones, platillos, abierto] = await Promise.all([
+  const [cocinas, horarios, fotos, secciones, platillos, abierto, resenas] = await Promise.all([
     supabase.from("restaurant_cuisines").select("cuisines (name)").eq("restaurant_id", r.id),
     supabase
       .from("restaurant_hours")
@@ -60,6 +61,9 @@ async function cargar(slug) {
       .eq("restaurant_id", r.id)
       .order("position"),
     supabase.rpc("restaurant_abierto", { rid: r.id }),
+    // Por RPC y no por join: profiles es privado, y esta funcion devuelve el
+    // nombre de quien firma sin abrir el resto del perfil.
+    supabase.rpc("resenas_restaurante", { rid: r.id }),
   ]);
 
   return {
@@ -73,6 +77,7 @@ async function cargar(slug) {
     secciones: secciones.data ?? [],
     platillos: platillos.data ?? [],
     abierto: abierto.data === true,
+    resenas: resenas.data ?? [],
   };
 }
 
@@ -104,7 +109,13 @@ export default async function Ficha({ params }) {
   }
   if (!datos) notFound();
 
-  const { r, cocinas, horarios, fotos, secciones, platillos, abierto } = datos;
+  const { r, cocinas, horarios, fotos, secciones, platillos, abierto, resenas } = datos;
+
+  // La ficha es publica, asi que la sesion puede no existir. Solo sirve para
+  // decidir que se ve bajo las resenas: el formulario, la puerta de entrada o
+  // el aviso al dueno.
+  const usuario = await currentUser();
+  const esDueno = Boolean(usuario && r.owner_id === usuario.id);
 
   // Un platillo sin sección va a un grupo propio al final, en vez de
   // desaparecer de la carta.
@@ -158,12 +169,14 @@ export default async function Ficha({ params }) {
                 <span className="ficha-cerrado">Cerrado ahora</span>
               ) : null}
               {r.rating_count > 0 && r.rating_avg ? (
-                <span>
+                <a className="ficha-resenas-enlace" href="#resenas">
                   ★ {r.rating_avg} · {r.rating_count}{" "}
                   {r.rating_count === 1 ? "reseña" : "reseñas"}
-                </span>
+                </a>
               ) : (
-                <span className="ficha-sinresenas">Aún sin reseñas</span>
+                <a className="ficha-sinresenas" href="#resenas">
+                  Aún sin reseñas · escribe la primera
+                </a>
               )}
             </p>
           </div>
@@ -214,6 +227,14 @@ export default async function Ficha({ params }) {
                 Este restaurante todavía no publica su menú. Vuelve pronto.
               </p>
             )}
+
+            <Resenas
+              slug={slug}
+              restaurante={r}
+              resenas={resenas}
+              usuarioId={usuario?.id ?? null}
+              esDueno={esDueno}
+            />
           </div>
 
           <aside className="ficha-lado">

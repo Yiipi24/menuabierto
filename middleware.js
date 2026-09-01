@@ -50,6 +50,9 @@ export async function middleware(request) {
   return response;
 }
 
+// La ficha entra aquí porque ahora muestra el formulario de reseñas y necesita
+// una sesión viva. No le cuesta nada a quien pasa sin cuenta: sin cookie de
+// sesión el middleware devuelve la respuesta sin hablar con Supabase.
 export const config = {
-  matcher: ["/", "/panel/:path*", "/entrar", "/reclamar"],
+  matcher: ["/", "/panel/:path*", "/entrar", "/registro", "/reclamar", "/r/:path*"],
 };
