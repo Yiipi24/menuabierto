@@ -97,7 +97,12 @@ as $$
            -- Si ademas escribio un lugar, manda el texto. Buscar "Escobedo"
            -- desde el centro de Monterrey tiene que traer Escobedo, no el
            -- vacio que dejaba cruzar el radio con el nombre.
-           or coalesce(btrim(place_text), '') <> ''
+           --
+           -- Se recorta igual que el filtro de mas abajo, con las comas
+           -- incluidas: si aqui ", " contara como lugar y alli no, apagaria el
+           -- radio sin poner ningun filtro en su lugar, y "Cerca de mi"
+           -- devolveria el directorio entero.
+           or coalesce(btrim(place_text, ' ,'), '') <> ''
            or st_dwithin(r.location, o.punto, radius_m))
       and (max_price_level is null or r.price_level <= max_price_level)
       and (min_rating is null or r.rating_avg >= min_rating)

@@ -70,6 +70,9 @@ export async function guardarRestaurante(_prevState, formData) {
     return { status: "error", message: "Elige un rango de precio." };
   }
 
+  const punto = leerUbicacion(formData);
+  if (punto.error) return { status: "error", message: punto.error };
+
   const sitio = limpio(formData, "website");
   // Sin esquema el enlace se resuelve contra menuabierto.com y no lleva a
   // ningún lado; añadirlo nosotros evita pedírselo al dueño.
@@ -97,7 +100,7 @@ export async function guardarRestaurante(_prevState, formData) {
     return { status: "error", message: "No pudimos guardar los cambios." };
   }
 
-  const errorPunto = await guardarUbicacion(supabase, id, formData);
+  const errorPunto = await guardarUbicacion(supabase, id, punto);
   if (errorPunto) return errorPunto;
 
   const errorCategorias = await guardarCategorias(supabase, id, formData);
@@ -111,38 +114,44 @@ export async function guardarRestaurante(_prevState, formData) {
   return { status: "ok", message: "Cambios guardados." };
 }
 
-// El punto no se escribe con un update normal porque `location` es geography:
-// habría que mandar EWKT en texto y confiar en el cast. La función de la base
-// recibe dos números, los valida y arma el punto ella.
-async function guardarUbicacion(supabase, id, formData) {
+// Se valida antes de escribir nada, no al llegar el turno del punto: si el
+// aviso saliera después del primer update, la ficha se quedaría con el nombre
+// y la dirección nuevos, sin categorías ni horarios, y con un mensaje que dice
+// que no se guardó nada. Devuelve el punto listo, o el error a mostrar.
+function leerUbicacion(formData) {
   const lat = aCoordenada(formData, "lat");
   const lng = aCoordenada(formData, "lng");
 
   if (Number.isNaN(lat) || Number.isNaN(lng)) {
     return {
-      status: "error",
-      message: "La latitud y la longitud tienen que ser números. Ejemplo: 25.79000 y -100.31500.",
+      error: "La latitud y la longitud tienen que ser números. Ejemplo: 25.79000 y -100.31500.",
     };
   }
   // Media coordenada no ubica nada, y guardarla a medias deja la ficha creyendo
   // que ya tiene punto.
   if ((lat === null) !== (lng === null)) {
     return {
-      status: "error",
-      message: "Faltó una de las dos coordenadas. Pon latitud y longitud, o deja las dos vacías.",
+      error: "Faltó una de las dos coordenadas. Pon latitud y longitud, o deja las dos vacías.",
     };
   }
   if (lat !== null && (lat < -90 || lat > 90)) {
-    return { status: "error", message: "La latitud va entre -90 y 90." };
+    return { error: "La latitud va entre -90 y 90." };
   }
   if (lng !== null && (lng < -180 || lng > 180)) {
-    return { status: "error", message: "La longitud va entre -180 y 180." };
+    return { error: "La longitud va entre -180 y 180." };
   }
 
+  return { lat, lng };
+}
+
+// El punto no se escribe con un update normal porque `location` es geography:
+// habría que mandar EWKT en texto y confiar en el cast. La función de la base
+// recibe dos números, los valida otra vez y arma el punto ella.
+async function guardarUbicacion(supabase, id, punto) {
   const { error } = await supabase.rpc("set_restaurant_location", {
     rid: id,
-    lat,
-    lng,
+    lat: punto.lat,
+    lng: punto.lng,
   });
 
   if (error) {

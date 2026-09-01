@@ -50,12 +50,28 @@ export default function EditarForm({
 
   const porDia = new Map(horarios.map((h) => [h.weekday, h]));
 
-  // De Google Maps se copia "25.79000, -100.31500" de una pieza. Si eso cae
-  // en el campo de latitud, se reparte solo en vez de obligar a recortarlo.
+  // De Google Maps se copia "25.79000, -100.31500" de una pieza. Si eso cae en
+  // el campo de latitud, se reparte solo en vez de obligar a recortarlo. Pero
+  // en español la coma es también el separador decimal, y "25,79" es una sola
+  // latitud: repartirla mandaría el restaurante a miles de kilómetros, y sin
+  // avisar. Solo se separa cuando la coma no puede ser decimal.
+  function separarPar(valor) {
+    const partes = valor.split(",");
+    if (partes.length !== 2) return null;
+    const izq = partes[0].trim();
+    const der = partes[1].trim();
+    if (izq === "" || der === "") return null;
+    // Detrás de una coma decimal no va un signo ni un espacio, y una pieza que
+    // ya trae punto decimal no está usando la coma para decimales.
+    const esPar =
+      /^[+-]/.test(der) || izq.includes(".") || der.includes(".") || /,\s/.test(valor);
+    return esPar ? { lat: izq, lng: der } : null;
+  }
+
   function escribirLat(valor) {
-    const par = valor.split(",");
-    if (par.length === 2 && par[1].trim() !== "") {
-      setPunto({ lat: par[0].trim(), lng: par[1].trim() });
+    const par = separarPar(valor);
+    if (par) {
+      setPunto(par);
       return;
     }
     setPunto((antes) => ({ ...antes, lat: valor }));
