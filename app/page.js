@@ -252,10 +252,13 @@ export default async function Home({ searchParams }) {
       <main className="wrap explorar-main">
         <div className="explorar-encabezado">
           <h2>
-            {conUbicacion
-              ? "Restaurantes cerca de ti"
-              : lugar
-                ? `Restaurantes en ${lugar}`
+            {/* El lugar escrito manda sobre las coordenadas: si alguien tiene
+                puesta su ubicación y aun así escribe "Escobedo", lo que está
+                viendo es Escobedo, y titularlo "cerca de ti" sería mentir. */}
+            {lugar
+              ? `Restaurantes en ${lugar}`
+              : conUbicacion
+                ? "Restaurantes cerca de ti"
                 : "Restaurantes publicados"}
             <span className="explorar-cuenta">
               {resultados.length === 1 ? "1 resultado" : `${resultados.length} resultados`}
@@ -402,50 +405,6 @@ export default async function Home({ searchParams }) {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section id="planes">
-        <div className="wrap section">
-          <div className="section-head">
-            <h2>Dos planes, sin letras chiquitas</h2>
-            <p>
-              Publicar tu restaurante no cuesta. Premium es para cuando quieras
-              destacar.
-            </p>
-          </div>
-          <div className="plans">
-            <article className="plan">
-              <h3>Básico</h3>
-              <div className="plan-price">
-                Gratis <span>para siempre</span>
-              </div>
-              <ul>
-                <li>Perfil del restaurante con ubicación y horarios</li>
-                <li>Menú completo con precios</li>
-                <li>Hasta 10 fotos</li>
-                <li>Aparece en las búsquedas de tu zona</li>
-              </ul>
-            </article>
-            <article className="plan plan-featured">
-              <span className="plan-badge">Premium</span>
-              <h3>Premium</h3>
-              <div className="plan-price">
-                Mensual <span>precio al lanzamiento</span>
-              </div>
-              <ul>
-                <li>Todo lo del plan Básico</li>
-                <li>Posición destacada en tu zona y tu categoría</li>
-                <li>Fotos ilimitadas y video del local</li>
-                <li>Promociones y menú del día</li>
-                <li>Estadísticas de visitas y búsquedas</li>
-              </ul>
-            </article>
-          </div>
-          <p className="plan-note">
-            Definiremos el precio de Premium antes del lanzamiento. Quien esté
-            en la lista de espera lo conserva el primer año.
-          </p>
         </div>
       </section>
 

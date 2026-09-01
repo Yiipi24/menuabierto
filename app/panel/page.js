@@ -31,6 +31,9 @@ export default async function Panel() {
       <header className="panel-top">
         <Brand href="/" />
         <div className="panel-top-derecha">
+          <Link className="btn-texto" href="/panel/planes">
+            Planes
+          </Link>
           <Link className="btn-texto" href="/panel/cuenta">
             {auth.user.email}
           </Link>

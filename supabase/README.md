@@ -16,6 +16,18 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
 - **`location` es `geography(point, 4326)`**, no dos columnas de latitud y
   longitud. Con el índice GiST, `ST_DWithin` resuelve "cerca de mí" contra un
   directorio grande; filtrar en JavaScript no escala más allá de un pueblo.
+- **Una ficha sin coordenadas no la esconde el radio.** `location` se quedó
+  nula en todas las fichas hasta que el panel aprendió a pedirla, y mientras
+  tanto exigir `location is not null` dejaba "Cerca de mí" en cero resultados.
+  Sale igual en la búsqueda, pero al final, porque su distancia es nula.
+  Cuando la mayoría tenga punto conviene volver a apretar esto.
+- **El lugar escrito manda sobre el radio.** Buscar "Escobedo" con la ubicación
+  puesta tiene que traer Escobedo, no la intersección vacía de las dos cosas.
+- **El panel escribe el punto por `set_restaurant_location`**, no con un
+  `update` normal: mandar EWKT en texto y confiar en el cast es más frágil que
+  una función que recibe dos números y los valida. Se lee con
+  `restaurant_coords`, porque PostgREST devuelve `geography` en hexadecimal.
+  Las dos son `security invoker` y solo para `authenticated`.
 - **`owner_id` y `created_by` son distintos.** `created_by` es quien cargó la
   ficha; `owner_id` es el dueño que la reclamó. Una ficha que cargamos
   nosotros tiene `owner_id` nulo y debe mostrarse como *no reclamada*, nunca

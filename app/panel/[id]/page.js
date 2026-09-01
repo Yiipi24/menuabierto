@@ -28,24 +28,32 @@ export default async function Editar({ params }) {
 
   if (!restaurante) notFound();
 
-  const [{ data: cuisines }, { data: elegidas }, { data: horarios }, { data: fotos }] =
-    await Promise.all([
-      supabase.from("cuisines").select("slug, name").order("name"),
-      supabase
-        .from("restaurant_cuisines")
-        .select("cuisines (slug)")
-        .eq("restaurant_id", id),
-      supabase
-        .from("restaurant_hours")
-        .select("weekday, opens, closes")
-        .eq("restaurant_id", id)
-        .order("weekday"),
-      supabase
-        .from("restaurant_media")
-        .select("id, storage_path, alt")
-        .eq("restaurant_id", id)
-        .order("position"),
-    ]);
+  const [
+    { data: cuisines },
+    { data: elegidas },
+    { data: horarios },
+    { data: fotos },
+    { data: coords },
+  ] = await Promise.all([
+    supabase.from("cuisines").select("slug, name").order("name"),
+    supabase
+      .from("restaurant_cuisines")
+      .select("cuisines (slug)")
+      .eq("restaurant_id", id),
+    supabase
+      .from("restaurant_hours")
+      .select("weekday, opens, closes")
+      .eq("restaurant_id", id)
+      .order("weekday"),
+    supabase
+      .from("restaurant_media")
+      .select("id, storage_path, alt")
+      .eq("restaurant_id", id)
+      .order("position"),
+    // `location` es geography y PostgREST la devuelve en hexadecimal, que no
+    // sirve para llenar dos campos. La función la traduce a lat/lng.
+    supabase.rpc("restaurant_coords", { rid: id }),
+  ]);
 
   const conUrl = (fotos ?? []).map((f) => ({
     ...f,
@@ -94,6 +102,7 @@ export default async function Editar({ params }) {
           cuisines={cuisines ?? []}
           elegidas={(elegidas ?? []).map((e) => e.cuisines?.slug).filter(Boolean)}
           horarios={horarios ?? []}
+          coords={coords?.[0] ?? null}
         />
 
         <Fotos id={restaurante.id} fotos={conUrl} />
