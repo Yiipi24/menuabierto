@@ -1390,3 +1390,5 @@ section { scroll-margin-top: 80px; }
 @media (max-width: 860px) {
   .ficha-cols { grid-template-columns: 1fr; gap: 28px; }
 }
+
+.section-cta { text-align: center; margin-top: 32px; }

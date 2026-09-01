@@ -15,7 +15,7 @@ export default function Orden({ valor }) {
   function cambiar(e) {
     const siguiente = new URLSearchParams(params.toString());
     siguiente.set("orden", e.target.value);
-    router.push(`/explorar?${siguiente.toString()}`);
+    router.push(`/?${siguiente.toString()}`);
   }
 
   return (

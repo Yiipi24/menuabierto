@@ -131,7 +131,7 @@ export default async function Ficha({ params }) {
         <div className="wrap nav-inner">
           <Brand />
           <div className="nav-links">
-            <Link href="/explorar">Explorar</Link>
+            <Link href="/">Buscar</Link>
             <Link className="btn btn-sm" href="/registro">
               Publica tu menú
             </Link>
@@ -140,8 +140,8 @@ export default async function Ficha({ params }) {
       </nav>
 
       <main className="wrap ficha">
-        <Link className="btn-texto ficha-volver" href="/explorar">
-          ← Volver a explorar
+        <Link className="btn-texto ficha-volver" href="/">
+          ← Volver a la búsqueda
         </Link>
 
         <header className="ficha-encabezado">
