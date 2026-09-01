@@ -959,3 +959,434 @@ section { scroll-margin-top: 80px; }
   padding: 10px;
   font-size: 14.5px;
 }
+
+/* ---------- explorar: buscador, filtros y tarjetas ---------- */
+
+.nav-activo { color: var(--accent); font-weight: 600; }
+
+.hero-acciones { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+
+/* Una fila del teléfono de la portada que sí lleva a la ficha. Hereda el
+   layout de .result y solo quita lo que el enlace trae por su cuenta. */
+.result-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.result-link:hover { background: var(--accent-soft); }
+
+.phone-pie {
+  display: block;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  text-align: center;
+}
+
+.aviso-explorar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 8px 0 56px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-warm);
+}
+
+.aviso-explorar h2 { font-size: 24px; margin-bottom: 6px; }
+
+.aviso-explorar p { color: var(--ink-soft); font-size: 15.5px; }
+
+.explorar-hero {
+  padding: 48px 0 32px;
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.explorar-hero h1 { font-size: 40px; }
+
+.explorar-sub { color: var(--ink-soft); margin-top: 10px; }
+
+.buscador { margin: 24px auto 0; max-width: 860px; text-align: left; }
+
+.buscador-campos {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 10px;
+}
+
+.buscador-campo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.buscador-campo > span { color: var(--ink-faint); font-size: 17px; }
+
+.buscador-campo input {
+  width: 100%;
+  border: 0;
+  padding: 13px 0;
+  font: inherit;
+  font-size: 16px;
+  background: none;
+  color: var(--ink);
+}
+
+/* El foco se pinta en el contenedor y no en el input: con el borde redondo,
+   el anillo del input se vería cuadrado dentro de la píldora. */
+.buscador-campo input:focus { outline: none; }
+
+.buscador-campo:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.buscador-campos .btn { border-radius: 999px; }
+
+.buscador-pie {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.btn-ubicacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--paper);
+  color: var(--accent);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-ubicacion[disabled] { opacity: 0.6; cursor: default; }
+
+.btn-ubicacion-on { background: var(--accent); color: var(--paper); }
+
+.buscador-nota { font-size: 14px; color: var(--ink-soft); }
+
+.chips-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.chip-filtro {
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 14.5px;
+  text-decoration: none;
+  color: var(--ink-soft);
+}
+
+.chip-filtro:hover { border-color: var(--accent); color: var(--accent); }
+
+.chip-on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.explorar-main { padding: 36px 24px 72px; }
+
+.explorar-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.explorar-encabezado h2 {
+  font-size: 26px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.explorar-cuenta { font-size: 14.5px; font-weight: 400; color: var(--ink-faint); }
+
+.orden select {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+/* Etiqueta que solo leen los lectores de pantalla: el <select> ya se explica
+   solo a la vista, pero sin nombre accesible no se entiende al oído. */
+.hueso-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--paper);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.tarjeta:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.tarjeta-foto {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, var(--accent-soft), #f3e8dd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tarjeta-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.tarjeta-sinfoto { font-size: 34px; opacity: 0.5; }
+
+.tarjeta-distancia,
+.tarjeta-abierto {
+  position: absolute;
+  top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(28, 25, 23, 0.78);
+  color: var(--paper);
+}
+
+.tarjeta-distancia { left: 10px; }
+
+.tarjeta-abierto { right: 10px; background: #15803d; }
+
+.tarjeta-cuerpo { padding: 14px 16px 12px; flex: 1; }
+
+.tarjeta-titulo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tarjeta-titulo h3 { font-size: 18px; }
+
+.tarjeta-rating { font-size: 14.5px; font-weight: 600; color: #b45309; white-space: nowrap; }
+
+.tarjeta-tipo { font-size: 14.5px; color: var(--ink-soft); margin-top: 3px; }
+
+.tarjeta-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink-faint);
+  margin-top: 8px;
+}
+
+.tarjeta-pie {
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.explorar-vacio {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.explorar-vacio h3 { font-size: 21px; margin-bottom: 8px; }
+
+.explorar-vacio p { color: var(--ink-soft); max-width: 46ch; margin: 0 auto 20px; }
+
+@media (max-width: 720px) {
+  .buscador-campos { grid-template-columns: 1fr; }
+  .explorar-hero h1 { font-size: 30px; }
+  .explorar-encabezado { flex-direction: column; align-items: flex-start; }
+}
+
+/* ---------- ficha pública del restaurante ---------- */
+
+.ficha { padding: 28px 24px 72px; }
+
+.ficha-volver { display: inline-block; margin-bottom: 18px; text-decoration: none; }
+
+.ficha-encabezado h1 { font-size: 34px; }
+
+.ficha-tipo { color: var(--ink-soft); margin-top: 6px; }
+
+.ficha-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+
+.ficha-abierto,
+.ficha-cerrado {
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.ficha-abierto { background: #dcfce7; color: #15803d; }
+
+.ficha-cerrado { background: var(--paper-warm); color: var(--ink-soft); }
+
+.ficha-sinresenas { color: var(--ink-faint); }
+
+.ficha-fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.ficha-fotos img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.ficha-cols {
+  display: grid;
+  grid-template-columns: 1.5fr 0.85fr;
+  gap: 40px;
+  margin-top: 28px;
+  align-items: start;
+}
+
+.ficha-desc { color: var(--ink-soft); margin-bottom: 28px; }
+
+.ficha-titulo { font-size: 24px; margin-bottom: 16px; }
+
+.ficha-vacio { color: var(--ink-soft); }
+
+.menu-seccion { margin-bottom: 28px; }
+
+.menu-seccion h3 {
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+
+.menu-lista { list-style: none; margin: 0; padding: 0; }
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.menu-item:last-child { border-bottom: 0; }
+
+.menu-nombre { display: block; font-weight: 600; }
+
+.menu-desc { display: block; font-size: 14.5px; color: var(--ink-soft); margin-top: 2px; }
+
+.menu-etiqueta {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.menu-precio { font-weight: 600; white-space: nowrap; }
+
+/* Agotado se tacha en vez de esconderse: quien busca ese platillo necesita
+   saber que existe y que hoy no hay. */
+.menu-agotado .menu-nombre,
+.menu-agotado .menu-precio { text-decoration: line-through; color: var(--ink-faint); }
+
+.ficha-lado { display: grid; gap: 16px; }
+
+.ficha-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  background: var(--paper-warm);
+}
+
+.ficha-card h3 { font-size: 16px; margin-bottom: 8px; }
+
+.ficha-card p { color: var(--ink-soft); font-size: 15px; }
+
+.ficha-card a { display: block; font-size: 15px; margin-top: 6px; }
+
+.ficha-card .btn { margin-top: 12px; }
+
+.ficha-horarios { list-style: none; margin: 0; padding: 0; font-size: 14.5px; }
+
+.ficha-horarios li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 4px 0;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 860px) {
+  .ficha-cols { grid-template-columns: 1fr; gap: 28px; }
+}
