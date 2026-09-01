@@ -21,7 +21,7 @@ export default function Buscador({ q = "", lugar = "", conUbicacion = false }) {
       if (valor === null || valor === "") siguiente.delete(clave);
       else siguiente.set(clave, valor);
     }
-    router.push(`/explorar?${siguiente.toString()}`);
+    router.push(`/?${siguiente.toString()}`);
   }
 
   function buscar(e) {

@@ -1,98 +1,23 @@
 import Link from "next/link";
-import Waitlist from "./waitlist";
 import { supabaseServer } from "../lib/supabase";
+import Brand from "./brand";
+import Buscador from "./buscador";
+import Orden from "./orden";
+import Waitlist from "./waitlist";
 
-// Mientras no haya ninguna ficha publicada, el teléfono de la portada enseña
-// estos ejemplos. En cuanto exista el primer restaurante real, se muestran los
-// reales y estos dejan de usarse.
-const DEMO_RESULTS = [
-  {
-    name: "Taquería La Esquina",
-    kind: "Tacos · $$",
-    rating: "4.8",
-    tag: "A 350 m",
-  },
-  {
-    name: "Cocina de Doña Mari",
-    kind: "Comida corrida · $",
-    rating: "4.7",
-    tag: "Menú del día",
-  },
-  {
-    name: "Verde Limón",
-    kind: "Vegetariano · $$",
-    rating: "4.6",
-    tag: "Abierto ahora",
-  },
-  {
-    name: "Sazón del Puerto",
-    kind: "Mariscos · $$$",
-    rating: "4.5",
-    tag: "A 1.2 km",
-  },
-];
+// La portada es la búsqueda: quien llega quiere ver dónde comer, no leer
+// sobre el producto. El texto de venta queda debajo, para quien baje.
+export const metadata = {
+  title: "Menú Abierto — encuentra dónde comer, y haz que te encuentren",
+  description:
+    "Busca restaurantes por colonia, zona, municipio o estado, o encuentra los más cercanos a ti, con su menú y sus precios de verdad.",
+};
 
-// La portada se genera estática; sin esto el primer restaurante publicado no
-// aparecería hasta el siguiente despliegue.
-export const revalidate = 300;
+// Depende de lo que traiga la URL, así que se resuelve en cada visita.
+export const dynamic = "force-dynamic";
 
+const BUCKET_FOTOS = "restaurantes";
 const PRECIO = ["", "$", "$$", "$$$", "$$$$"];
-
-// La portada es pública, así que basta el cliente sin sesión: la RLS deja ver
-// a cualquiera los restaurantes en estado 'publicado'.
-async function restaurantesPublicados() {
-  try {
-    const supabase = supabaseServer();
-    const { data, error } = await supabase
-      .from("restaurants")
-      .select(
-        "id, slug, name, summary, city, neighborhood, price_level, rating_avg, rating_count, restaurant_cuisines(cuisines(name))",
-      )
-      .eq("status", "publicado")
-      .order("created_at", { ascending: false })
-      .limit(4);
-
-    if (error) return [];
-    return data ?? [];
-  } catch {
-    // Sin variables de entorno (build local, previsualización) la portada
-    // sigue funcionando con los ejemplos.
-    return [];
-  }
-}
-
-function aResultado(r) {
-  const cocina = r.restaurant_cuisines?.[0]?.cuisines?.name;
-  const precio = PRECIO[r.price_level] ?? "";
-  const kind = [cocina || r.summary, precio].filter(Boolean).join(" · ");
-
-  return {
-    slug: r.slug,
-    name: r.name,
-    kind: kind || "Restaurante",
-    rating: r.rating_count > 0 && r.rating_avg ? String(r.rating_avg) : null,
-    tag: [r.neighborhood, r.city].filter(Boolean).join(", ") || "Nuevo",
-  };
-}
-
-const DINER = [
-  {
-    icon: "◎",
-    title: "Cerca de ti",
-    body: "Resultados ordenados por distancia real, con lo que está abierto en este momento hasta arriba.",
-  },
-  {
-    icon: "◇",
-    title: "Como se te antoje",
-    body: "Filtra por tipo de comida, rango de precio, calificación, o lo que tú necesites: vegetariano, sin gluten, para llevar.",
-  },
-  {
-    icon: "☰",
-    title: "El menú de verdad",
-    body: "Precios actualizados por el propio restaurante, con fotos de los platos. Decides antes de salir de casa.",
-  },
-];
-
 const OWNER = [
   {
     icon: "✎",
@@ -126,145 +51,260 @@ const STEPS = [
   },
 ];
 
-export default async function Home() {
-  const publicados = await restaurantesPublicados();
-  const hayPublicados = publicados.length > 0;
-  const results = hayPublicados ? publicados.map(aResultado) : DEMO_RESULTS;
+const RADIO_M = 15000;
+
+function distancia(metros) {
+  if (metros == null) return null;
+  return metros < 950
+    ? `${Math.round(metros / 10) * 10} m`
+    : `${(metros / 1000).toFixed(1)} km`;
+}
+
+function lugarDe(r) {
+  return [r.neighborhood, r.city].filter(Boolean).join(" · ");
+}
+
+// Los filtros se llevan en la URL para que una búsqueda se pueda compartir y
+// para que el botón "atrás" del navegador haga lo esperado.
+function hrefCon(params, cambios) {
+  const siguiente = new URLSearchParams(params);
+  for (const [clave, valor] of Object.entries(cambios)) {
+    if (valor === null || valor === "") siguiente.delete(clave);
+    else siguiente.set(clave, valor);
+  }
+  const cadena = siguiente.toString();
+  return cadena ? `/?${cadena}` : "/";
+}
+
+export default async function Home({ searchParams }) {
+  const sp = await searchParams;
+  const q = typeof sp.q === "string" ? sp.q : "";
+  const lugar = typeof sp.lugar === "string" ? sp.lugar : "";
+  const cocina = typeof sp.cocina === "string" ? sp.cocina : "";
+  const abierto = sp.abierto === "1";
+  const precio = Number(sp.precio) || null;
+  const lat = Number(sp.lat);
+  const lng = Number(sp.lng);
+  const conUbicacion = Number.isFinite(lat) && Number.isFinite(lng) && sp.lat && sp.lng;
+  const orden = ["relevancia", "cercanos", "calificacion"].includes(sp.orden)
+    ? sp.orden
+    : conUbicacion
+      ? "cercanos"
+      : "relevancia";
+
+  const params = new URLSearchParams();
+  for (const [clave, valor] of Object.entries(sp)) {
+    if (typeof valor === "string" && valor !== "") params.set(clave, valor);
+  }
+
+  let resultados = [];
+  let categorias = [];
+  let fallo = false;
+
+  try {
+    const supabase = supabaseServer();
+
+    const [busqueda, usadas] = await Promise.all([
+      supabase.rpc("search_restaurants", {
+        lat: conUbicacion ? lat : null,
+        lng: conUbicacion ? lng : null,
+        radius_m: RADIO_M,
+        cuisine_slugs: cocina ? [cocina] : null,
+        max_price_level: precio,
+        min_rating: null,
+        open_now: abierto,
+        search_text: q || null,
+        place_text: lugar || null,
+        sort_by: orden,
+        result_limit: 48,
+        result_offset: 0,
+      }),
+      // Las categorías que se ofrecen son las que de verdad tiene alguien
+      // publicado: un filtro que siempre devuelve cero no ayuda a nadie.
+      supabase.from("restaurant_cuisines").select("cuisines (slug, name)"),
+    ]);
+
+    if (busqueda.error) fallo = true;
+    resultados = busqueda.data ?? [];
+
+    const vistas = new Map();
+    for (const fila of usadas.data ?? []) {
+      const c = fila.cuisines;
+      if (c && !vistas.has(c.slug)) vistas.set(c.slug, c.name);
+    }
+    categorias = [...vistas.entries()]
+      .map(([slug, name]) => ({ slug, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "es"))
+      .slice(0, 10);
+
+    // Una sola consulta para las fotos de todos los resultados, y no una por
+    // tarjeta: con veinte restaurantes serían veinte viajes a la base.
+    if (resultados.length) {
+      const { data: fotos } = await supabase
+        .from("restaurant_media")
+        .select("restaurant_id, storage_path, position")
+        .in(
+          "restaurant_id",
+          resultados.map((r) => r.id),
+        )
+        .order("position");
+
+      const primera = new Map();
+      for (const f of fotos ?? []) {
+        if (!primera.has(f.restaurant_id)) primera.set(f.restaurant_id, f.storage_path);
+      }
+      resultados = resultados.map((r) => {
+        const ruta = primera.get(r.id);
+        return {
+          ...r,
+          foto: ruta
+            ? supabase.storage.from(BUCKET_FOTOS).getPublicUrl(ruta).data.publicUrl
+            : null,
+        };
+      });
+    }
+  } catch {
+    fallo = true;
+  }
+
+  const hayFiltros = Boolean(q || lugar || cocina || abierto || precio || conUbicacion);
 
   return (
     <>
       <nav className="nav">
         <div className="wrap nav-inner">
-          <a className="brand" href="#top">
-            <img
-              className="brand-mark"
-              src="/logo.svg"
-              alt=""
-              width={28}
-              height={28}
-            />
-            Menú Abierto
-          </a>
+          <Brand />
           <div className="nav-links">
-            <Link href="/explorar">Explorar</Link>
-            <a className="hide-sm" href="/entrar">
-              Entrar
-            </a>
-            <a className="btn btn-sm" href="/registro">
-              Crear cuenta
-            </a>
+            <Link className="hide-sm" href="#restaurantes">
+              Para restaurantes
+            </Link>
+            <Link className="hide-sm" href="/entrar">
+              Iniciar sesión
+            </Link>
+            <Link className="btn btn-sm" href="/registro">
+              Publica tu menú
+            </Link>
           </div>
         </div>
       </nav>
 
-      <header className="hero" id="top">
-        <div className="wrap hero-grid">
-          <div>
-            <span className="eyebrow">
-              {hayPublicados
-                ? "Ya hay restaurantes en Menú Abierto"
-                : "Muy pronto en México"}
-            </span>
-            <h1>
-              Encuentra dónde comer. <em>Haz que te encuentren.</em>
-            </h1>
-            <p className="hero-sub">
-              Menú Abierto reúne los restaurantes de tu ciudad con su menú y sus
-              precios de verdad. Los comensales buscan y comparan; los dueños
-              publican y actualizan desde su cuenta.
-            </p>
-            {hayPublicados ? (
-              <div className="hero-acciones">
-                <Link className="btn" href="/explorar">
-                  Explorar restaurantes
-                </Link>
-                <a className="btn-texto" href="#lista">
-                  Avísame de los nuevos
-                </a>
-              </div>
-            ) : (
-              <a className="btn" href="#lista">
-                Entrar a la lista de espera
-              </a>
-            )}
-            <p className="hero-note">
-              Gratis para comensales. Gratis para publicar tu restaurante.
-            </p>
-          </div>
+      <header className="explorar-hero">
+        <div className="wrap">
+          <h1>¿Qué se te antoja hoy?</h1>
+          <p className="explorar-sub">
+            Encuentra restaurantes, platillos y menús cerca de ti.
+          </p>
+          <Buscador q={q} lugar={lugar} conUbicacion={Boolean(conUbicacion)} />
 
-          <div className="phone" aria-hidden={hayPublicados ? undefined : "true"}>
-            <div className="phone-head">
-              <strong>Buscar cerca de mí</strong>
-              <span>
-                {hayPublicados
-                  ? "Restaurantes publicados en Menú Abierto"
-                  : "Tacos · abierto ahora · 4.5+"}
-              </span>
-            </div>
-            <div className="phone-body">
-              {results.map((r) => {
-                const fila = (
-                  <>
-                    <div className="result-thumb" />
-                    <div className="result-text">
-                      <div className="dish-name">{r.name}</div>
-                      <div className="dish-desc">{r.kind}</div>
-                      <div className="result-tag">{r.tag}</div>
-                    </div>
-                    {r.rating ? (
-                      <div className="result-rating">★ {r.rating}</div>
-                    ) : null}
-                  </>
-                );
-
-                // Los ejemplos son decorativos y no llevan a ningún lado; un
-                // restaurante de verdad sí abre su ficha, que es lo que
-                // cualquiera intenta al verlo en la lista.
-                return r.slug ? (
-                  <Link className="result result-link" key={r.slug} href={`/r/${r.slug}`}>
-                    {fila}
-                  </Link>
-                ) : (
-                  <div className="result" key={r.name}>
-                    {fila}
-                  </div>
-                );
-              })}
-            </div>
-            {hayPublicados ? (
-              <Link className="phone-pie" href="/explorar">
-                Ver todos los restaurantes →
+          <div className="chips-filtro">
+            {categorias.map((c) => (
+              <Link
+                key={c.slug}
+                className={c.slug === cocina ? "chip-filtro chip-on" : "chip-filtro"}
+                href={hrefCon(params, { cocina: c.slug === cocina ? null : c.slug })}
+              >
+                {c.name}
               </Link>
-            ) : null}
+            ))}
+            <Link
+              className={abierto ? "chip-filtro chip-on" : "chip-filtro"}
+              href={hrefCon(params, { abierto: abierto ? null : "1" })}
+            >
+              Abierto ahora
+            </Link>
+            {[1, 2, 3].map((p) => (
+              <Link
+                key={p}
+                className={precio === p ? "chip-filtro chip-on" : "chip-filtro"}
+                href={hrefCon(params, { precio: precio === p ? null : String(p) })}
+              >
+                {PRECIO[p]} o menos
+              </Link>
+            ))}
           </div>
         </div>
       </header>
 
-      <section className="band" id="comensales">
-        <div className="wrap section">
-          <div className="section-head">
-            <h2>Para quien tiene hambre</h2>
+      <main className="wrap explorar-main">
+        <div className="explorar-encabezado">
+          <h2>
+            {conUbicacion
+              ? "Restaurantes cerca de ti"
+              : lugar
+                ? `Restaurantes en ${lugar}`
+                : "Restaurantes publicados"}
+            <span className="explorar-cuenta">
+              {resultados.length === 1 ? "1 resultado" : `${resultados.length} resultados`}
+            </span>
+          </h2>
+          <Orden valor={orden} />
+        </div>
+
+        {fallo ? (
+          <p className="form-msg err">
+            No pudimos cargar la búsqueda. Vuelve a intentarlo en un momento.
+          </p>
+        ) : resultados.length === 0 ? (
+          <div className="explorar-vacio">
+            <h3>Todavía no hay nada que coincida</h3>
             <p>
-              Dejas de abrir cinco apps y cuatro perfiles de redes para saber si
-              un lugar sigue abierto y cuánto cuesta.
+              Menú Abierto está creciendo ciudad por ciudad. Prueba con menos
+              filtros, o escribe otra colonia o municipio.
             </p>
+            {hayFiltros ? (
+              <Link className="btn" href="/">
+                Ver todos los restaurantes
+              </Link>
+            ) : (
+              <Link className="btn" href="/registro">
+                Publica tu restaurante
+              </Link>
+            )}
           </div>
-          <div className="cards">
-            {DINER.map((c) => (
-              <article className="card" key={c.title}>
-                <div className="card-icon">{c.icon}</div>
-                <h3>{c.title}</h3>
-                <p>{c.body}</p>
-              </article>
+        ) : (
+          <div className="tarjetas">
+            {resultados.map((r) => (
+              <Link className="tarjeta" key={r.id} href={`/r/${r.slug}`}>
+                <div className="tarjeta-foto">
+                  {r.foto ? (
+                    <img src={r.foto} alt="" loading="lazy" />
+                  ) : (
+                    <span className="tarjeta-sinfoto" aria-hidden="true">
+                      🍽
+                    </span>
+                  )}
+                  {r.distance_m != null ? (
+                    <span className="tarjeta-distancia">{distancia(r.distance_m)}</span>
+                  ) : null}
+                  {r.is_open_now ? <span className="tarjeta-abierto">Abierto ahora</span> : null}
+                </div>
+                <div className="tarjeta-cuerpo">
+                  <div className="tarjeta-titulo">
+                    <h3>{r.name}</h3>
+                    {r.rating_count > 0 && r.rating_avg ? (
+                      <span className="tarjeta-rating">★ {r.rating_avg}</span>
+                    ) : null}
+                  </div>
+                  <p className="tarjeta-tipo">
+                    {r.cuisines?.length ? r.cuisines.join(" · ") : r.summary || "Restaurante"}
+                  </p>
+                  <p className="tarjeta-meta">
+                    <span>◎ {lugarDe(r) || "México"}</span>
+                    {r.price_level ? <span>{PRECIO[r.price_level]}</span> : null}
+                  </p>
+                </div>
+                <span className="tarjeta-pie">Ver menú →</span>
+              </Link>
             ))}
           </div>
-        </div>
-      </section>
+        )}
+      </main>
+
 
       <section id="restaurantes">
         <div className="wrap section">
           <div className="section-head">
-            <h2>Para quien cocina</h2>
+            <h2>¿Tienes un restaurante?</h2>
             <p>
               Tu carta deja de vivir en una foto borrosa de hace dos años. La
               controlas tú, desde tu cuenta, cuando quieras.
@@ -278,6 +318,11 @@ export default async function Home() {
                 <p>{c.body}</p>
               </article>
             ))}
+          </div>
+          <div className="section-cta">
+            <Link className="btn" href="/registro">
+              Publica tu menú gratis
+            </Link>
           </div>
         </div>
       </section>
@@ -343,23 +388,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {hayPublicados ? (
-        <section className="wrap">
-          <div className="aviso-explorar">
-            <div>
-              <h2>Ya hay restaurantes en Menú Abierto</h2>
-              <p>Explora sus menús, precios y ubicaciones.</p>
-            </div>
-            <Link className="btn" href="/explorar">
-              Ver todos los restaurantes →
-            </Link>
-          </div>
-        </section>
-      ) : null}
-
       <section className="band" id="lista">
         <div className="wrap cta">
-          <h2>Avísame cuando abra</h2>
+          <h2>Avísame cuando llegue a mi ciudad</h2>
           <p>
             Estamos armando el directorio ciudad por ciudad. Déjanos tu correo y
             te escribimos cuando toque la tuya.
