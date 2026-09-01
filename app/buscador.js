@@ -60,7 +60,12 @@ export default function Buscador({ q = "", lugar = "", conUbicacion = false }) {
     <form className="buscador" onSubmit={buscar}>
       <div className="buscador-campos">
         <label className="buscador-campo">
-          <span aria-hidden="true">⌕</span>
+          <span className="buscador-icono" aria-hidden="true">
+            <svg viewBox="0 0 20 20">
+              <circle cx="9" cy="9" r="6" />
+              <path d="M13.5 13.5 18 18" />
+            </svg>
+          </span>
           <input
             type="search"
             name="q"
@@ -70,8 +75,14 @@ export default function Buscador({ q = "", lugar = "", conUbicacion = false }) {
             aria-label="Restaurante, platillo o tipo de comida"
           />
         </label>
+
         <label className="buscador-campo">
-          <span aria-hidden="true">◎</span>
+          <span className="buscador-icono" aria-hidden="true">
+            <svg viewBox="0 0 20 20">
+              <path d="M10 18s6-5.2 6-9.6A6 6 0 0 0 4 8.4C4 12.8 10 18 10 18z" />
+              <circle cx="10" cy="8.2" r="2.2" />
+            </svg>
+          </span>
           <input
             type="search"
             name="lugar"
@@ -81,31 +92,47 @@ export default function Buscador({ q = "", lugar = "", conUbicacion = false }) {
             aria-label="Colonia, zona, municipio, ciudad o estado"
           />
         </label>
-        <button className="btn" type="submit">
+
+        <button className="btn btn-buscar" type="submit">
           Buscar
         </button>
       </div>
 
+      {/* "Cerca de mí" cuelga justo debajo de "Buscar": son las dos formas de
+          lanzar la misma búsqueda, y dentro de la barra dejaba un hueco. */}
       <div className="buscador-pie">
-        <button
-          className={conUbicacion ? "btn-ubicacion btn-ubicacion-on" : "btn-ubicacion"}
-          type="button"
-          onClick={cercaDeMi}
-          disabled={ubicando}
-        >
-          ◉ {ubicando ? "Buscando tu ubicación…" : "Cerca de mí"}
-        </button>
-        {conUbicacion ? (
-          <button className="btn-texto" type="button" onClick={() => irA({ lat: null, lng: null })}>
-            Quitar mi ubicación
+        <div className="buscador-acciones">
+          <button
+            className={conUbicacion ? "btn-ubicacion btn-ubicacion-on" : "btn-ubicacion"}
+            type="button"
+            onClick={cercaDeMi}
+            disabled={ubicando}
+          >
+            <span className="btn-ubicacion-icono" aria-hidden="true">
+              <svg viewBox="0 0 20 20">
+                <circle cx="10" cy="10" r="3.2" />
+                <circle cx="10" cy="10" r="6.6" />
+                <path d="M10 1v2.2M10 16.8V19M1 10h2.2M16.8 10H19" />
+              </svg>
+            </span>
+            {ubicando ? "Buscando tu ubicación…" : "Cerca de mí"}
           </button>
-        ) : (
-          <span className="buscador-nota">Ordenar por distancia</span>
-        )}
+          {conUbicacion ? (
+            <button
+              className="buscador-quitar"
+              type="button"
+              onClick={() => irA({ lat: null, lng: null })}
+            >
+              Quitar mi ubicación
+            </button>
+          ) : (
+            <span className="buscador-nota">Ordenar por distancia</span>
+          )}
+        </div>
       </div>
 
       {aviso ? (
-        <p className="form-msg err" role="status">
+        <p className="buscador-aviso" role="status">
           {aviso}
         </p>
       ) : null}

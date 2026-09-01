@@ -4,6 +4,7 @@ import Brand from "./brand";
 import Buscador from "./buscador";
 import Orden from "./orden";
 import Waitlist from "./waitlist";
+import { iconoCocina } from "./cocinas";
 
 // La portada es la búsqueda: quien llega quiere ver dónde comer, no leer
 // sobre el producto. El texto de venta queda debajo, para quien baje.
@@ -99,6 +100,7 @@ export default async function Home({ searchParams }) {
 
   let resultados = [];
   let categorias = [];
+  let slugPorNombre = new Map();
   let fallo = false;
 
   try {
@@ -137,6 +139,8 @@ export default async function Home({ searchParams }) {
       .sort((a, b) => a.name.localeCompare(b.name, "es"))
       .slice(0, 10);
 
+    for (const [slug, name] of vistas) slugPorNombre.set(name, slug);
+
     // Una sola consulta para las fotos de todos los resultados, y no una por
     // tarjeta: con veinte restaurantes serían veinte viajes a la base.
     if (resultados.length) {
@@ -168,6 +172,9 @@ export default async function Home({ searchParams }) {
   }
 
   const hayFiltros = Boolean(q || lugar || cocina || abierto || precio || conUbicacion);
+  // La imagen del encabezado es la de un restaurante publicado: nada de banco
+  // de fotos, y la portada se ve viva desde el primer negocio que sube una.
+  const fotoPortada = resultados.find((r) => r.foto)?.foto ?? null;
 
   return (
     <>
@@ -188,12 +195,27 @@ export default async function Home({ searchParams }) {
         </div>
       </nav>
 
-      <header className="explorar-hero">
-        <div className="wrap">
+      <header className="hero-buscar">
+        {fotoPortada ? (
+          <div className="hero-fondo" aria-hidden="true">
+            <img src={fotoPortada} alt="" />
+          </div>
+        ) : null}
+        <svg className="hero-hoja hero-hoja-izq" viewBox="0 0 120 160" aria-hidden="true">
+          <path d="M110 0C60 10 10 45 6 100c-3 34 14 54 34 60 4-46 26-92 70-125z" />
+          <path d="M96 22C64 46 40 84 34 132" className="hero-hoja-vena" />
+        </svg>
+        <svg className="hero-hoja hero-hoja-der" viewBox="0 0 120 160" aria-hidden="true">
+          <path d="M10 0c50 10 100 45 104 100 3 34-14 54-34 60-4-46-26-92-70-125z" />
+          <path d="M24 22c32 24 56 62 62 110" className="hero-hoja-vena" />
+        </svg>
+
+        <div className="wrap hero-buscar-inner">
           <h1>¿Qué se te antoja hoy?</h1>
-          <p className="explorar-sub">
-            Encuentra restaurantes, platillos y menús cerca de ti.
+          <p className="hero-buscar-sub">
+            Encuentra restaurantes, platillos y menús cerca de ti, con precios de verdad.
           </p>
+
           <Buscador q={q} lugar={lugar} conUbicacion={Boolean(conUbicacion)} />
 
           <div className="chips-filtro">
@@ -203,6 +225,7 @@ export default async function Home({ searchParams }) {
                 className={c.slug === cocina ? "chip-filtro chip-on" : "chip-filtro"}
                 href={hrefCon(params, { cocina: c.slug === cocina ? null : c.slug })}
               >
+                <span aria-hidden="true">{iconoCocina(c.slug)}</span>
                 {c.name}
               </Link>
             ))}
@@ -210,6 +233,7 @@ export default async function Home({ searchParams }) {
               className={abierto ? "chip-filtro chip-on" : "chip-filtro"}
               href={hrefCon(params, { abierto: abierto ? null : "1" })}
             >
+              <span aria-hidden="true">🕐</span>
               Abierto ahora
             </Link>
             {[1, 2, 3].map((p) => (
@@ -263,43 +287,80 @@ export default async function Home({ searchParams }) {
           </div>
         ) : (
           <div className="tarjetas">
-            {resultados.map((r) => (
-              <Link className="tarjeta" key={r.id} href={`/r/${r.slug}`}>
-                <div className="tarjeta-foto">
-                  {r.foto ? (
-                    <img src={r.foto} alt="" loading="lazy" />
-                  ) : (
-                    <span className="tarjeta-sinfoto" aria-hidden="true">
-                      🍽
-                    </span>
-                  )}
-                  {r.distance_m != null ? (
-                    <span className="tarjeta-distancia">{distancia(r.distance_m)}</span>
-                  ) : null}
-                  {r.is_open_now ? <span className="tarjeta-abierto">Abierto ahora</span> : null}
-                </div>
-                <div className="tarjeta-cuerpo">
-                  <div className="tarjeta-titulo">
-                    <h3>{r.name}</h3>
-                    {r.rating_count > 0 && r.rating_avg ? (
-                      <span className="tarjeta-rating">★ {r.rating_avg}</span>
-                    ) : null}
+            {resultados.map((r) => {
+              const icono = iconoCocina(slugPorNombre.get(r.cuisines?.[0]));
+              return (
+                <Link className="tarjeta" key={r.id} href={`/r/${r.slug}`}>
+                  <div className="tarjeta-foto">
+                    {r.foto ? (
+                      <img src={r.foto} alt="" loading="lazy" />
+                    ) : (
+                      <span className="tarjeta-sinfoto" aria-hidden="true">
+                        {icono}
+                      </span>
+                    )}
+                    <div className="tarjeta-insignias">
+                      {r.distance_m != null ? (
+                        <span className="insignia insignia-oscura">
+                          <span aria-hidden="true">◉</span> {distancia(r.distance_m)}
+                        </span>
+                      ) : null}
+                      {r.is_open_now ? (
+                        <span className="insignia insignia-abierto">Abierto ahora</span>
+                      ) : null}
+                    </div>
                   </div>
-                  <p className="tarjeta-tipo">
-                    {r.cuisines?.length ? r.cuisines.join(" · ") : r.summary || "Restaurante"}
-                  </p>
-                  <p className="tarjeta-meta">
-                    <span>◎ {lugarDe(r) || "México"}</span>
-                    {r.price_level ? <span>{PRECIO[r.price_level]}</span> : null}
-                  </p>
-                </div>
-                <span className="tarjeta-pie">Ver menú →</span>
-              </Link>
-            ))}
+                  <div className="tarjeta-cuerpo">
+                    <div className="tarjeta-titulo">
+                      <h3>{r.name}</h3>
+                      {r.rating_count > 0 && r.rating_avg ? (
+                        <span className="tarjeta-rating">
+                          <span aria-hidden="true">★</span> {r.rating_avg}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="tarjeta-tipo">
+                      <span aria-hidden="true">{icono}</span>
+                      {r.cuisines?.length ? r.cuisines.join(" · ") : r.summary || "Restaurante"}
+                    </p>
+                    <p className="tarjeta-meta">
+                      <span className="tarjeta-lugar">
+                        <span aria-hidden="true">◎</span> {lugarDe(r) || "México"}
+                      </span>
+                      {r.price_level ? (
+                        <span className="tarjeta-precio">{PRECIO[r.price_level]}</span>
+                      ) : null}
+                    </p>
+                  </div>
+                  <span className="tarjeta-pie">
+                    Ver menú <span aria-hidden="true">→</span>
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </main>
 
+      {resultados.length ? (
+        <section className="wrap">
+          <div className="aviso-publicar">
+            <span className="aviso-emoji" aria-hidden="true">
+              🏪
+            </span>
+            <div>
+              <h2>¿Tu restaurante todavía no está aquí?</h2>
+              <p>
+                Publicar tu menú es gratis y toma una tarde. Quien busca en tu
+                zona te encuentra con precios y horarios al día.
+              </p>
+            </div>
+            <Link className="btn" href="/registro">
+              Publica tu menú
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section id="restaurantes">
         <div className="wrap section">

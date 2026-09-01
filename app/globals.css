@@ -92,16 +92,18 @@ a { color: inherit; }
 
 /* ---------- buttons ---------- */
 
+/* El botón principal va en el color de marca y no en negro: es la acción que
+   la página quiere que se vea, y el naranja la separa del texto. */
 .btn {
   display: inline-block;
   padding: 12px 22px;
   border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--accent);
+  color: #fff;
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--accent);
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
@@ -960,88 +962,126 @@ section { scroll-margin-top: 80px; }
   font-size: 14.5px;
 }
 
-/* ---------- explorar: buscador, filtros y tarjetas ---------- */
+/* ---------- portada: encabezado de búsqueda ---------- */
 
 .nav-activo { color: var(--accent); font-weight: 600; }
 
-.hero-acciones { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-
-/* Una fila del teléfono de la portada que sí lleva a la ficha. Hereda el
-   layout de .result y solo quita lo que el enlace trae por su cuenta. */
-.result-link {
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.result-link:hover { background: var(--accent-soft); }
-
-.phone-pie {
-  display: block;
-  padding: 12px 16px;
-  border-top: 1px solid var(--line);
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-  text-align: center;
-}
-
-.aviso-explorar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin: 8px 0 56px;
-  padding: 24px 28px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--paper-warm);
-}
-
-.aviso-explorar h2 { font-size: 24px; margin-bottom: 6px; }
-
-.aviso-explorar p { color: var(--ink-soft); font-size: 15.5px; }
-
-.explorar-hero {
-  padding: 48px 0 32px;
-  background: var(--accent-soft);
+.hero-buscar {
+  position: relative;
+  overflow: hidden;
+  padding: 56px 0 40px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #fff7f0 0%, var(--accent-soft) 55%, #fbeadd 100%);
   border-bottom: 1px solid var(--line);
-  text-align: center;
 }
 
-.explorar-hero h1 { font-size: 40px; }
+/* La foto de un restaurante publicado, muy tenue y desenfocada, da fondo sin
+   competir con el buscador, que es lo único que la persona vino a usar. */
+.hero-fondo {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+}
 
-.explorar-sub { color: var(--ink-soft); margin-top: 10px; }
+.hero-fondo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(3px) saturate(1.1);
+  transform: scale(1.06);
+}
 
-.buscador { margin: 24px auto 0; max-width: 860px; text-align: left; }
+.hero-fondo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 247, 240, 0.55) 0%,
+    rgba(255, 241, 231, 0.85) 60%,
+    var(--accent-soft) 100%
+  );
+}
+
+.hero-hoja {
+  position: absolute;
+  top: 8px;
+  width: 78px;
+  height: 104px;
+  fill: #7fa663;
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.hero-hoja-vena { fill: none; stroke: #3f6b33; stroke-width: 3; opacity: 0.5; }
+
+.hero-hoja-izq { left: 12px; transform: rotate(-16deg); }
+
+.hero-hoja-der { right: 12px; transform: rotate(16deg); }
+
+.hero-buscar-inner { position: relative; text-align: center; }
+
+.hero-buscar h1 {
+  font-size: clamp(30px, 4.4vw, 46px);
+  letter-spacing: -0.03em;
+}
+
+.hero-buscar-sub {
+  color: var(--ink-soft);
+  margin: 12px auto 0;
+  max-width: 52ch;
+  font-size: 17px;
+}
+
+/* ---------- buscador ---------- */
+
+.buscador {
+  margin: 26px auto 0;
+  max-width: 940px;
+  text-align: left;
+}
 
 .buscador-campos {
   display: grid;
-  grid-template-columns: 1.2fr 1fr auto;
-  gap: 10px;
+  grid-template-columns: 1.25fr 1.1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  background: rgba(253, 252, 250, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px -28px rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(6px);
 }
 
 .buscador-campo {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 14px;
+  padding: 0 16px;
+  height: 52px;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 999px;
 }
 
-.buscador-campo > span { color: var(--ink-faint); font-size: 17px; }
+.buscador-icono { display: flex; flex: none; color: var(--ink-faint); }
+
+.buscador-icono svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
 
 .buscador-campo input {
   width: 100%;
   border: 0;
-  padding: 13px 0;
+  padding: 0;
   font: inherit;
-  font-size: 16px;
+  font-size: 15.5px;
   background: none;
   color: var(--ink);
 }
@@ -1056,20 +1096,36 @@ section { scroll-margin-top: 80px; }
   border-color: transparent;
 }
 
-.buscador-campos .btn { border-radius: 999px; }
-
 .buscador-pie {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 12px;
+  justify-content: flex-end;
+  padding: 10px 12px 0;
 }
+
+.buscador-acciones {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+}
+
+.btn-buscar {
+  height: 52px;
+  padding: 0 34px;
+  border-radius: 999px;
+  background: var(--accent);
+  border-color: var(--accent);
+  font-size: 16px;
+}
+
+.btn-buscar:hover { opacity: 0.92; }
 
 .btn-ubicacion {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 9px 18px;
+  height: 40px;
+  padding: 0 16px;
   border-radius: 999px;
   border: 1px solid var(--accent);
   background: var(--paper);
@@ -1078,33 +1134,84 @@ section { scroll-margin-top: 80px; }
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
+
+.btn-ubicacion:hover { background: var(--accent-soft); }
 
 .btn-ubicacion[disabled] { opacity: 0.6; cursor: default; }
 
 .btn-ubicacion-on { background: var(--accent); color: var(--paper); }
 
-.buscador-nota { font-size: 14px; color: var(--ink-soft); }
+.btn-ubicacion-icono { display: flex; }
+
+.btn-ubicacion-icono svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.buscador-nota {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.buscador-quitar {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.buscador-aviso {
+  margin: 10px auto 0;
+  max-width: 520px;
+  text-align: center;
+  font-size: 14.5px;
+  color: #b91c1c;
+}
+
+/* ---------- chips de filtro ---------- */
 
 .chips-filtro {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
 .chip-filtro {
-  padding: 8px 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: var(--paper);
+  background: rgba(253, 252, 250, 0.9);
   font-size: 14.5px;
+  font-weight: 500;
   text-decoration: none;
   color: var(--ink-soft);
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-.chip-filtro:hover { border-color: var(--accent); color: var(--accent); }
+.chip-filtro span { font-size: 15px; line-height: 1; }
+
+.chip-filtro:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
 
 .chip-on {
   background: var(--ink);
@@ -1112,18 +1219,22 @@ section { scroll-margin-top: 80px; }
   color: var(--paper);
 }
 
-.explorar-main { padding: 36px 24px 72px; }
+.chip-on:hover { color: var(--paper); border-color: var(--ink); }
+
+/* ---------- resultados ---------- */
+
+.explorar-main { padding: 40px 24px 56px; }
 
 .explorar-encabezado {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .explorar-encabezado h2 {
-  font-size: 26px;
+  font-size: 27px;
   display: flex;
   align-items: baseline;
   gap: 12px;
@@ -1133,13 +1244,14 @@ section { scroll-margin-top: 80px; }
 .explorar-cuenta { font-size: 14.5px; font-weight: 400; color: var(--ink-faint); }
 
 .orden select {
-  padding: 9px 14px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--paper);
   font: inherit;
   font-size: 14.5px;
   color: var(--ink);
+  cursor: pointer;
 }
 
 /* Etiqueta que solo leen los lectores de pantalla: el <select> ya se explica
@@ -1155,31 +1267,37 @@ section { scroll-margin-top: 80px; }
 
 .tarjetas {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 22px;
 }
 
 .tarjeta {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 18px;
   overflow: hidden;
   background: var(--paper);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tarjeta:hover {
   border-color: var(--accent);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 22px 40px -26px rgba(28, 25, 23, 0.55);
 }
 
+/* Altura fija y no aspect-ratio: con fotos verticales de celular, la relación
+   de aspecto estiraba la tarjeta hasta el doble que sus vecinas. */
 .tarjeta-foto {
   position: relative;
-  aspect-ratio: 16 / 10;
-  background: linear-gradient(135deg, var(--accent-soft), #f3e8dd);
+  height: 184px;
+  flex: none;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--accent-soft), #f7e6d6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1187,25 +1305,37 @@ section { scroll-margin-top: 80px; }
 
 .tarjeta-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.tarjeta-sinfoto { font-size: 34px; opacity: 0.5; }
+.tarjeta-sinfoto { font-size: 42px; opacity: 0.75; }
 
-.tarjeta-distancia,
-.tarjeta-abierto {
+.tarjeta-insignias {
   position: absolute;
-  top: 10px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  background: rgba(28, 25, 23, 0.78);
-  color: var(--paper);
+  inset: 10px 10px auto 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
 }
 
-.tarjeta-distancia { left: 10px; }
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+}
 
-.tarjeta-abierto { right: 10px; background: #15803d; }
+.insignia-oscura {
+  background: rgba(28, 25, 23, 0.8);
+  color: var(--paper);
+  backdrop-filter: blur(4px);
+}
 
-.tarjeta-cuerpo { padding: 14px 16px 12px; flex: 1; }
+.insignia-abierto { background: #15803d; color: #fff; margin-left: auto; }
+
+.tarjeta-cuerpo { padding: 15px 17px 13px; flex: 1; }
 
 .tarjeta-titulo {
   display: flex;
@@ -1214,43 +1344,115 @@ section { scroll-margin-top: 80px; }
   gap: 10px;
 }
 
-.tarjeta-titulo h3 { font-size: 18px; }
+.tarjeta-titulo h3 { font-size: 18.5px; }
 
-.tarjeta-rating { font-size: 14.5px; font-weight: 600; color: #b45309; white-space: nowrap; }
+.tarjeta-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #b45309;
+  white-space: nowrap;
+}
 
-.tarjeta-tipo { font-size: 14.5px; color: var(--ink-soft); margin-top: 3px; }
+.tarjeta-tipo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  margin-top: 5px;
+}
 
 .tarjeta-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 10px;
   font-size: 14px;
   color: var(--ink-faint);
-  margin-top: 8px;
+  margin-top: 10px;
+}
+
+.tarjeta-lugar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tarjeta-precio {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .tarjeta-pie {
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 16px;
   border-top: 1px solid var(--line);
   font-size: 14.5px;
   font-weight: 600;
   color: var(--accent);
+  transition: background 0.15s ease;
 }
+
+.tarjeta:hover .tarjeta-pie { background: var(--accent-soft); }
 
 .explorar-vacio {
   border: 1px dashed var(--line);
-  border-radius: var(--radius);
-  padding: 48px 24px;
+  border-radius: 18px;
+  padding: 56px 24px;
   text-align: center;
+  background: var(--paper-warm);
 }
 
 .explorar-vacio h3 { font-size: 21px; margin-bottom: 8px; }
 
 .explorar-vacio p { color: var(--ink-soft); max-width: 46ch; margin: 0 auto 20px; }
 
-@media (max-width: 720px) {
-  .buscador-campos { grid-template-columns: 1fr; }
-  .explorar-hero h1 { font-size: 30px; }
+/* ---------- llamada a publicar ---------- */
+
+.aviso-publicar {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-bottom: 64px;
+  padding: 24px 28px;
+  border: 1px solid #d7e6cf;
+  border-radius: 18px;
+  background: linear-gradient(120deg, #f2f7ee, #eaf3e4);
+}
+
+.aviso-emoji {
+  font-size: 40px;
+  line-height: 1;
+  flex: none;
+}
+
+.aviso-publicar > div { flex: 1; min-width: 240px; }
+
+.aviso-publicar h2 { font-size: 23px; margin-bottom: 5px; }
+
+.aviso-publicar p { color: var(--ink-soft); font-size: 15.5px; }
+
+
+@media (max-width: 820px) {
+  .buscador-campos { grid-template-columns: 1fr; border-radius: 20px; }
+  .buscador-pie { justify-content: center; padding-top: 12px; }
+  .hero-buscar { padding: 40px 0 32px; }
+  .hero-hoja { display: none; }
   .explorar-encabezado { flex-direction: column; align-items: flex-start; }
 }
 
