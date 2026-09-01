@@ -40,6 +40,15 @@ function limpio(formData, campo) {
   return valor || null;
 }
 
+// Los dos campos de coordenadas son texto para que se pueda pegar el par de
+// Google Maps de una vez. Aquí vuelven a ser números, o nada.
+function aCoordenada(formData, campo) {
+  const bruto = limpio(formData, campo);
+  if (bruto === null) return null;
+  const numero = Number(bruto.replace(",", "."));
+  return Number.isFinite(numero) ? numero : NaN;
+}
+
 export async function guardarRestaurante(_prevState, formData) {
   const id = String(formData.get("id") ?? "");
   const { supabase, restaurante } = await sesionYRestaurante(id);
@@ -88,6 +97,9 @@ export async function guardarRestaurante(_prevState, formData) {
     return { status: "error", message: "No pudimos guardar los cambios." };
   }
 
+  const errorPunto = await guardarUbicacion(supabase, id, formData);
+  if (errorPunto) return errorPunto;
+
   const errorCategorias = await guardarCategorias(supabase, id, formData);
   if (errorCategorias) return errorCategorias;
 
@@ -97,6 +109,47 @@ export async function guardarRestaurante(_prevState, formData) {
   revalidatePath("/panel");
   revalidatePath(`/panel/${id}`);
   return { status: "ok", message: "Cambios guardados." };
+}
+
+// El punto no se escribe con un update normal porque `location` es geography:
+// habría que mandar EWKT en texto y confiar en el cast. La función de la base
+// recibe dos números, los valida y arma el punto ella.
+async function guardarUbicacion(supabase, id, formData) {
+  const lat = aCoordenada(formData, "lat");
+  const lng = aCoordenada(formData, "lng");
+
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    return {
+      status: "error",
+      message: "La latitud y la longitud tienen que ser números. Ejemplo: 25.79000 y -100.31500.",
+    };
+  }
+  // Media coordenada no ubica nada, y guardarla a medias deja la ficha creyendo
+  // que ya tiene punto.
+  if ((lat === null) !== (lng === null)) {
+    return {
+      status: "error",
+      message: "Faltó una de las dos coordenadas. Pon latitud y longitud, o deja las dos vacías.",
+    };
+  }
+  if (lat !== null && (lat < -90 || lat > 90)) {
+    return { status: "error", message: "La latitud va entre -90 y 90." };
+  }
+  if (lng !== null && (lng < -180 || lng > 180)) {
+    return { status: "error", message: "La longitud va entre -180 y 180." };
+  }
+
+  const { error } = await supabase.rpc("set_restaurant_location", {
+    rid: id,
+    lat,
+    lng,
+  });
+
+  if (error) {
+    console.error("guardar ubicacion", error.message);
+    return { status: "error", message: "No pudimos guardar la ubicación." };
+  }
+  return null;
 }
 
 // Categorías y horarios se reescriben enteros en vez de calcular el diff: son

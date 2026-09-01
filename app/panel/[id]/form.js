@@ -27,13 +27,65 @@ function aHora(valor) {
   return valor ? String(valor).slice(0, 5) : "";
 }
 
-export default function EditarForm({ restaurante, cuisines, elegidas, horarios }) {
+export default function EditarForm({
+  restaurante,
+  cuisines,
+  elegidas,
+  horarios,
+  coords,
+}) {
   const [state, action, pending] = useActionState(guardarRestaurante, inicial);
   // Las categorías se llevan en estado para que una recién creada quede
   // marcada sola, sin que el dueño tenga que buscarla en la lista.
   const [marcadas, setMarcadas] = useState(() => new Set(elegidas));
+  // Las coordenadas se llevan en estado porque hay tres formas de llenarlas
+  // (a mano, pegando el par de Google Maps, o con el botón de ubicación) y
+  // las tres tienen que escribir en los mismos dos campos.
+  const [punto, setPunto] = useState(() => ({
+    lat: coords?.lat != null ? String(coords.lat) : "",
+    lng: coords?.lng != null ? String(coords.lng) : "",
+  }));
+  const [ubicando, setUbicando] = useState(false);
+  const [avisoPunto, setAvisoPunto] = useState("");
 
   const porDia = new Map(horarios.map((h) => [h.weekday, h]));
+
+  // De Google Maps se copia "25.79000, -100.31500" de una pieza. Si eso cae
+  // en el campo de latitud, se reparte solo en vez de obligar a recortarlo.
+  function escribirLat(valor) {
+    const par = valor.split(",");
+    if (par.length === 2 && par[1].trim() !== "") {
+      setPunto({ lat: par[0].trim(), lng: par[1].trim() });
+      return;
+    }
+    setPunto((antes) => ({ ...antes, lat: valor }));
+  }
+
+  function usarMiUbicacion() {
+    if (!navigator.geolocation) {
+      setAvisoPunto("Tu navegador no comparte la ubicación. Escribe las coordenadas a mano.");
+      return;
+    }
+    setAvisoPunto("");
+    setUbicando(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUbicando(false);
+        // Cinco decimales son alrededor de un metro: de sobra para un local, y
+        // más cifras solo dan una precisión que el GPS del teléfono no tiene.
+        setPunto({
+          lat: pos.coords.latitude.toFixed(5),
+          lng: pos.coords.longitude.toFixed(5),
+        });
+        setAvisoPunto("Coordenadas puestas. Guarda los cambios para conservarlas.");
+      },
+      () => {
+        setUbicando(false);
+        setAvisoPunto("No pudimos obtener tu ubicación. Escribe las coordenadas a mano.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  }
 
   function alternar(slug) {
     setMarcadas((antes) => {
@@ -162,6 +214,64 @@ export default function EditarForm({ restaurante, cuisines, elegidas, horarios }
             />
           </label>
         </div>
+
+        {/* Sin coordenadas la ficha no puede ordenarse por cercanía: sale en
+            las búsquedas por colonia o ciudad, pero nunca con su distancia.
+            Es el campo que hacía que "Cerca de mí" no sirviera de nada. */}
+        <div className="campo-par">
+          <label className="campo">
+            <span>Latitud <em>(opcional)</em></span>
+            <input
+              type="text"
+              name="lat"
+              inputMode="decimal"
+              maxLength={24}
+              value={punto.lat}
+              onChange={(e) => escribirLat(e.target.value)}
+              placeholder="25.79000"
+            />
+          </label>
+          <label className="campo">
+            <span>Longitud <em>(opcional)</em></span>
+            <input
+              type="text"
+              name="lng"
+              inputMode="decimal"
+              maxLength={24}
+              value={punto.lng}
+              onChange={(e) => setPunto((antes) => ({ ...antes, lng: e.target.value }))}
+              placeholder="-100.31500"
+            />
+          </label>
+        </div>
+
+        <div className="campo-acciones">
+          <button
+            className="btn btn-chico"
+            type="button"
+            onClick={usarMiUbicacion}
+            disabled={ubicando}
+          >
+            {ubicando ? "Buscando…" : "Usar mi ubicación actual"}
+          </button>
+          {punto.lat || punto.lng ? (
+            <button
+              className="btn-texto"
+              type="button"
+              onClick={() => {
+                setPunto({ lat: "", lng: "" });
+                setAvisoPunto("");
+              }}
+            >
+              Quitar las coordenadas
+            </button>
+          ) : null}
+        </div>
+
+        <p className="campo-pista">
+          {avisoPunto ||
+            "Ábrelo desde el local, o copia el par de números de Google Maps y pégalo en Latitud."}
+        </p>
 
         <fieldset className="grupo">
           <legend>Rango de precio</legend>
