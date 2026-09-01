@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Waitlist from "./waitlist";
 import { supabaseServer } from "../lib/supabase";
 
@@ -66,6 +67,7 @@ function aResultado(r) {
   const kind = [cocina || r.summary, precio].filter(Boolean).join(" · ");
 
   return {
+    slug: r.slug,
     name: r.name,
     kind: kind || "Restaurante",
     rating: r.rating_count > 0 && r.rating_avg ? String(r.rating_avg) : null,
@@ -144,6 +146,7 @@ export default async function Home() {
             Menú Abierto
           </a>
           <div className="nav-links">
+            <Link href="/explorar">Explorar</Link>
             <a className="hide-sm" href="/entrar">
               Entrar
             </a>
@@ -170,15 +173,26 @@ export default async function Home() {
               precios de verdad. Los comensales buscan y comparan; los dueños
               publican y actualizan desde su cuenta.
             </p>
-            <a className="btn" href="#lista">
-              Entrar a la lista de espera
-            </a>
+            {hayPublicados ? (
+              <div className="hero-acciones">
+                <Link className="btn" href="/explorar">
+                  Explorar restaurantes
+                </Link>
+                <a className="btn-texto" href="#lista">
+                  Avísame de los nuevos
+                </a>
+              </div>
+            ) : (
+              <a className="btn" href="#lista">
+                Entrar a la lista de espera
+              </a>
+            )}
             <p className="hero-note">
               Gratis para comensales. Gratis para publicar tu restaurante.
             </p>
           </div>
 
-          <div className="phone" aria-hidden="true">
+          <div className="phone" aria-hidden={hayPublicados ? undefined : "true"}>
             <div className="phone-head">
               <strong>Buscar cerca de mí</strong>
               <span>
@@ -188,20 +202,40 @@ export default async function Home() {
               </span>
             </div>
             <div className="phone-body">
-              {results.map((r) => (
-                <div className="result" key={r.name}>
-                  <div className="result-thumb" />
-                  <div className="result-text">
-                    <div className="dish-name">{r.name}</div>
-                    <div className="dish-desc">{r.kind}</div>
-                    <div className="result-tag">{r.tag}</div>
+              {results.map((r) => {
+                const fila = (
+                  <>
+                    <div className="result-thumb" />
+                    <div className="result-text">
+                      <div className="dish-name">{r.name}</div>
+                      <div className="dish-desc">{r.kind}</div>
+                      <div className="result-tag">{r.tag}</div>
+                    </div>
+                    {r.rating ? (
+                      <div className="result-rating">★ {r.rating}</div>
+                    ) : null}
+                  </>
+                );
+
+                // Los ejemplos son decorativos y no llevan a ningún lado; un
+                // restaurante de verdad sí abre su ficha, que es lo que
+                // cualquiera intenta al verlo en la lista.
+                return r.slug ? (
+                  <Link className="result result-link" key={r.slug} href={`/r/${r.slug}`}>
+                    {fila}
+                  </Link>
+                ) : (
+                  <div className="result" key={r.name}>
+                    {fila}
                   </div>
-                  {r.rating ? (
-                    <div className="result-rating">★ {r.rating}</div>
-                  ) : null}
-                </div>
-              ))}
+                );
+              })}
             </div>
+            {hayPublicados ? (
+              <Link className="phone-pie" href="/explorar">
+                Ver todos los restaurantes →
+              </Link>
+            ) : null}
           </div>
         </div>
       </header>
@@ -308,6 +342,20 @@ export default async function Home() {
           </p>
         </div>
       </section>
+
+      {hayPublicados ? (
+        <section className="wrap">
+          <div className="aviso-explorar">
+            <div>
+              <h2>Ya hay restaurantes en Menú Abierto</h2>
+              <p>Explora sus menús, precios y ubicaciones.</p>
+            </div>
+            <Link className="btn" href="/explorar">
+              Ver todos los restaurantes →
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section className="band" id="lista">
         <div className="wrap cta">
