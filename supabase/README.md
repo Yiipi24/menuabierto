@@ -6,6 +6,13 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
 ## Reglas
 
 - **Nunca edites una migración ya aplicada.** Escribe una nueva que corrija.
+  Esto ya se rompió una vez: los cambios de `ubicacion_panel_solo_autenticados`,
+  `restaurant_coords_solo_del_duenio` y `lugar_vacio_no_apaga_el_radio` se
+  metieron dentro de `ubicacion_en_busqueda_y_panel`, que ya estaba aplicada,
+  en vez de ir en archivos nuevos. Los tres archivos ya están de vuelta, con el
+  SQL exacto que corrió; el que los precede quedó con el contenido final de los
+  cuatro, así que reaplicar de cero da el mismo esquema, solo que pasando dos
+  veces por lo mismo.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
@@ -85,6 +92,18 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   rompería las referencias existentes a cambio de nada.
 - `cuisines_created_by_fkey` sin índice: la columna se escribe al proponer una
   categoría y no se consulta por ella; el catálogo son decenas de filas.
+
+## Pendiente conocido
+
+Cinco archivos llevan una fecha distinta a la que quedó registrada en
+`supabase_migrations.schema_migrations`: `add_signup_intent` (que ni siquiera
+trae hora), `panel_edicion_categorias_fotos`, `buscar_por_lugar`,
+`resenas_de_comensales` y `ubicacion_en_busqueda_y_panel`. El orden relativo es
+el mismo en el repo y en la base, así que reaplicar de cero funciona; lo que no
+funciona es `supabase db push` o `db diff`, que comparan por fecha y ven cinco
+migraciones locales que "faltan" allá y cinco remotas que no conocen.
+Renombrarlos lo arregla, pero cambia el nombre de archivos ya aplicados: hay
+que hacerlo a propósito y de una vez, no de pasada.
 
 # Correos de autenticación
 
