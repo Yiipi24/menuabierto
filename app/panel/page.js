@@ -100,6 +100,9 @@ export default async function Panel() {
                     <Link className="btn-texto" href={`/panel/${r.id}`}>
                       Seguir editando
                     </Link>
+                    <Link className="btn-texto" href={`/panel/${r.id}/menus`}>
+                      Menús
+                    </Link>
                     <form action={cambiarEstado}>
                       <input type="hidden" name="id" value={r.id} />
                       <input

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
+import { menusIncluidos } from "../../../lib/planes";
 import EditarForm from "./form";
 import Fotos from "./fotos";
 import Brand from "../../brand";
@@ -20,7 +21,7 @@ export default async function Editar({ params }) {
   const { data: restaurante } = await supabase
     .from("restaurants")
     .select(
-      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status",
+      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status, plan, premium_until",
     )
     .eq("id", id)
     .eq("owner_id", auth.user.id)
@@ -34,6 +35,7 @@ export default async function Editar({ params }) {
     { data: horarios },
     { data: fotos },
     { data: coords },
+    { data: menus },
   ] = await Promise.all([
     supabase.from("cuisines").select("slug, name").order("name"),
     supabase
@@ -53,6 +55,11 @@ export default async function Editar({ params }) {
     // `location` es geography y PostgREST la devuelve en hexadecimal, que no
     // sirve para llenar dos campos. La función la traduce a lat/lng.
     supabase.rpc("restaurant_coords", { rid: id }),
+    supabase
+      .from("menus")
+      .select("id, name, is_visible")
+      .eq("restaurant_id", id)
+      .order("position"),
   ]);
 
   const conUrl = (fotos ?? []).map((f) => ({
@@ -62,6 +69,8 @@ export default async function Editar({ params }) {
   }));
 
   const publicado = restaurante.status === "publicado";
+  const cupoMenus = menusIncluidos(restaurante);
+  const visibles = (menus ?? []).filter((m) => m.is_visible).length;
 
   return (
     <div className="panel-wrap">
@@ -104,6 +113,44 @@ export default async function Editar({ params }) {
           horarios={horarios ?? []}
           coords={coords?.[0] ?? null}
         />
+
+        <section className="bloque-menu">
+          <div className="bloque-menu-cabeza">
+            <h2 className="sub">Menús</h2>
+            <span className="cupo">
+              {(menus ?? []).length} de {cupoMenus}
+            </span>
+          </div>
+          <p className="ayuda">
+            La carta, las bebidas, el menú del día: cada uno es un menú aparte.
+            Los capturas por secciones o subes el tuyo en PDF.
+          </p>
+
+          {menus?.length ? (
+            <ul className="lista-menus-mini">
+              {menus.map((m) => (
+                <li key={m.id}>
+                  <Link href={`/panel/${restaurante.id}/menus/${m.id}`}>{m.name}</Link>
+                  {m.is_visible ? null : <span className="estado">Oculto</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="nota-borrador">
+              Todavía no hay ningún menú. Sin menú, la ficha se ve a medias.
+            </p>
+          )}
+
+          {menus?.length && visibles === 0 ? (
+            <p className="nota-borrador">
+              Los tienes todos ocultos: la ficha aparece sin menú.
+            </p>
+          ) : null}
+
+          <Link className="btn" href={`/panel/${restaurante.id}/menus`}>
+            {menus?.length ? "Administrar los menús" : "Crear el primer menú"}
+          </Link>
+        </section>
 
         <Fotos id={restaurante.id} fotos={conUrl} />
       </main>

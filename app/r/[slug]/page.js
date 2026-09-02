@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { currentUser, supabaseServer } from "../../../lib/supabase";
+import { pesos } from "../../../lib/precios";
+import { plantillaValida } from "../../../lib/plantillas";
 import Brand from "../../brand";
 import Resenas from "./resenas";
 
 export const dynamic = "force-dynamic";
 
 const BUCKET_FOTOS = "restaurantes";
+const BUCKET_MENUS = "menus";
 const PRECIO = ["", "$", "$$", "$$$", "$$$$"];
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
@@ -14,13 +17,46 @@ function hora(t) {
   return typeof t === "string" ? t.slice(0, 5) : t;
 }
 
-function pesos(centavos, moneda = "MXN") {
-  if (centavos == null) return null;
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: moneda,
-    minimumFractionDigits: centavos % 100 === 0 ? 0 : 2,
-  }).format(centavos / 100);
+// Cada menú se arma completo aquí y no en el render: la página pinta lo que
+// recibe y no tiene que cruzar tres listas mientras genera HTML.
+//
+// Un platillo sin sección no desaparece: se va a un grupo propio al final. Y
+// una sección vacía tampoco se pinta, porque un encabezado sin nada debajo
+// solo hace creer que algo falló.
+function armarMenus(supabase, menus, secciones, platillos) {
+  return menus
+    .map((m) => {
+      const mios = platillos.filter((p) => p.menu_id === m.id);
+      const grupos = [
+        ...secciones
+          .filter((s) => s.menu_id === m.id)
+          .map((s) => ({
+            id: s.id,
+            name: s.name,
+            items: mios.filter((p) => p.section_id === s.id),
+          })),
+        {
+          id: `${m.id}-sueltos`,
+          name: "Otros platillos",
+          items: mios.filter((p) => !p.section_id),
+        },
+      ].filter((g) => g.items.length);
+
+      return {
+        id: m.id,
+        name: m.name,
+        kind: m.kind,
+        template: plantillaValida(m.template),
+        fileMime: m.file_mime,
+        fileUrl: m.file_path
+          ? supabase.storage.from(BUCKET_MENUS).getPublicUrl(m.file_path).data.publicUrl
+          : null,
+        grupos,
+      };
+    })
+    // Un menú digital sin platillos, o uno de archivo sin archivo, está a
+    // medio hacer. Enseñarlo vacío es peor que no enseñarlo.
+    .filter((m) => (m.kind === "archivo" ? Boolean(m.fileUrl) : m.grupos.length > 0));
 }
 
 async function cargar(slug) {
@@ -38,7 +74,7 @@ async function cargar(slug) {
 
   if (!r) return null;
 
-  const [cocinas, horarios, fotos, secciones, platillos, abierto, resenas] = await Promise.all([
+  const [cocinas, horarios, fotos, menus, secciones, platillos, abierto, resenas] = await Promise.all([
     supabase.from("restaurant_cuisines").select("cuisines (name)").eq("restaurant_id", r.id),
     supabase
       .from("restaurant_hours")
@@ -50,16 +86,27 @@ async function cargar(slug) {
       .select("storage_path, alt")
       .eq("restaurant_id", r.id)
       .order("position"),
+    // Un restaurante puede tener varias cartas: la de comida, la de bebidas,
+    // la del día. Las ocultas son las que el dueño está preparando.
+    supabase
+      .from("menus")
+      .select("id, name, kind, template, file_path, file_mime, position")
+      .eq("restaurant_id", r.id)
+      .eq("is_visible", true)
+      .order("position")
+      .order("created_at"),
     supabase
       .from("menu_sections")
-      .select("id, name, position")
+      .select("id, menu_id, name, position")
       .eq("restaurant_id", r.id)
-      .order("position"),
+      .order("position")
+      .order("created_at"),
     supabase
       .from("menu_items")
-      .select("id, section_id, name, description, price_cents, currency, is_available, position")
+      .select("id, menu_id, section_id, name, description, price_cents, currency, is_available, position")
       .eq("restaurant_id", r.id)
-      .order("position"),
+      .order("position")
+      .order("created_at"),
     supabase.rpc("restaurant_abierto", { rid: r.id }),
     // Por RPC y no por join: profiles es privado, y esta funcion devuelve el
     // nombre de quien firma sin abrir el resto del perfil.
@@ -74,8 +121,12 @@ async function cargar(slug) {
       ...f,
       url: supabase.storage.from(BUCKET_FOTOS).getPublicUrl(f.storage_path).data.publicUrl,
     })),
-    secciones: secciones.data ?? [],
-    platillos: platillos.data ?? [],
+    menus: armarMenus(
+      supabase,
+      menus.data ?? [],
+      secciones.data ?? [],
+      platillos.data ?? [],
+    ),
     abierto: abierto.data === true,
     resenas: resenas.data ?? [],
   };
@@ -109,7 +160,7 @@ export default async function Ficha({ params }) {
   }
   if (!datos) notFound();
 
-  const { r, cocinas, horarios, fotos, secciones, platillos, abierto, resenas } = datos;
+  const { r, cocinas, horarios, fotos, menus, abierto, resenas } = datos;
 
   // La ficha es publica, asi que la sesion puede no existir. Solo sirve para
   // decidir que se ve bajo las resenas: el formulario, la puerta de entrada o
@@ -117,20 +168,9 @@ export default async function Ficha({ params }) {
   const usuario = await currentUser();
   const esDueno = Boolean(usuario && r.owner_id === usuario.id);
 
-  // Un platillo sin sección va a un grupo propio al final, en vez de
-  // desaparecer de la carta.
-  const grupos = [
-    ...secciones.map((s) => ({
-      id: s.id,
-      name: s.name,
-      items: platillos.filter((p) => p.section_id === s.id),
-    })),
-    {
-      id: "sin-seccion",
-      name: secciones.length ? "Otros platillos" : "Menú",
-      items: platillos.filter((p) => !p.section_id),
-    },
-  ].filter((g) => g.items.length);
+  // Con un solo menú su nombre ya es el h2 de arriba y no se repite como h3,
+  // así que las secciones suben un nivel para no dejar el hueco.
+  const TituloDeSeccion = menus.length > 1 ? "h4" : "h3";
 
   const direccion = [r.street, r.neighborhood, r.city, r.state, r.postal_code]
     .filter(Boolean)
@@ -194,32 +234,93 @@ export default async function Ficha({ params }) {
           <div>
             {r.description ? <p className="ficha-desc">{r.description}</p> : null}
 
-            <h2 className="ficha-titulo">Menú</h2>
-            {grupos.length ? (
-              grupos.map((g) => (
-                <section className="menu-seccion" key={g.id}>
-                  <h3>{g.name}</h3>
-                  <ul className="menu-lista">
-                    {g.items.map((p) => (
-                      <li
-                        className={p.is_available ? "menu-item" : "menu-item menu-agotado"}
-                        key={p.id}
+            <h2 className="ficha-titulo">
+              {menus.length === 1 ? menus[0].name : "Menús"}
+            </h2>
+
+            {/* Con varias cartas, unos enlaces de ancla llevan a cada una. Son
+                anclas y no pestañas de JavaScript porque así funcionan con la
+                página a medio cargar, se pueden compartir y las indexa el
+                buscador. */}
+            {menus.length > 1 ? (
+              <nav className="menu-indice">
+                {menus.map((m) => (
+                  <a key={m.id} href={`#menu-${m.id}`}>
+                    {m.name}
+                  </a>
+                ))}
+              </nav>
+            ) : null}
+
+            {menus.length ? (
+              menus.map((m) => (
+                <section className="menu-carta" id={`menu-${m.id}`} key={m.id}>
+                  {menus.length > 1 ? <h3 className="menu-carta-titulo">{m.name}</h3> : null}
+
+                  {m.kind === "archivo" ? (
+                    <div className="menu-archivo-publico">
+                      {m.fileMime === "application/pdf" ? (
+                        <object
+                          className="menu-archivo-vista"
+                          data={m.fileUrl}
+                          type="application/pdf"
+                          aria-label={`${m.name} de ${r.name}`}
+                        >
+                          <p className="ficha-vacio">
+                            Tu navegador no muestra el PDF aquí.
+                          </p>
+                        </object>
+                      ) : (
+                        <img
+                          className="menu-archivo-vista"
+                          src={m.fileUrl}
+                          alt={`${m.name} de ${r.name}`}
+                          loading="lazy"
+                        />
+                      )}
+                      <a
+                        className="btn btn-sm"
+                        href={m.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        <div>
-                          <span className="menu-nombre">{p.name}</span>
-                          {p.description ? (
-                            <span className="menu-desc">{p.description}</span>
-                          ) : null}
-                          {!p.is_available ? (
-                            <span className="menu-etiqueta">Agotado hoy</span>
-                          ) : null}
-                        </div>
-                        <span className="menu-precio">
-                          {pesos(p.price_cents, p.currency) ?? "—"}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                        Abrir el menú completo
+                      </a>
+                    </div>
+                  ) : (
+                    /* La plantilla solo cambia cómo se pinta: el marcado es el
+                       mismo y el estilo cuelga de esta clase. */
+                    <div className={`menu-plantilla plantilla-${m.template}`}>
+                      {m.grupos.map((g) => (
+                        <section className="menu-seccion" key={g.id}>
+                          <TituloDeSeccion>{g.name}</TituloDeSeccion>
+                          <ul className="menu-lista">
+                            {g.items.map((p) => (
+                              <li
+                                className={
+                                  p.is_available ? "menu-item" : "menu-item menu-agotado"
+                                }
+                                key={p.id}
+                              >
+                                <div>
+                                  <span className="menu-nombre">{p.name}</span>
+                                  {p.description ? (
+                                    <span className="menu-desc">{p.description}</span>
+                                  ) : null}
+                                  {!p.is_available ? (
+                                    <span className="menu-etiqueta">Agotado hoy</span>
+                                  ) : null}
+                                </div>
+                                <span className="menu-precio">
+                                  {pesos(p.price_cents, p.currency) ?? "—"}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+                      ))}
+                    </div>
+                  )}
                 </section>
               ))
             ) : (
