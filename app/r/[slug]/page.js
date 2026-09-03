@@ -5,14 +5,18 @@ import { currentUser } from "../../../lib/supabase";
 import { qrRuta } from "../../../lib/qr";
 import Brand from "../../brand";
 import Resenas from "./resenas";
-import { cargar, direccionDe, hora, DIAS, PRECIO } from "./datos";
+import { cargar, diaLocal, direccionDe, hora, repiteDireccion, DIAS, PRECIO } from "./datos";
 import { IconoDestacado } from "../../destacados";
+import { IconoRed } from "../../redes-iconos";
 import {
   IconoCompartir,
   IconoCubiertos,
   IconoEscudo,
   IconoEstrella,
   IconoFlecha,
+  IconoFlechaAtras,
+  IconoEnlaceExterno,
+  IconoGlobo,
   IconoPin,
   IconoReloj,
   IconoTarjeta,
@@ -107,11 +111,19 @@ export default async function Ficha({ params }) {
 
   // El día cerrado no tiene fila de horas, así que se arma la semana completa:
   // "Cerrado" dicho a propósito informa más que un día que no aparece.
+  // El día de hoy se marca en la lista: quien abre la ficha casi siempre viene
+  // a preguntar por hoy y no por el jueves.
+  const hoy = diaLocal(r.timezone);
+
   const semana = [1, 2, 3, 4, 5, 6, 0].map((dia) => ({
     dia,
     cerrado: cerrados.includes(dia),
     tramos: horarios.filter((h) => h.weekday === dia),
   })).filter((d) => d.cerrado || d.tramos.length);
+
+  // La descripción se calla cuando solo repite la dirección: es el caso más
+  // común y hacía que la misma línea saliera tres veces en la ficha.
+  const descripcion = r.description && !repiteDireccion(r.description, r) ? r.description : null;
 
   return (
     <>
@@ -129,8 +141,9 @@ export default async function Ficha({ params }) {
 
       <main className="ficha">
         <div className="wrap">
-          <Link className="btn-texto ficha-volver" href="/">
-            ← Volver a la búsqueda
+          <Link className="ficha-volver" href="/">
+            <IconoFlechaAtras ancho={18} />
+            Volver a la búsqueda
           </Link>
 
           <header className={portada ? "ficha-hero" : "ficha-hero ficha-hero-sinfoto"}>
@@ -185,16 +198,18 @@ export default async function Ficha({ params }) {
             </div>
           ) : null}
 
-          {/* La dirección sale del costado y se pone de lado a lado: es lo
-              primero que se busca después del nombre. */}
+          {/* La dirección va una sola vez y de lado a lado: es lo primero que
+              se busca después del nombre, y antes salía repetida en la misma
+              banda. */}
           <section className="ficha-banda">
-            <p className="ficha-banda-dir">
-              <IconoPin />
-              <span>{direccion || "Ubicación no publicada"}</span>
-            </p>
             <div className="ficha-banda-donde">
-              <h2>Dónde está</h2>
-              <p>{direccion || "Este restaurante todavía no publica su dirección."}</p>
+              <span className="ficha-banda-pin">
+                <IconoPin ancho={20} />
+              </span>
+              <div>
+                <h2>Dirección</h2>
+                <p>{direccion || "Este restaurante todavía no publica su dirección."}</p>
+              </div>
             </div>
             {direccion ? (
               <a
@@ -258,23 +273,50 @@ export default async function Ficha({ params }) {
             </section>
           )}
 
-          {r.description ? <p className="ficha-desc">{r.description}</p> : null}
+          {descripcion ? <p className="ficha-desc">{descripcion}</p> : null}
 
           {r.phone || r.website || redes.length || semana.length ? (
             <div className="ficha-detalles">
               {semana.length ? (
-                <div className="ficha-card" id="horarios">
-                  <h3>Horarios</h3>
+                <div className="ficha-card ficha-card-horarios" id="horarios">
+                  <div className="ficha-card-cabeza">
+                    <h3>
+                      <IconoReloj ancho={19} />
+                      Horarios
+                    </h3>
+                  </div>
                   <ul className="ficha-horarios">
                     {semana.map((d) => (
-                      <li key={d.dia}>
-                        <span>{DIAS[d.dia]}</span>
-                        <span>
+                      <li
+                        key={d.dia}
+                        className={[
+                          d.dia === hoy ? "es-hoy" : "",
+                          d.cerrado ? "es-cerrado" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      >
+                        <span className="ficha-horarios-dia">
+                          {DIAS[d.dia]}
+                          {d.dia === hoy ? <em>Hoy</em> : null}
+                        </span>
+                        <span className="ficha-horarios-horas">
                           {d.cerrado
                             ? "Cerrado"
                             : d.tramos
                                 .map((h) => `${hora(h.opens)} – ${hora(h.closes)}`)
                                 .join(" y ")}
+                          {d.dia === hoy && !d.cerrado ? (
+                            <span
+                              className={
+                                abierto
+                                  ? "ficha-estado ficha-estado-abierto"
+                                  : "ficha-estado ficha-estado-cerrado"
+                              }
+                            >
+                              {abierto ? "Abierto ahora" : "Cerrado ahora"}
+                            </span>
+                          ) : null}
                         </span>
                       </li>
                     ))}
@@ -283,24 +325,58 @@ export default async function Ficha({ params }) {
               ) : null}
 
               {r.phone || r.website || redes.length ? (
-                <div className="ficha-card">
-                  <h3>Contacto</h3>
-                  {r.phone ? <a href={`tel:${r.phone}`}>{r.phone}</a> : null}
-                  {r.website ? (
-                    <a href={r.website} target="_blank" rel="noopener noreferrer">
-                      Sitio web
-                    </a>
+                <div className="ficha-card ficha-card-contacto">
+                  <div className="ficha-card-cabeza">
+                    <h3>
+                      <IconoTelefono ancho={19} />
+                      Contacto y redes
+                    </h3>
+                  </div>
+
+                  {redes.length ? (
+                    <p className="ficha-card-intro">
+                      Síguelos en sus redes sociales para ver novedades, promociones y más.
+                    </p>
                   ) : null}
-                  {redes.map((red) => (
-                    <a
-                      key={red.url}
-                      href={red.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {red.nombre}
-                    </a>
-                  ))}
+
+                  {r.phone || r.website ? (
+                    <ul className="ficha-contacto">
+                      {r.phone ? (
+                        <li>
+                          <a href={`tel:${r.phone}`}>
+                            <IconoTelefono ancho={18} />
+                            {r.phone}
+                          </a>
+                        </li>
+                      ) : null}
+                      {r.website ? (
+                        <li>
+                          <a href={r.website} target="_blank" rel="noopener noreferrer">
+                            <IconoGlobo ancho={18} />
+                            Sitio web
+                          </a>
+                        </li>
+                      ) : null}
+                    </ul>
+                  ) : null}
+
+                  {/* Las redes van como fichas con su logo: una lista de
+                      enlaces azules no dejaba ver de un vistazo cuáles hay. */}
+                  {redes.length ? (
+                    <ul className="ficha-redes">
+                      {redes.map((red) => (
+                        <li key={red.url}>
+                          <a href={red.url} target="_blank" rel="noopener noreferrer">
+                            <span className={`ficha-red-logo red-${red.slug}`}>
+                              <IconoRed slug={red.slug} ancho={20} />
+                            </span>
+                            <span className="ficha-red-nombre">{red.nombre}</span>
+                            <IconoEnlaceExterno ancho={16} />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               ) : null}
             </div>
