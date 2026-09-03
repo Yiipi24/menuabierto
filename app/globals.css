@@ -1554,7 +1554,7 @@ section { scroll-margin-top: 80px; }
 
 /* ---------- ficha pública del restaurante ---------- */
 
-.ficha { padding: 28px 24px 72px; }
+.ficha { padding: 28px 0 72px; }
 
 .ficha-volver { display: inline-block; margin-bottom: 18px; text-decoration: none; }
 
@@ -1586,32 +1586,29 @@ section { scroll-margin-top: 80px; }
 
 .ficha-sinresenas { color: var(--ink-faint); }
 
-.ficha-fotos {
+.ficha-galeria {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
-  margin: 24px 0;
+  margin-top: 18px;
 }
 
-.ficha-fotos img {
+.ficha-galeria img {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
   border-radius: 12px;
   display: block;
 }
-
-.ficha-cols {
+.ficha-detalles {
   display: grid;
-  grid-template-columns: 1.5fr 0.85fr;
-  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
   margin-top: 28px;
   align-items: start;
 }
 
-.ficha-desc { color: var(--ink-soft); margin-bottom: 28px; }
-
-.ficha-titulo { font-size: 24px; margin-bottom: 16px; }
+.ficha-desc { color: var(--ink-soft); margin-top: 28px; }
 
 .ficha-vacio { color: var(--ink-soft); }
 
@@ -1659,8 +1656,6 @@ section { scroll-margin-top: 80px; }
 .menu-agotado .menu-nombre,
 .menu-agotado .menu-precio { text-decoration: line-through; color: var(--ink-faint); }
 
-.ficha-lado { display: grid; gap: 16px; }
-
 .ficha-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1687,7 +1682,7 @@ section { scroll-margin-top: 80px; }
 }
 
 @media (max-width: 860px) {
-  .ficha-cols { grid-template-columns: 1fr; gap: 28px; }
+  .ficha-detalles { grid-template-columns: 1fr; }
 }
 
 .section-cta { text-align: center; margin-top: 32px; }
@@ -1714,23 +1709,91 @@ section { scroll-margin-top: 80px; }
 .ficha-resenas-enlace:hover,
 .ficha-sinresenas:hover { text-decoration: underline; }
 
-.resenas { margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--line); }
+/* La banda de reseñas se sale del ancho del contenido y toma la ventana
+   completa. El fondo cálido es lo que marca dónde empieza. */
+.resenas-banda {
+  margin-top: 48px;
+  padding: 48px 0 52px;
+  background: var(--paper-warm);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 80px;
+}
 
-.resenas-resumen {
+.resenas-banda-encabezado { text-align: center; margin-bottom: 30px; }
+
+.resenas-banda-encabezado h2 {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 22px;
+  justify-content: center;
+  gap: 10px;
+  font-size: 30px;
+}
+
+.resenas-banda-encabezado h2 .icono { color: var(--accent); }
+
+.resenas-banda-encabezado p { color: var(--ink-soft); margin-top: 6px; font-size: 15.5px; }
+
+.resenas-tablero {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.resenas-resumen {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 24px 22px;
+  text-align: center;
 }
 
 .resenas-resumen > strong {
-  font-size: 40px;
+  display: block;
+  font-size: 52px;
   font-weight: 650;
   line-height: 1;
   letter-spacing: -0.03em;
 }
 
-.resenas-conteo { display: block; font-size: 14.5px; color: var(--ink-soft); }
+.resenas-resumen .estrellas { display: block; margin-top: 10px; font-size: 19px; }
+
+.resenas-conteo { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 6px; }
+
+.resenas-reparto { list-style: none; margin: 18px 0 0; padding: 0; }
+
+.resenas-reparto li {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.resenas-reparto-nivel { text-align: left; white-space: nowrap; }
+
+.resenas-reparto-pct { text-align: right; }
+
+.resenas-barra {
+  display: block;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.resenas-barra-llena { display: block; height: 100%; background: var(--accent); }
+
+.resenas-vacio { text-align: center; max-width: 46ch; margin: 0 auto; }
+
+.resenas-escribir { max-width: 720px; margin: 28px auto 0; }
+
+@media (max-width: 860px) {
+  .resenas-tablero { grid-template-columns: 1fr; }
+}
 
 .estrellas { font-size: 16px; letter-spacing: 2px; line-height: 1; }
 
@@ -1827,9 +1890,24 @@ section { scroll-margin-top: 80px; }
 
 /* ---------- lista ---------- */
 
-.resena-lista { list-style: none; margin: 0; padding: 0; }
+.resena-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: 16px;
+  align-content: start;
+}
 
-.resena { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.resena {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.resena .estrellas { display: block; margin: 8px 0 10px; }
 
 .resena:last-child { border-bottom: 0; }
 
@@ -2172,4 +2250,197 @@ img.menu-archivo-vista { min-height: 0; }
   .plantilla-elegante .menu-seccion { text-align: left; }
   .form-platillo-fila .campo-precio { width: 100%; }
   .fila-menu { align-items: flex-start; }
+}
+
+/* ---------- ficha: encabezado, dirección y entrada al menú ---------- */
+
+.icono { flex: none; display: block; }
+
+/* La foto deja de ser una franja de seis y pasa a ser una sola, al lado del
+   nombre: ocupa menos de media pantalla y el menú ya no queda debajo del
+   pliegue. */
+.ficha-hero {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 470px);
+  gap: 32px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.ficha-hero-sinfoto { grid-template-columns: 1fr; }
+
+.ficha-hero-texto h1 { font-size: 44px; }
+
+.ficha-hero-foto { margin: 0; }
+
+.ficha-hero-foto img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--radius);
+  display: block;
+}
+
+.ficha-destacados {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+}
+
+.ficha-destacados li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 14ch;
+  line-height: 1.3;
+}
+
+.ficha-destacados .icono { color: var(--accent); }
+
+/* Dirección de lado a lado: a la izquierda la línea corta con el pin, a la
+   derecha la ficha con el botón. */
+.ficha-banda {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 28px;
+  align-items: center;
+  margin-top: 28px;
+  padding: 20px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.ficha-banda-dir {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15.5px;
+}
+
+.ficha-banda-dir .icono { color: var(--accent); margin-top: 2px; }
+
+.ficha-banda-donde {
+  border-left: 1px solid var(--line);
+  padding-left: 28px;
+}
+
+.ficha-banda-donde h2 { font-size: 16px; margin-bottom: 6px; }
+
+.ficha-banda-donde p { color: var(--ink-soft); font-size: 14.5px; }
+
+.ficha-banda-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+}
+
+/* La tarjeta que reemplaza al menú desplegado: un botón para verlo en esta
+   pantalla y un QR para abrirlo en el celular sin teclear la dirección. */
+.ficha-menu-cta {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 28px 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.ficha-menu-cta-vacia { grid-template-columns: 1fr; background: var(--paper-warm); }
+
+.ficha-menu-texto { display: flex; align-items: flex-start; gap: 18px; }
+
+.ficha-menu-icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--paper);
+}
+
+.ficha-menu-texto h2 { font-size: 24px; }
+
+.ficha-menu-texto p { color: var(--ink-soft); font-size: 15.5px; margin-top: 8px; }
+
+.ficha-menu-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ficha-menu-qr {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-left: 32px;
+  border-left: 1px solid var(--line);
+  max-width: 420px;
+}
+
+.ficha-menu-qr-caja {
+  flex: none;
+  padding: 10px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.ficha-menu-qr h3 { font-size: 16px; line-height: 1.3; }
+
+.ficha-menu-qr p { color: var(--ink-soft); font-size: 14px; margin-top: 8px; }
+
+/* En puntos por pulgada el QR es una rejilla, no un dibujo: sin el tamaño fijo
+   el navegador lo interpola y la cámara pierde los módulos. */
+.qr { display: block; width: 128px; height: 128px; }
+
+/* La tira de abajo: cuatro datos que la gente pregunta antes de salir de casa. */
+.ficha-tira {
+  list-style: none;
+  margin: 0;
+  padding: 30px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.ficha-tira li { display: flex; align-items: flex-start; gap: 12px; }
+
+.ficha-tira .icono { color: var(--accent); margin-top: 2px; }
+
+.ficha-tira strong { display: block; font-size: 15px; }
+
+.ficha-tira span { display: block; font-size: 14px; color: var(--ink-soft); }
+
+/* ---------- la carta en su propia página ---------- */
+
+.menu-pagina-encabezado { margin-bottom: 28px; }
+
+.menu-pagina-encabezado h1 { font-size: 36px; }
+
+@media (max-width: 980px) {
+  .ficha-menu-cta { grid-template-columns: 1fr; }
+  .ficha-menu-qr { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); padding-top: 22px; max-width: none; }
+}
+
+@media (max-width: 860px) {
+  .ficha-hero { grid-template-columns: 1fr; gap: 24px; }
+  .ficha-hero-texto h1 { font-size: 34px; }
+  .ficha-banda { grid-template-columns: 1fr; gap: 18px; }
+  .ficha-banda-donde { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 18px; }
+  .ficha-banda-boton { justify-content: center; }
+  .resenas-banda-encabezado h2 { font-size: 25px; }
 }
