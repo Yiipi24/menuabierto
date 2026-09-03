@@ -27,6 +27,21 @@ function Estrellas({ valor }) {
   );
 }
 
+// El reparto se calcula sobre las reseñas que ya están en la página y no con
+// otra consulta: son las mismas que se pintan abajo y el número no puede
+// contradecir a la lista.
+function reparto(resenas) {
+  const total = resenas.length;
+  return [5, 4, 3, 2, 1].map((estrellas) => {
+    const cuantas = resenas.filter((r) => Math.round(r.rating) === estrellas).length;
+    return {
+      estrellas,
+      cuantas,
+      porcentaje: total ? Math.round((cuantas / total) * 100) : 0,
+    };
+  });
+}
+
 export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno }) {
   const total = resenas.length;
   const promedio = restaurante.rating_avg ?? null;
@@ -38,73 +53,84 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
   const deOtros = mia ? resenas.filter((r) => r.author_id !== usuarioId) : resenas;
 
   return (
-    <section className="resenas" id="resenas">
-      <h2 className="ficha-titulo">Reseñas</h2>
-
+    <div className="resenas">
       {total ? (
-        <div className="resenas-resumen">
-          <strong>{promedio ?? "—"}</strong>
-          <div>
+        <div className="resenas-tablero">
+          <div className="resenas-resumen">
+            <strong>{promedio ?? "—"}</strong>
             <Estrellas valor={promedio ?? 0} />
             <span className="resenas-conteo">
-              {total} {total === 1 ? "reseña" : "reseñas"}
+              Basado en {total} {total === 1 ? "reseña" : "reseñas"}
             </span>
+
+            <ul className="resenas-reparto">
+              {reparto(resenas).map((fila) => (
+                <li key={fila.estrellas}>
+                  <span className="resenas-reparto-nivel">
+                    {fila.estrellas} <span className="estrella-llena">★</span>
+                  </span>
+                  <span className="resenas-barra">
+                    <span
+                      className="resenas-barra-llena"
+                      style={{ width: `${fila.porcentaje}%` }}
+                    />
+                  </span>
+                  <span className="resenas-reparto-pct">{fila.porcentaje}%</span>
+                </li>
+              ))}
+            </ul>
           </div>
+
+          {deOtros.length ? (
+            <ul className="resena-lista">
+              {deOtros.map((r) => (
+                <li className="resena" key={r.id}>
+                  <div className="resena-cabeza">
+                    <span className="resena-autor">{r.author_name}</span>
+                    <span className="resena-fecha">{fecha(r.created_at)}</span>
+                  </div>
+                  <Estrellas valor={r.rating} />
+                  {r.body ? <p className="resena-texto">{r.body}</p> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : (
-        <p className="ficha-vacio">
+        <p className="ficha-vacio resenas-vacio">
           Todavía nadie reseña este lugar. Si ya comiste aquí, tu reseña es la
           primera que van a leer los demás.
         </p>
       )}
 
-      {esDueno ? (
-        <p className="resena-nota">
-          Este restaurante es tuyo. Las reseñas las escriben los comensales, por
-          eso no puedes calificarlo.
-        </p>
-      ) : usuarioId ? (
-        <ResenaForm slug={slug} restaurantId={restaurante.id} mia={mia} />
-      ) : (
-        // La puerta de entrada, no un muro: dice qué falta y lleva de vuelta
-        // aquí mismo en cuanto la persona entra o se registra.
-        <div className="resena-puerta">
-          <h3>Solo los comensales registrados dejan reseñas</h3>
-          <p>
-            Pedimos una cuenta para que cada persona califique una vez y su
-            reseña tenga un nombre detrás. Es gratis y toma un minuto.
+      <div className="resenas-escribir">
+        {esDueno ? (
+          <p className="resena-nota">
+            Este restaurante es tuyo. Las reseñas las escriben los comensales, por
+            eso no puedes calificarlo.
           </p>
-          <div className="resena-puerta-botones">
-            <Link
-              className="btn"
-              href={`/registro?next=${encodeURIComponent(volverAqui)}`}
-            >
-              Crear cuenta
-            </Link>
-            <Link
-              className="btn-texto"
-              href={`/entrar?next=${encodeURIComponent(volverAqui)}`}
-            >
-              Ya tengo cuenta
-            </Link>
+        ) : usuarioId ? (
+          <ResenaForm slug={slug} restaurantId={restaurante.id} mia={mia} />
+        ) : (
+          // La puerta de entrada, no un muro: dice qué falta y lleva de vuelta
+          // aquí mismo en cuanto la persona entra o se registra.
+          <div className="resena-puerta">
+            <h3>Solo los comensales registrados dejan reseñas</h3>
+            <p>
+              Pedimos una cuenta para que cada persona califique una vez y su
+              reseña tenga un nombre detrás. Es gratis y toma un minuto.
+            </p>
+            <div className="resena-puerta-botones">
+              <Link className="btn" href={`/registro?next=${encodeURIComponent(volverAqui)}`}>
+                Crear cuenta
+              </Link>
+              <Link className="btn-texto" href={`/entrar?next=${encodeURIComponent(volverAqui)}`}>
+                Ya tengo cuenta
+              </Link>
+            </div>
           </div>
-        </div>
-      )}
-
-      {deOtros.length ? (
-        <ul className="resena-lista">
-          {deOtros.map((r) => (
-            <li className="resena" key={r.id}>
-              <div className="resena-cabeza">
-                <span className="resena-autor">{r.author_name}</span>
-                <Estrellas valor={r.rating} />
-                <span className="resena-fecha">{fecha(r.created_at)}</span>
-              </div>
-              {r.body ? <p className="resena-texto">{r.body}</p> : null}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </section>
+        )}
+      </div>
+    </div>
   );
 }
