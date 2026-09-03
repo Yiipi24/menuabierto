@@ -1,5 +1,7 @@
 import { supabaseServer } from "../../../lib/supabase";
 import { plantillaValida } from "../../../lib/plantillas";
+import { destacadosDe } from "../../destacados";
+import { conEsquema, nombreDeRed } from "../../../lib/redes";
 
 // La carga vive aquí y no en la página porque ahora son dos: la ficha y la
 // carta completa. Las dos necesitan lo mismo y ninguna debería tener su propia
@@ -68,7 +70,7 @@ export async function cargar(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, rating_avg, rating_count",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, rating_avg, rating_count, highlights, social_links, closed_days",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -84,7 +86,7 @@ export async function cargar(slug) {
       .order("weekday"),
     supabase
       .from("restaurant_media")
-      .select("storage_path, alt")
+      .select("storage_path, alt, category")
       .eq("restaurant_id", r.id)
       .order("position"),
     // Un restaurante puede tener varias cartas: la de comida, la de bebidas,
@@ -116,12 +118,23 @@ export async function cargar(slug) {
 
   return {
     r,
+    // Los destacados y las redes se limpian aquí, una vez: vienen de jsonb y
+    // la página no debería preguntarse si cada pieza trae lo que dice traer.
+    destacados: destacadosDe(r.highlights),
+    redes: (Array.isArray(r.social_links) ? r.social_links : [])
+      .map((red) => ({ nombre: nombreDeRed(red?.network), url: conEsquema(red?.url) }))
+      .filter((red) => red.url),
+    cerrados: (r.closed_days ?? []).map(Number),
     cocinas: (cocinas.data ?? []).map((c) => c.cuisines?.name).filter(Boolean),
     horarios: horarios.data ?? [],
-    fotos: (fotos.data ?? []).map((f) => ({
-      ...f,
-      url: supabase.storage.from(BUCKET_FOTOS).getPublicUrl(f.storage_path).data.publicUrl,
-    })),
+    // La fachada encabeza la ficha aunque se haya subido al final: es la foto
+    // que se reconoce al llegar al local.
+    fotos: (fotos.data ?? [])
+      .map((f) => ({
+        ...f,
+        url: supabase.storage.from(BUCKET_FOTOS).getPublicUrl(f.storage_path).data.publicUrl,
+      }))
+      .sort((a, b) => (a.category === "fachada" ? -1 : 0) - (b.category === "fachada" ? -1 : 0)),
     menus: armarMenus(
       supabase,
       menus.data ?? [],

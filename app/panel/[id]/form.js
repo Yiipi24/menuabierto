@@ -1,9 +1,19 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { guardarRestaurante, crearCategoria } from "./actions";
+import { ESTADOS } from "../../../lib/estados";
+import { REDES } from "../../../lib/redes";
+import {
+  ICONOS_DESTACADO,
+  ICONO_POR_DEFECTO,
+  IconoDestacado,
+  MAX_DESTACADOS,
+} from "../../destacados";
 
 const inicial = { status: "idle", message: "" };
+
+const FORM_ID = "editar-restaurante";
 
 const PRECIOS = [
   ["1", "$", "Económico"],
@@ -22,6 +32,8 @@ const DIAS = [
   [0, "Domingo"],
 ];
 
+const MAX_REDES = 8;
+
 // La base guarda time (08:00:00) y el input type=time quiere HH:MM.
 function aHora(valor) {
   return valor ? String(valor).slice(0, 5) : "";
@@ -33,6 +45,7 @@ export default function EditarForm({
   elegidas,
   horarios,
   coords,
+  children,
 }) {
   const [state, action, pending] = useActionState(guardarRestaurante, inicial);
   // Las categorías se llevan en estado para que una recién creada quede
@@ -47,6 +60,27 @@ export default function EditarForm({
   }));
   const [ubicando, setUbicando] = useState(false);
   const [avisoPunto, setAvisoPunto] = useState("");
+
+  const [destacados, setDestacados] = useState(() => {
+    const guardados = Array.isArray(restaurante.highlights) ? restaurante.highlights : [];
+    return Array.from({ length: MAX_DESTACADOS }, (_, i) => ({
+      icon: guardados[i]?.icon || ICONO_POR_DEFECTO,
+      text: guardados[i]?.text || "",
+    }));
+  });
+
+  const [redes, setRedes] = useState(() => {
+    const guardadas = Array.isArray(restaurante.social_links) ? restaurante.social_links : [];
+    return guardadas
+      .filter((r) => r?.url)
+      .map((r) => ({ network: r.network || "otra", url: r.url }));
+  });
+
+  // Los días cerrados se llevan en estado porque apagan sus dos campos de hora
+  // en cuanto se marcan, sin esperar al guardado.
+  const [cerrados, setCerrados] = useState(
+    () => new Set((restaurante.closed_days ?? []).map(Number)),
+  );
 
   const porDia = new Map(horarios.map((h) => [h.weekday, h]));
 
@@ -112,9 +146,28 @@ export default function EditarForm({
     });
   }
 
+  function alternarCerrado(dia) {
+    setCerrados((antes) => {
+      const copia = new Set(antes);
+      if (copia.has(dia)) copia.delete(dia);
+      else copia.add(dia);
+      return copia;
+    });
+  }
+
+  function cambiarDestacado(i, campo, valor) {
+    setDestacados((antes) =>
+      antes.map((d, j) => (j === i ? { ...d, [campo]: valor } : d)),
+    );
+  }
+
+  function cambiarRed(i, campo, valor) {
+    setRedes((antes) => antes.map((r, j) => (j === i ? { ...r, [campo]: valor } : r)));
+  }
+
   return (
     <>
-      <form action={action} className="form-alta">
+      <form action={action} id={FORM_ID} className="form-alta">
         <input type="hidden" name="id" value={restaurante.id} />
 
         <label className="campo">
@@ -149,31 +202,139 @@ export default function EditarForm({
           />
         </label>
 
+        <fieldset className="grupo">
+          <legend>
+            Lo que te distingue <em>(hasta {MAX_DESTACADOS} frases con icono)</em>
+          </legend>
+          <p className="ayuda">
+            Salen junto al nombre en tu ficha. Escríbelas cortas: "Ahumados al
+            estilo BBQ", "Cocción lenta 14+ horas".
+          </p>
+          <div className="destacados-edicion">
+            {destacados.map((d, i) => (
+              <div className="destacado-fila" key={i}>
+                <span className="destacado-muestra" aria-hidden="true">
+                  <IconoDestacado slug={d.icon} ancho={22} />
+                </span>
+                <label className="destacado-icono">
+                  <span className="sr-only">Icono del destacado {i + 1}</span>
+                  <select
+                    name={`highlight_icon_${i}`}
+                    value={d.icon}
+                    onChange={(e) => cambiarDestacado(i, "icon", e.target.value)}
+                  >
+                    {ICONOS_DESTACADO.map(([slug, nombre]) => (
+                      <option value={slug} key={slug}>
+                        {nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="destacado-texto">
+                  <span className="sr-only">Texto del destacado {i + 1}</span>
+                  <input
+                    type="text"
+                    name={`highlight_text_${i}`}
+                    maxLength={60}
+                    value={d.text}
+                    onChange={(e) => cambiarDestacado(i, "text", e.target.value)}
+                    placeholder={
+                      i === 0
+                        ? "Ahumados al estilo BBQ"
+                        : i === 1
+                          ? "Brisket y pulled pork"
+                          : "Cocción lenta 14+ horas"
+                    }
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+
         <h2 className="sub">Contacto</h2>
 
-        <div className="campo-par">
+        <label className="campo">
+          <span>Teléfono</span>
+          <input
+            type="tel"
+            name="phone"
+            maxLength={20}
+            inputMode="tel"
+            defaultValue={restaurante.phone ?? ""}
+            placeholder="55 1234 5678"
+          />
+        </label>
+
+        <fieldset className="grupo">
+          <legend>
+            Sitio o redes <em>(opcional)</em>
+          </legend>
+
           <label className="campo">
-            <span>Teléfono</span>
-            <input
-              type="tel"
-              name="phone"
-              maxLength={20}
-              inputMode="tel"
-              defaultValue={restaurante.phone ?? ""}
-              placeholder="55 1234 5678"
-            />
-          </label>
-          <label className="campo">
-            <span>Sitio o redes <em>(opcional)</em></span>
+            <span>Página web</span>
             <input
               type="text"
               name="website"
               maxLength={200}
               defaultValue={restaurante.website ?? ""}
-              placeholder="instagram.com/mirestaurante"
+              placeholder="mirestaurante.com"
             />
           </label>
-        </div>
+
+          <div className="redes-edicion">
+            {redes.map((r, i) => (
+              <div className="red-fila" key={i}>
+                <label className="red-tipo">
+                  <span className="sr-only">Red social {i + 1}</span>
+                  <select
+                    name={`social_network_${i}`}
+                    value={r.network}
+                    onChange={(e) => cambiarRed(i, "network", e.target.value)}
+                  >
+                    {REDES.map((red) => (
+                      <option value={red.slug} key={red.slug}>
+                        {red.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="red-liga">
+                  <span className="sr-only">Enlace de la red {i + 1}</span>
+                  <input
+                    type="text"
+                    name={`social_url_${i}`}
+                    maxLength={200}
+                    value={r.url}
+                    onChange={(e) => cambiarRed(i, "url", e.target.value)}
+                    placeholder="instagram.com/mirestaurante"
+                  />
+                </label>
+                <button
+                  className="btn-texto"
+                  type="button"
+                  onClick={() => setRedes((antes) => antes.filter((_, j) => j !== i))}
+                >
+                  Quitar
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {redes.length < MAX_REDES ? (
+            <button
+              className="btn btn-chico"
+              type="button"
+              onClick={() =>
+                setRedes((antes) => [...antes, { network: "instagram", url: "" }])
+              }
+            >
+              Agregar red social
+            </button>
+          ) : (
+            <p className="ayuda">Ya son {MAX_REDES} enlaces: es el máximo.</p>
+          )}
+        </fieldset>
 
         <h2 className="sub">Dirección</h2>
 
@@ -221,13 +382,17 @@ export default function EditarForm({
             />
           </label>
           <label className="campo">
-            <span>Estado <em>(opcional)</em></span>
-            <input
-              type="text"
-              name="state"
-              maxLength={80}
-              defaultValue={restaurante.state ?? ""}
-            />
+            <span>Estado</span>
+            <select name="state" required defaultValue={restaurante.state ?? ""}>
+              <option value="" disabled>
+                Elige tu estado
+              </option>
+              {ESTADOS.map((estado) => (
+                <option value={estado} key={estado}>
+                  {estado}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 
@@ -345,39 +510,69 @@ export default function EditarForm({
               </label>
             ))}
           </div>
+
+          {/* Va aquí, pegada a la lista, porque es la respuesta a mirarla y no
+              encontrar lo tuyo. No es un <form> propio: dos formularios
+              anidados no son válidos, así que llama a la acción a mano. */}
+          <NuevaCategoria
+            id={restaurante.id}
+            onCreada={(slug) => setMarcadas((antes) => new Set(antes).add(slug))}
+          />
         </fieldset>
 
         <fieldset className="grupo">
           <legend>
-            Horarios <em>(deja vacío el día que cierras)</em>
+            Horarios <em>(marca el día que cierras)</em>
           </legend>
           <div className="horarios">
-            {DIAS.map(([dia, nombre]) => (
-              <div className="horario" key={dia}>
-                <span className="horario-dia">{nombre}</span>
-                <input
-                  type="time"
-                  name={`opens_${dia}`}
-                  aria-label={`Abre el ${nombre.toLowerCase()}`}
-                  defaultValue={aHora(porDia.get(dia)?.opens)}
-                />
-                <span className="horario-a">a</span>
-                <input
-                  type="time"
-                  name={`closes_${dia}`}
-                  aria-label={`Cierra el ${nombre.toLowerCase()}`}
-                  defaultValue={aHora(porDia.get(dia)?.closes)}
-                />
-              </div>
-            ))}
+            {DIAS.map(([dia, nombre]) => {
+              const cerrado = cerrados.has(dia);
+              return (
+                <div className={cerrado ? "horario horario-cerrado" : "horario"} key={dia}>
+                  <label className="horario-cierre">
+                    <input
+                      type="checkbox"
+                      name="closed_days"
+                      value={dia}
+                      checked={cerrado}
+                      onChange={() => alternarCerrado(dia)}
+                    />
+                    <span>Cerrado</span>
+                  </label>
+                  <span className="horario-dia">{nombre}</span>
+                  <input
+                    type="time"
+                    name={`opens_${dia}`}
+                    aria-label={`Abre el ${nombre.toLowerCase()}`}
+                    defaultValue={aHora(porDia.get(dia)?.opens)}
+                    disabled={cerrado}
+                  />
+                  <span className="horario-a">a</span>
+                  <input
+                    type="time"
+                    name={`closes_${dia}`}
+                    aria-label={`Cierra el ${nombre.toLowerCase()}`}
+                    defaultValue={aHora(porDia.get(dia)?.closes)}
+                    disabled={cerrado}
+                  />
+                </div>
+              );
+            })}
           </div>
           <p className="ayuda">
             Si cierras después de medianoche, pon la hora real (por ejemplo, de
             20:00 a 02:00).
           </p>
         </fieldset>
+      </form>
 
-        <button className="btn btn-block" type="submit" disabled={pending}>
+      {children}
+
+      {/* El botón vive fuera del formulario y lo manda por su id: así el
+          guardado queda al final de la página, después de los menús y las
+          fotos, y no a media edición. */}
+      <div className="guardar-final">
+        <button className="btn btn-block" type="submit" form={FORM_ID} disabled={pending}>
           {pending ? "Guardando…" : "Guardar cambios"}
         </button>
 
@@ -389,54 +584,66 @@ export default function EditarForm({
             {state.message}
           </p>
         ) : null}
-      </form>
-
-      <NuevaCategoria
-        id={restaurante.id}
-        onCreada={(slug) => setMarcadas((antes) => new Set(antes).add(slug))}
-      />
+      </div>
     </>
   );
 }
 
-// Va fuera del formulario principal: dos <form> anidados no son válidos, y
-// crear la categoría no debe guardar el resto de la ficha.
+// La acción se llama a mano, sin <form>, porque este bloque vive dentro del
+// formulario grande: crear la categoría no debe guardar el resto de la ficha.
 function NuevaCategoria({ id, onCreada }) {
-  const [state, action, pending] = useActionState(
-    async (prev, formData) => {
-      const resultado = await crearCategoria(prev, formData);
-      if (resultado.status === "ok" && resultado.slug) onCreada(resultado.slug);
-      return resultado;
-    },
-    inicial,
-  );
+  const [nombre, setNombre] = useState("");
+  const [aviso, setAviso] = useState(inicial);
+  const [enviando, empezar] = useTransition();
+
+  function agregar() {
+    const datos = new FormData();
+    datos.set("id", id);
+    datos.set("nombre", nombre);
+    empezar(async () => {
+      const resultado = await crearCategoria(inicial, datos);
+      setAviso(resultado);
+      if (resultado.status === "ok" && resultado.slug) {
+        onCreada(resultado.slug);
+        setNombre("");
+      }
+    });
+  }
 
   return (
-    <form action={action} className="categoria-nueva">
-      <input type="hidden" name="id" value={id} />
+    <div className="categoria-nueva">
       <label className="campo">
         <span>¿Falta tu tipo de comida? Agrégalo</span>
         <input
           type="text"
-          name="nombre"
+          value={nombre}
           maxLength={40}
           placeholder="BBQ, birria, mariscos…"
+          onChange={(e) => setNombre(e.target.value)}
+          // Enter dentro del campo mandaría el formulario grande; aquí solo
+          // agrega la categoría, que es lo que la persona está haciendo.
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              agregar();
+            }
+          }}
         />
       </label>
-      <button className="btn-texto" type="submit" disabled={pending}>
-        {pending ? "Agregando…" : "Agregar categoría"}
+      <button className="btn-texto" type="button" onClick={agregar} disabled={enviando}>
+        {enviando ? "Agregando…" : "Agregar categoría"}
       </button>
-      {state.status !== "idle" ? (
+      {aviso.status !== "idle" ? (
         <p
-          className={state.status === "ok" ? "form-msg ok" : "form-msg err"}
-          role={state.status === "ok" ? "status" : "alert"}
+          className={aviso.status === "ok" ? "form-msg ok" : "form-msg err"}
+          role={aviso.status === "ok" ? "status" : "alert"}
         >
-          {state.message}
+          {aviso.message}
         </p>
       ) : null}
       <p className="ayuda">
         La categoría queda marcada al crearla; recuerda guardar los cambios.
       </p>
-    </form>
+    </div>
   );
 }
