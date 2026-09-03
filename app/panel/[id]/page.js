@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
-import { menusIncluidos } from "../../../lib/planes";
+import { menusIncluidos, fotosPlatillosIncluidas } from "../../../lib/planes";
 import EditarForm from "./form";
 import Fotos from "./fotos";
 import Brand from "../../brand";
@@ -21,7 +21,7 @@ export default async function Editar({ params }) {
   const { data: restaurante } = await supabase
     .from("restaurants")
     .select(
-      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status, plan, premium_until",
+      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status, plan, premium_until, highlights, social_links, closed_days",
     )
     .eq("id", id)
     .eq("owner_id", auth.user.id)
@@ -49,7 +49,7 @@ export default async function Editar({ params }) {
       .order("weekday"),
     supabase
       .from("restaurant_media")
-      .select("id, storage_path, alt")
+      .select("id, storage_path, alt, category")
       .eq("restaurant_id", id)
       .order("position"),
     // `location` es geography y PostgREST la devuelve en hexadecimal, que no
@@ -106,53 +106,60 @@ export default async function Editar({ params }) {
             : "Está en borrador: solo tú lo ves hasta que lo publiques."}
         </p>
 
+        {/* Los menús y las fotos van dentro del componente del formulario, no
+            después: así el botón de guardar puede quedar al final de todo. */}
         <EditarForm
           restaurante={restaurante}
           cuisines={cuisines ?? []}
           elegidas={(elegidas ?? []).map((e) => e.cuisines?.slug).filter(Boolean)}
           horarios={horarios ?? []}
           coords={coords?.[0] ?? null}
-        />
+        >
 
-        <section className="bloque-menu">
-          <div className="bloque-menu-cabeza">
-            <h2 className="sub">Menús</h2>
-            <span className="cupo">
-              {(menus ?? []).length} de {cupoMenus}
-            </span>
-          </div>
-          <p className="ayuda">
-            La carta, las bebidas, el menú del día: cada uno es un menú aparte.
-            Los capturas por secciones o subes el tuyo en PDF.
-          </p>
-
-          {menus?.length ? (
-            <ul className="lista-menus-mini">
-              {menus.map((m) => (
-                <li key={m.id}>
-                  <Link href={`/panel/${restaurante.id}/menus/${m.id}`}>{m.name}</Link>
-                  {m.is_visible ? null : <span className="estado">Oculto</span>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="nota-borrador">
-              Todavía no hay ningún menú. Sin menú, la ficha se ve a medias.
+          <section className="bloque-menu">
+            <div className="bloque-menu-cabeza">
+              <h2 className="sub">Menús</h2>
+              <span className="cupo">
+                {(menus ?? []).length} de {cupoMenus}
+              </span>
+            </div>
+            <p className="ayuda">
+              La carta, las bebidas, el menú del día: cada uno es un menú aparte.
+              Los capturas por secciones o subes el tuyo en PDF.
             </p>
-          )}
 
-          {menus?.length && visibles === 0 ? (
-            <p className="nota-borrador">
-              Los tienes todos ocultos: la ficha aparece sin menú.
-            </p>
-          ) : null}
+            {menus?.length ? (
+              <ul className="lista-menus-mini">
+                {menus.map((m) => (
+                  <li key={m.id}>
+                    <Link href={`/panel/${restaurante.id}/menus/${m.id}`}>{m.name}</Link>
+                    {m.is_visible ? null : <span className="estado">Oculto</span>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="nota-borrador">
+                Todavía no hay ningún menú. Sin menú, la ficha se ve a medias.
+              </p>
+            )}
 
-          <Link className="btn" href={`/panel/${restaurante.id}/menus`}>
-            {menus?.length ? "Administrar los menús" : "Crear el primer menú"}
-          </Link>
-        </section>
+            {menus?.length && visibles === 0 ? (
+              <p className="nota-borrador">
+                Los tienes todos ocultos: la ficha aparece sin menú.
+              </p>
+            ) : null}
 
-        <Fotos id={restaurante.id} fotos={conUrl} />
+            <Link className="btn" href={`/panel/${restaurante.id}/menus`}>
+              {menus?.length ? "Administrar los menús" : "Crear el primer menú"}
+            </Link>
+          </section>
+
+          <Fotos
+            id={restaurante.id}
+            fotos={conUrl}
+            cupoPlatillos={fotosPlatillosIncluidas(restaurante)}
+          />
+        </EditarForm>
       </main>
     </div>
   );

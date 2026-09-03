@@ -6,6 +6,7 @@ import { qrRuta } from "../../../lib/qr";
 import Brand from "../../brand";
 import Resenas from "./resenas";
 import { cargar, direccionDe, hora, DIAS, PRECIO } from "./datos";
+import { IconoDestacado } from "../../destacados";
 import {
   IconoCompartir,
   IconoCubiertos,
@@ -78,7 +79,8 @@ export default async function Ficha({ params }) {
   }
   if (!datos) notFound();
 
-  const { r, cocinas, horarios, fotos, menus, abierto, resenas } = datos;
+  const { r, cocinas, horarios, fotos, menus, abierto, resenas, destacados, redes, cerrados } =
+    datos;
 
   // La ficha es publica, asi que la sesion puede no existir. Solo sirve para
   // decidir que se ve bajo las resenas: el formulario, la puerta de entrada o
@@ -96,9 +98,20 @@ export default async function Ficha({ params }) {
   const portada = fotos[0] ?? null;
   const secundarias = fotos.slice(1, 5);
 
-  // Los tres destacados salen de las cocinas del restaurante, no de una lista
-  // inventada: si no tiene ninguna, la fila no se pinta.
-  const destacados = cocinas.slice(0, 3);
+  // Los destacados los escribe el dueño con su icono. Mientras no ponga
+  // ninguno se cae a sus cocinas, que es lo que la ficha mostraba antes: una
+  // fila vacía se vería peor que una genérica.
+  const tiraDestacados = destacados.length
+    ? destacados
+    : cocinas.slice(0, 3).map((c) => ({ icon: "cubiertos", text: c }));
+
+  // El día cerrado no tiene fila de horas, así que se arma la semana completa:
+  // "Cerrado" dicho a propósito informa más que un día que no aparece.
+  const semana = [1, 2, 3, 4, 5, 6, 0].map((dia) => ({
+    dia,
+    cerrado: cerrados.includes(dia),
+    tramos: horarios.filter((h) => h.weekday === dia),
+  })).filter((d) => d.cerrado || d.tramos.length);
 
   return (
     <>
@@ -145,12 +158,12 @@ export default async function Ficha({ params }) {
                 )}
               </p>
 
-              {destacados.length ? (
+              {tiraDestacados.length ? (
                 <ul className="ficha-destacados">
-                  {destacados.map((c) => (
-                    <li key={c}>
-                      <IconoCubiertos ancho={22} />
-                      <span>{c}</span>
+                  {tiraDestacados.map((d, i) => (
+                    <li key={`${d.text}-${i}`}>
+                      <IconoDestacado slug={d.icon} ancho={22} />
+                      <span>{d.text}</span>
                     </li>
                   ))}
                 </ul>
@@ -247,17 +260,21 @@ export default async function Ficha({ params }) {
 
           {r.description ? <p className="ficha-desc">{r.description}</p> : null}
 
-          {r.phone || r.website || horarios.length ? (
+          {r.phone || r.website || redes.length || semana.length ? (
             <div className="ficha-detalles">
-              {horarios.length ? (
+              {semana.length ? (
                 <div className="ficha-card" id="horarios">
                   <h3>Horarios</h3>
                   <ul className="ficha-horarios">
-                    {horarios.map((h, i) => (
-                      <li key={`${h.weekday}-${i}`}>
-                        <span>{DIAS[h.weekday]}</span>
+                    {semana.map((d) => (
+                      <li key={d.dia}>
+                        <span>{DIAS[d.dia]}</span>
                         <span>
-                          {hora(h.opens)} – {hora(h.closes)}
+                          {d.cerrado
+                            ? "Cerrado"
+                            : d.tramos
+                                .map((h) => `${hora(h.opens)} – ${hora(h.closes)}`)
+                                .join(" y ")}
                         </span>
                       </li>
                     ))}
@@ -265,7 +282,7 @@ export default async function Ficha({ params }) {
                 </div>
               ) : null}
 
-              {r.phone || r.website ? (
+              {r.phone || r.website || redes.length ? (
                 <div className="ficha-card">
                   <h3>Contacto</h3>
                   {r.phone ? <a href={`tel:${r.phone}`}>{r.phone}</a> : null}
@@ -274,6 +291,16 @@ export default async function Ficha({ params }) {
                       Sitio web
                     </a>
                   ) : null}
+                  {redes.map((red) => (
+                    <a
+                      key={red.url}
+                      href={red.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {red.nombre}
+                    </a>
+                  ))}
                 </div>
               ) : null}
             </div>

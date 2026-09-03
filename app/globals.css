@@ -976,9 +976,29 @@ section { scroll-margin-top: 80px; }
 
 .horario {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: auto 1fr auto auto auto;
   align-items: center;
   gap: 10px;
+}
+
+.horario-cierre {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.horario-cierre input { accent-color: var(--accent); }
+
+.horario-cerrado .horario-dia { color: var(--ink-faint); }
+
+.horario input:disabled {
+  background: var(--paper-warm);
+  color: var(--ink-faint);
+  cursor: not-allowed;
 }
 
 .horario-dia { font-size: 14.5px; color: var(--ink-soft); }
@@ -1000,6 +1020,83 @@ section { scroll-margin-top: 80px; }
 @media (max-width: 480px) {
   .horario { grid-template-columns: 1fr; gap: 4px; }
   .horario-a { display: none; }
+}
+
+/* ---------- destacados, redes y guardado ---------- */
+
+.destacados-edicion { display: grid; gap: 10px; }
+
+.destacado-fila {
+  display: grid;
+  grid-template-columns: auto minmax(140px, 0.6fr) 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.destacado-muestra {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.destacado-icono select,
+.destacado-texto input,
+.red-tipo select,
+.red-liga input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.destacado-icono select:focus,
+.destacado-texto input:focus,
+.red-tipo select:focus,
+.red-liga input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.redes-edicion { display: grid; gap: 10px; margin-bottom: 12px; }
+
+.red-fila {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.5fr) 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .destacado-fila { grid-template-columns: auto 1fr; }
+  .destacado-texto { grid-column: 1 / -1; }
+  .red-fila { grid-template-columns: 1fr auto; }
+  .red-liga { grid-column: 1 / -1; }
+}
+
+/* El guardado queda al final de la página, después de menús y fotos: es lo
+   último que se hace, no algo que interrumpa a media edición. */
+.guardar-final {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.grupo-fotos { margin-top: 26px; }
+
+.grupo-fotos-cabeza {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.grupo-fotos-titulo {
+  font-size: 15.5px;
+  font-weight: 600;
+  margin: 0;
 }
 
 .categoria-nueva {

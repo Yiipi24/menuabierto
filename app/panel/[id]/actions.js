@@ -4,10 +4,16 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { geocodificar, mismaDireccion } from "../../../lib/geocodificar";
+import { estadoValido } from "../../../lib/estados";
+import { conEsquema, redValida } from "../../../lib/redes";
+import { iconoValido, ICONO_POR_DEFECTO, MAX_DESTACADOS } from "../../destacados";
+import { FOTOS_FACHADA, fotosPlatillosIncluidas } from "../../../lib/planes";
 
 const BUCKET_FOTOS = "restaurantes";
 const MAX_FOTO_BYTES = 5 * 1024 * 1024;
 const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const CATEGORIAS_FOTO = ["fachada", "platillo"];
+const MAX_REDES = 8;
 
 // Todo lo de esta página exige ser el dueño. Se comprueba aquí además de en la
 // RLS para poder responder con un mensaje claro en vez de un update vacío.
@@ -22,7 +28,9 @@ async function sesionYRestaurante(id) {
   // interesa si viene o no, no su contenido.
   const { data: restaurante } = await supabase
     .from("restaurants")
-    .select("id, street, neighborhood, city, state, postal_code, location")
+    .select(
+      "id, street, neighborhood, city, state, postal_code, location, plan, premium_until",
+    )
     .eq("id", id)
     .eq("owner_id", auth.user.id)
     .maybeSingle();
@@ -63,6 +71,7 @@ export async function guardarRestaurante(_prevState, formData) {
 
   const nombre = String(formData.get("name") ?? "").trim();
   const ciudad = String(formData.get("city") ?? "").trim();
+  const estado = String(formData.get("state") ?? "").trim();
   const nivel = Number(formData.get("price_level") ?? 2);
 
   if (nombre.length < 2) {
@@ -70,6 +79,9 @@ export async function guardarRestaurante(_prevState, formData) {
   }
   if (ciudad.length < 2) {
     return { status: "error", message: "La ciudad es obligatoria." };
+  }
+  if (!estadoValido(estado)) {
+    return { status: "error", message: "Elige tu estado de la lista." };
   }
   if (!Number.isInteger(nivel) || nivel < 1 || nivel > 4) {
     return { status: "error", message: "Elige un rango de precio." };
@@ -82,14 +94,16 @@ export async function guardarRestaurante(_prevState, formData) {
     street: limpio(formData, "street"),
     neighborhood: limpio(formData, "neighborhood"),
     city: ciudad,
-    state: limpio(formData, "state"),
+    state: estado,
     postal_code: limpio(formData, "postal_code"),
   };
 
-  const sitio = limpio(formData, "website");
   // Sin esquema el enlace se resuelve contra menuabierto.com y no lleva a
   // ningún lado; añadirlo nosotros evita pedírselo al dueño.
-  const website = sitio && !/^https?:\/\//i.test(sitio) ? `https://${sitio}` : sitio;
+  const website = conEsquema(limpio(formData, "website"));
+  const destacados = leerDestacados(formData);
+  const redes = leerRedes(formData);
+  const cerrados = leerDiasCerrados(formData);
 
   const { error } = await supabase
     .from("restaurants")
@@ -101,6 +115,9 @@ export async function guardarRestaurante(_prevState, formData) {
       phone: limpio(formData, "phone"),
       website,
       price_level: nivel,
+      highlights: destacados,
+      social_links: redes,
+      closed_days: cerrados,
     })
     .eq("id", id);
 
@@ -115,7 +132,7 @@ export async function guardarRestaurante(_prevState, formData) {
   const errorCategorias = await guardarCategorias(supabase, id, formData);
   if (errorCategorias) return errorCategorias;
 
-  const errorHorarios = await guardarHorarios(supabase, id, formData);
+  const errorHorarios = await guardarHorarios(supabase, id, formData, cerrados);
   if (errorHorarios) return errorHorarios;
 
   // Al final, y a propósito: preguntarle a un servicio de terceros es lo único
@@ -128,6 +145,39 @@ export async function guardarRestaurante(_prevState, formData) {
   revalidatePath("/panel");
   revalidatePath(`/panel/${id}`);
   return { status: "ok", message: "Cambios guardados." };
+}
+
+// Los tres destacados llegan como campos sueltos (highlight_icon_0, …) porque
+// son un número fijo de renglones. Aquí vuelven a ser la lista que guarda la
+// base, sin los que quedaron en blanco: un destacado vacío no es un destacado.
+function leerDestacados(formData) {
+  const lista = [];
+  for (let i = 0; i < MAX_DESTACADOS; i += 1) {
+    const texto = String(formData.get(`highlight_text_${i}`) ?? "").trim().slice(0, 60);
+    if (!texto) continue;
+    const icono = String(formData.get(`highlight_icon_${i}`) ?? "");
+    lista.push({ icon: iconoValido(icono) ? icono : ICONO_POR_DEFECTO, text: texto });
+  }
+  return lista;
+}
+
+function leerRedes(formData) {
+  const lista = [];
+  for (let i = 0; i < MAX_REDES; i += 1) {
+    const url = conEsquema(formData.get(`social_url_${i}`));
+    if (!url) continue;
+    const red = String(formData.get(`social_network_${i}`) ?? "");
+    lista.push({ network: redValida(red) ? red : "otra", url: url.slice(0, 200) });
+  }
+  return lista;
+}
+
+function leerDiasCerrados(formData) {
+  const dias = formData
+    .getAll("closed_days")
+    .map((d) => Number(d))
+    .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+  return [...new Set(dias)].sort((a, b) => a - b);
 }
 
 // Se valida antes de escribir nada, no al llegar el turno del punto: si el
@@ -237,10 +287,15 @@ async function guardarCategorias(supabase, id, formData) {
   return null;
 }
 
-async function guardarHorarios(supabase, id, formData) {
+async function guardarHorarios(supabase, id, formData, cerrados) {
   const filas = [];
+  const cerrado = new Set(cerrados);
 
   for (let dia = 0; dia < 7; dia += 1) {
+    // Un día marcado como cerrado no guarda horas aunque los campos traigan
+    // algo: el navegador manda el valor viejo de un input deshabilitado en
+    // cuanto deja de estarlo, y el dueño ya dijo que ese día no abre.
+    if (cerrado.has(dia)) continue;
     const abre = String(formData.get(`opens_${dia}`) ?? "").trim();
     const cierra = String(formData.get(`closes_${dia}`) ?? "").trim();
     // Un día sin horas es un día cerrado, no un error: es lo que hace el
@@ -324,12 +379,39 @@ export async function subirFotos(_prevState, formData) {
     return { status: "error", message: "Ese restaurante no es tuyo." };
   }
 
+  const categoria = String(formData.get("categoria") ?? "");
+  if (!CATEGORIAS_FOTO.includes(categoria)) {
+    return { status: "error", message: "Di si es la fachada o un platillo." };
+  }
+
   const archivos = formData
     .getAll("fotos")
     .filter((f) => typeof f === "object" && f.size > 0);
 
   if (!archivos.length) {
     return { status: "error", message: "Elige al menos una foto." };
+  }
+
+  // El cupo depende del papel de la foto: la fachada es una sola y los
+  // platillos crecen con el plan. Se cuenta antes de subir nada para no dejar
+  // archivos a medias en el bucket cuando el cupo ya estaba lleno.
+  const cupo =
+    categoria === "fachada" ? FOTOS_FACHADA : fotosPlatillosIncluidas(restaurante);
+
+  const { count: yaHay } = await supabase
+    .from("restaurant_media")
+    .select("id", { count: "exact", head: true })
+    .eq("restaurant_id", id)
+    .eq("category", categoria);
+
+  if ((yaHay ?? 0) + archivos.length > cupo) {
+    return {
+      status: "error",
+      message:
+        categoria === "fachada"
+          ? "La fachada es una sola foto. Borra la que tienes para cambiarla."
+          : `Tu plan incluye ${cupo} ${cupo === 1 ? "foto" : "fotos"} de platillos. Borra alguna o mejora tu plan.`,
+    };
   }
 
   const { data: ultima } = await supabase
@@ -367,8 +449,9 @@ export async function subirFotos(_prevState, formData) {
     const { error: errorFila } = await supabase.from("restaurant_media").insert({
       restaurant_id: id,
       kind: "foto",
+      category: categoria,
       storage_path: ruta,
-      position: posicion,
+      position: categoria === "fachada" ? -1 : posicion,
     });
 
     if (errorFila) {
@@ -382,6 +465,7 @@ export async function subirFotos(_prevState, formData) {
   }
 
   revalidatePath(`/panel/${id}`);
+  revalidatePath("/panel");
   return {
     status: "ok",
     message: archivos.length === 1 ? "Foto subida." : "Fotos subidas.",
