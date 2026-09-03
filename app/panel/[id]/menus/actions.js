@@ -6,9 +6,9 @@ import { supabaseSession } from "../../../../lib/supabase";
 import { menusIncluidos } from "../../../../lib/planes";
 import { plantillaValida } from "../../../../lib/plantillas";
 import { aCentavos } from "../../../../lib/precios";
+import { MAX_ARCHIVO_BYTES } from "../../../../lib/subidas";
 
 const BUCKET_MENUS = "menus";
-const MAX_ARCHIVO_BYTES = 10 * 1024 * 1024;
 const TIPOS_ARCHIVO = {
   "application/pdf": "pdf",
   "image/jpeg": "jpg",
