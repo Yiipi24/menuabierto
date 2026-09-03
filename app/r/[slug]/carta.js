@@ -1,36 +1,11 @@
-import { pesos } from "../../../lib/precios";
+import { estiloDeMenu } from "../../../lib/plantillas";
+import MenuPintado from "../../menu-render";
 
 // El marcado de la carta vive aparte porque la ficha ya no la pinta: ahora la
 // enseña la página /menu, y el día que vuelva a hacer falta en otro lado no hay
 // que copiarla.
 
-function Grupos({ menu, Titulo }) {
-  return (
-    /* La plantilla solo cambia cómo se pinta: el marcado es el mismo y el
-       estilo cuelga de esta clase. */
-    <div className={`menu-plantilla plantilla-${menu.template}`}>
-      {menu.grupos.map((g) => (
-        <section className="menu-seccion" key={g.id}>
-          <Titulo>{g.name}</Titulo>
-          <ul className="menu-lista">
-            {g.items.map((p) => (
-              <li className={p.is_available ? "menu-item" : "menu-item menu-agotado"} key={p.id}>
-                <div>
-                  <span className="menu-nombre">{p.name}</span>
-                  {p.description ? <span className="menu-desc">{p.description}</span> : null}
-                  {!p.is_available ? <span className="menu-etiqueta">Agotado hoy</span> : null}
-                </div>
-                <span className="menu-precio">{pesos(p.price_cents, p.currency) ?? "—"}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-export default function Carta({ menus, restaurante }) {
+export default function Carta({ menus, restaurante, destacados = [] }) {
   if (!menus.length) {
     return (
       <p className="ficha-vacio">
@@ -38,10 +13,6 @@ export default function Carta({ menus, restaurante }) {
       </p>
     );
   }
-
-  // Con un solo menú su nombre ya es el h2 de arriba y no se repite como h3,
-  // así que las secciones suben un nivel para no dejar el hueco.
-  const TituloDeSeccion = menus.length > 1 ? "h4" : "h3";
 
   return (
     <>
@@ -60,10 +31,9 @@ export default function Carta({ menus, restaurante }) {
 
       {menus.map((m) => (
         <section className="menu-carta" id={`menu-${m.id}`} key={m.id}>
-          {menus.length > 1 ? <h3 className="menu-carta-titulo">{m.name}</h3> : null}
-
           {m.kind === "archivo" ? (
             <div className="menu-archivo-publico">
+              <h2 className="menu-carta-titulo">{m.name}</h2>
               {m.fileMime === "application/pdf" ? (
                 <object
                   className="menu-archivo-vista"
@@ -86,7 +56,12 @@ export default function Carta({ menus, restaurante }) {
               </a>
             </div>
           ) : (
-            <Grupos menu={m} Titulo={TituloDeSeccion} />
+            <MenuPintado
+              menu={m}
+              restaurante={restaurante}
+              destacados={destacados}
+              estilo={estiloDeMenu(m.template, m.style)}
+            />
           )}
         </section>
       ))}

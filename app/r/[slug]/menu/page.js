@@ -32,8 +32,18 @@ export default async function MenuCompleto({ params }) {
   }
   if (!datos) notFound();
 
-  const { r, cocinas, menus } = datos;
+  const { r, cocinas, menus, destacados } = datos;
   const ficha = `/r/${encodeURIComponent(slug)}`;
+
+  // La línea de abajo del título es la misma en todas las plantillas: el
+  // restaurante, su cocina y su nivel de precio. Se arma aquí una vez.
+  const linea = [
+    r.name,
+    cocinas.length ? cocinas.join(" · ") : null,
+    r.price_level ? PRECIO[r.price_level] : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <>
@@ -54,16 +64,16 @@ export default async function MenuCompleto({ params }) {
           ← Volver a {r.name}
         </Link>
 
-        <header className="menu-pagina-encabezado">
-          <h1>{menus.length === 1 ? menus[0].name : "Menú"}</h1>
-          <p className="ficha-tipo">
-            {r.name}
-            {cocinas.length ? ` · ${cocinas.join(" · ")}` : ""}
-            {r.price_level ? ` · ${PRECIO[r.price_level]}` : ""}
-          </p>
-        </header>
+        {/* Cada carta trae su propio encabezado —así se ve completa cuando
+            alguien la abre por el QR—, así que el título de la página solo
+            existe para el lector de pantalla y el buscador. */}
+        <h1 className="sr-only">Menú de {r.name}</h1>
 
-        <Carta menus={menus} restaurante={r} />
+        <Carta
+          menus={menus}
+          restaurante={{ name: r.name, linea }}
+          destacados={destacados}
+        />
       </main>
 
       <footer className="footer">

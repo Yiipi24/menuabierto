@@ -2,6 +2,7 @@ import { supabaseServer } from "../../../lib/supabase";
 import { plantillaValida } from "../../../lib/plantillas";
 import { destacadosDe } from "../../destacados";
 import { conEsquema, nombreDeRed } from "../../../lib/redes";
+import { agruparPlatillos } from "../../../lib/menus";
 
 // La carga vive aquí y no en la página porque ahora son dos: la ficha y la
 // carta completa. Las dos necesitan lo mismo y ninguna debería tener su propia
@@ -63,35 +64,26 @@ export function repiteDireccion(texto, r) {
 }
 
 // Cada menú se arma completo aquí y no en el render: la página pinta lo que
-// recibe y no tiene que cruzar tres listas mientras genera HTML.
-//
-// Un platillo sin sección no desaparece: se va a un grupo propio al final. Y
-// una sección vacía tampoco se pinta, porque un encabezado sin nada debajo
-// solo hace creer que algo falló.
+// recibe y no tiene que cruzar tres listas mientras genera HTML. El agrupado
+// en sí vive en lib/menus porque la vista previa del panel usa el mismo.
 function armarMenus(supabase, menus, secciones, platillos) {
   return menus
     .map((m) => {
       const mios = platillos.filter((p) => p.menu_id === m.id);
-      const grupos = [
-        ...secciones
-          .filter((s) => s.menu_id === m.id)
-          .map((s) => ({
-            id: s.id,
-            name: s.name,
-            items: mios.filter((p) => p.section_id === s.id),
-          })),
-        {
-          id: `${m.id}-sueltos`,
-          name: "Otros platillos",
-          items: mios.filter((p) => !p.section_id),
-        },
-      ].filter((g) => g.items.length);
+      const grupos = agruparPlatillos(
+        secciones.filter((s) => s.menu_id === m.id),
+        mios,
+        `${m.id}-sueltos`,
+      );
 
       return {
         id: m.id,
         name: m.name,
         kind: m.kind,
         template: plantillaValida(m.template),
+        // El estilo se pasa tal cual: quien lo pinta lo sanea con
+        // `estiloDeMenu`, que sabe cuáles son los ajustes de esa plantilla.
+        style: m.style,
         fileMime: m.file_mime,
         fileUrl: m.file_path
           ? supabase.storage.from(BUCKET_MENUS).getPublicUrl(m.file_path).data.publicUrl
@@ -135,7 +127,7 @@ export async function cargar(slug) {
     // la del día. Las ocultas son las que el dueño está preparando.
     supabase
       .from("menus")
-      .select("id, name, kind, template, file_path, file_mime, position")
+      .select("id, name, kind, template, style, file_path, file_mime, position")
       .eq("restaurant_id", r.id)
       .eq("is_visible", true)
       .order("position")
@@ -148,7 +140,7 @@ export async function cargar(slug) {
       .order("created_at"),
     supabase
       .from("menu_items")
-      .select("id, menu_id, section_id, name, description, price_cents, currency, is_available, position")
+      .select("id, menu_id, section_id, name, description, price_cents, currency, icon, is_available, position")
       .eq("restaurant_id", r.id)
       .order("position")
       .order("created_at"),

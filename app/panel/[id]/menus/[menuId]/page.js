@@ -21,7 +21,7 @@ export default async function EditarMenu({ params }) {
   // restaurante es de quien está firmado.
   const { data: restaurante } = await supabase
     .from("restaurants")
-    .select("id, name")
+    .select("id, name, highlights")
     .eq("id", id)
     .eq("owner_id", auth.user.id)
     .maybeSingle();
@@ -30,7 +30,7 @@ export default async function EditarMenu({ params }) {
 
   const { data: menu } = await supabase
     .from("menus")
-    .select("id, name, kind, template, file_path, file_mime, is_visible")
+    .select("id, name, kind, template, style, file_path, file_mime, is_visible")
     .eq("id", menuId)
     .eq("restaurant_id", id)
     .maybeSingle();
@@ -46,7 +46,7 @@ export default async function EditarMenu({ params }) {
       .order("created_at"),
     supabase
       .from("menu_items")
-      .select("id, section_id, name, description, price_cents, is_available, position")
+      .select("id, section_id, name, description, price_cents, icon, is_available, position")
       .eq("menu_id", menuId)
       .order("position")
       .order("created_at"),
@@ -77,7 +77,16 @@ export default async function EditarMenu({ params }) {
             : "Está oculto: no aparece en la ficha hasta que lo muestres."}
         </p>
 
-        <Ajustes id={id} menu={menu} />
+        {/* La vista previa de los ajustes pinta la carta de verdad, así que
+            necesita lo mismo que la ficha: el restaurante, sus destacados y
+            los platillos ya capturados. */}
+        <Ajustes
+          id={id}
+          menu={menu}
+          restaurante={restaurante}
+          secciones={secciones ?? []}
+          platillos={platillos ?? []}
+        />
 
         {menu.kind === "archivo" ? (
           <Archivo id={id} menu={menu} url={urlArchivo} />
