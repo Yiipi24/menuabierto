@@ -1064,15 +1064,28 @@ section { scroll-margin-top: 80px; }
 
 .red-fila {
   display: grid;
-  grid-template-columns: minmax(140px, 0.5fr) 1fr auto;
+  grid-template-columns: auto minmax(130px, 0.4fr) 1fr auto;
   align-items: center;
   gap: 10px;
+}
+
+/* La fila del panel abre con el logo de la red elegida, el mismo que verá
+   quien entre a la ficha. */
+.red-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--paper-warm);
+  color: var(--ink-soft);
 }
 
 @media (max-width: 560px) {
   .destacado-fila { grid-template-columns: auto 1fr; }
   .destacado-texto { grid-column: 1 / -1; }
-  .red-fila { grid-template-columns: 1fr auto; }
+  .red-fila { grid-template-columns: auto 1fr auto; }
   .red-liga { grid-column: 1 / -1; }
 }
 
@@ -1653,7 +1666,20 @@ section { scroll-margin-top: 80px; }
 
 .ficha { padding: 28px 0 72px; }
 
-.ficha-volver { display: inline-block; margin-bottom: 18px; text-decoration: none; }
+/* Volver es una acción, no un texto suelto: la flecha y el color de la marca
+   la hacen visible sin gritar como un botón. */
+.ficha-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.ficha-volver:hover { text-decoration: underline; }
 
 .ficha-encabezado h1 { font-size: 34px; }
 
@@ -1756,27 +1782,166 @@ section { scroll-margin-top: 80px; }
 .ficha-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 18px 20px;
-  background: var(--paper-warm);
+  padding: 20px 22px;
+  background: var(--paper);
 }
 
-.ficha-card h3 { font-size: 16px; margin-bottom: 8px; }
+.ficha-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 16px;
+}
+
+.ficha-card h3 .icono { color: var(--accent); }
 
 .ficha-card p { color: var(--ink-soft); font-size: 15px; }
 
-.ficha-card a { display: block; font-size: 15px; margin-top: 6px; }
-
 .ficha-card .btn { margin-top: 12px; }
+
+/* La cabecera lleva el título a un lado y el estado al otro, y la línea de
+   abajo separa el encabezado de la lista sin encerrarla en otra caja. */
+.ficha-card-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ficha-estado {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.ficha-estado-abierto { background: #ecfdf3; color: #15803d; }
+.ficha-estado-cerrado { background: var(--paper-warm); color: var(--ink-soft); }
 
 .ficha-horarios { list-style: none; margin: 0; padding: 0; font-size: 14.5px; }
 
 .ficha-horarios li {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 4px 0;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 9px;
   color: var(--ink-soft);
 }
+
+.ficha-horarios li + li { box-shadow: inset 0 1px 0 var(--line); }
+
+.ficha-horarios-dia { display: flex; align-items: center; gap: 8px; }
+
+.ficha-horarios-horas {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* El día de hoy se pinta como una fila propia: es el dato que se viene a
+   buscar y antes había que contarlo con el dedo. */
+.ficha-horarios .es-hoy {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.ficha-horarios .es-hoy + li { box-shadow: none; }
+
+.ficha-horarios .es-hoy em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.ficha-horarios .es-cerrado .ficha-horarios-horas { color: var(--ink-faint); }
+
+.ficha-contacto { list-style: none; margin: 0; padding: 0; }
+
+.ficha-contacto li + li { margin-top: 2px; }
+
+.ficha-contacto a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin: 0 -10px;
+  border-radius: 9px;
+  font-size: 15px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.ficha-contacto a:hover { background: var(--paper-warm); }
+
+.ficha-contacto + .ficha-redes { margin-top: 14px; }
+
+.ficha-contacto .icono { color: var(--ink-faint); flex: none; }
+
+.ficha-card-intro { font-size: 14.5px; color: var(--ink-soft); margin: 10px 0 14px; }
+
+/* Cada red es una fila con su logo de marca: se reconocen de un vistazo, cosa
+   que una columna de enlaces subrayados no lograba. */
+.ficha-redes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.ficha-redes a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  font-size: 15px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ficha-redes a:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+.ficha-redes .ficha-red-nombre { flex: 1; font-weight: 500; }
+
+.ficha-redes a > .icono { color: var(--ink-faint); flex: none; }
+
+/* El logo va en su color de marca sobre un disco claro: es como se reconoce
+   cada red, y el gris de la interfaz las volvía todas iguales. */
+.ficha-red-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--paper-warm);
+  color: var(--ink-soft);
+}
+
+.red-instagram { background: #fdf0f6; color: #c13584; }
+.red-facebook { background: #eef3fd; color: #1877f2; }
+.red-tiktok { background: #f2f2f4; color: #111014; }
+.red-whatsapp { background: #eafaf0; color: #25d366; }
+.red-x { background: #f2f2f4; color: #111014; }
+.red-youtube { background: #fdeeee; color: #ff0000; }
+.red-ubereats { background: #eafaef; color: #06c167; }
+.red-rappi { background: #fdeef3; color: #ff2b6b; }
+.red-didi { background: #fff5e6; color: #fc9153; }
 
 @media (max-width: 860px) {
   .ficha-detalles { grid-template-columns: 1fr; }
@@ -2403,8 +2568,8 @@ img.menu-archivo-vista { min-height: 0; }
    derecha la ficha con el botón. */
 .ficha-banda {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 28px;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
   align-items: center;
   margin-top: 28px;
   padding: 20px 24px;
@@ -2413,23 +2578,27 @@ img.menu-archivo-vista { min-height: 0; }
   background: var(--paper);
 }
 
-.ficha-banda-dir {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 15.5px;
-}
-
-.ficha-banda-dir .icono { color: var(--accent); margin-top: 2px; }
-
 .ficha-banda-donde {
-  border-left: 1px solid var(--line);
-  padding-left: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.ficha-banda-donde h2 { font-size: 16px; margin-bottom: 6px; }
+.ficha-banda-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
 
-.ficha-banda-donde p { color: var(--ink-soft); font-size: 14.5px; }
+.ficha-banda-donde h2 { font-size: 15px; margin-bottom: 3px; }
+
+.ficha-banda-donde p { color: var(--ink-soft); font-size: 15px; }
 
 .ficha-banda-boton {
   display: inline-flex;
@@ -2537,7 +2706,6 @@ img.menu-archivo-vista { min-height: 0; }
   .ficha-hero { grid-template-columns: 1fr; gap: 24px; }
   .ficha-hero-texto h1 { font-size: 34px; }
   .ficha-banda { grid-template-columns: 1fr; gap: 18px; }
-  .ficha-banda-donde { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 18px; }
   .ficha-banda-boton { justify-content: center; }
   .resenas-banda-encabezado h2 { font-size: 25px; }
 }

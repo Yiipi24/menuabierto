@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { guardarRestaurante, crearCategoria } from "./actions";
 import { ESTADOS } from "../../../lib/estados";
 import { REDES } from "../../../lib/redes";
+import { IconoRed } from "../../redes-iconos";
 import {
   ICONOS_DESTACADO,
   ICONO_POR_DEFECTO,
@@ -285,6 +286,11 @@ export default function EditarForm({
           <div className="redes-edicion">
             {redes.map((r, i) => (
               <div className="red-fila" key={i}>
+                {/* El logo cambia con el select: sin él las ocho filas se ven
+                    iguales y hay que leerlas una por una. */}
+                <span className={`red-logo red-${r.network}`}>
+                  <IconoRed slug={r.network} ancho={20} />
+                </span>
                 <label className="red-tipo">
                   <span className="sr-only">Red social {i + 1}</span>
                   <select

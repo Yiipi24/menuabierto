@@ -100,3 +100,29 @@ export function IconoCompartir(props) {
     </Svg>
   );
 }
+
+export function IconoGlobo(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.4 2.5 3.6 5.5 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.5-3.6-9s1.2-6.5 3.6-9z" />
+    </Svg>
+  );
+}
+
+export function IconoFlechaAtras(props) {
+  return (
+    <Svg {...props}>
+      <path d="M19 12H5M11 6l-6 6 6 6" />
+    </Svg>
+  );
+}
+
+export function IconoEnlaceExterno(props) {
+  return (
+    <Svg {...props}>
+      <path d="M14 4h6v6M20 4l-8.5 8.5" />
+      <path d="M18 14.5V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H10" />
+    </Svg>
+  );
+}

@@ -16,8 +16,50 @@ export function hora(t) {
   return typeof t === "string" ? t.slice(0, 5) : t;
 }
 
+// El día que la ficha marca como "hoy" es el del local, no el del servidor:
+// en Vercel son las seis de la mañana del martes mientras en Monterrey todavía
+// es lunes por la noche.
+export function diaLocal(zona) {
+  const dias = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  try {
+    const corto = new Intl.DateTimeFormat("en-US", {
+      timeZone: zona || "America/Mexico_City",
+      weekday: "short",
+    })
+      .format(new Date())
+      .toLowerCase();
+    const i = dias.indexOf(corto);
+    return i === -1 ? new Date().getDay() : i;
+  } catch {
+    return new Date().getDay();
+  }
+}
+
 export function direccionDe(r) {
   return [r.street, r.neighborhood, r.city, r.state, r.postal_code].filter(Boolean).join(", ");
+}
+
+// Muchos dueños pegan la dirección otra vez en la descripción, así que la
+// ficha la enseñaba dos y tres veces. Se comparan sin acentos, sin comas y sin
+// mayúsculas porque nunca la escriben igual dos veces.
+function normalizar(texto) {
+  return String(texto ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// Es la dirección repetida si comparten la calle y el número: lo demás
+// (colonia, "Cdad.", el estado abreviado) cambia de una a otra.
+export function repiteDireccion(texto, r) {
+  const a = normalizar(texto);
+  if (!a) return false;
+  const calle = normalizar(r?.street);
+  if (!calle) return false;
+  const dir = normalizar(direccionDe(r));
+  return a === dir || (a.includes(calle) && a.length < dir.length + 40);
 }
 
 // Cada menú se arma completo aquí y no en el render: la página pinta lo que
@@ -70,7 +112,7 @@ export async function cargar(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, rating_avg, rating_count, highlights, social_links, closed_days",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, closed_days",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -122,7 +164,11 @@ export async function cargar(slug) {
     // la página no debería preguntarse si cada pieza trae lo que dice traer.
     destacados: destacadosDe(r.highlights),
     redes: (Array.isArray(r.social_links) ? r.social_links : [])
-      .map((red) => ({ nombre: nombreDeRed(red?.network), url: conEsquema(red?.url) }))
+      .map((red) => ({
+        slug: red?.network ?? "otra",
+        nombre: nombreDeRed(red?.network),
+        url: conEsquema(red?.url),
+      }))
       .filter((red) => red.url),
     cerrados: (r.closed_days ?? []).map(Number),
     cocinas: (cocinas.data ?? []).map((c) => c.cuisines?.name).filter(Boolean),
