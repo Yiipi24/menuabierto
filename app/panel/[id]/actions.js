@@ -8,10 +8,9 @@ import { estadoValido } from "../../../lib/estados";
 import { conEsquema, redValida } from "../../../lib/redes";
 import { iconoValido, ICONO_POR_DEFECTO, MAX_DESTACADOS } from "../../destacados";
 import { FOTOS_FACHADA, fotosPlatillosIncluidas } from "../../../lib/planes";
+import { MAX_FOTO_BYTES, TIPOS_FOTO } from "../../../lib/subidas";
 
 const BUCKET_FOTOS = "restaurantes";
-const MAX_FOTO_BYTES = 5 * 1024 * 1024;
-const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const CATEGORIAS_FOTO = ["fachada", "platillo"];
 const MAX_REDES = 8;
 

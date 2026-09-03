@@ -2,16 +2,39 @@
 
 import { useActionState, useRef } from "react";
 import { subirArchivoMenu, quitarArchivoMenu } from "../actions";
+import {
+  MAX_ARCHIVO_BYTES,
+  TIPOS_ARCHIVO_MENU,
+  revisarArchivos,
+} from "../../../../../lib/subidas";
 
 const inicial = { status: "idle", message: "" };
 
 export default function Archivo({ id, menu, url }) {
   const entrada = useRef(null);
   const [state, action, pending] = useActionState(async (prev, formData) => {
-    const resultado = await subirArchivoMenu(prev, formData);
-    // Vaciar el input tras subir evita mandar dos veces el mismo archivo.
-    if (resultado.status === "ok" && entrada.current) entrada.current.value = "";
-    return resultado;
+    const archivos = formData.getAll("archivo").filter((f) => f && f.size > 0);
+    // Igual que con las fotos: un archivo por encima del tope reventaría la
+    // petición antes de que la acción llegue a revisarlo.
+    const aviso = revisarArchivos(archivos, {
+      tipos: TIPOS_ARCHIVO_MENU,
+      maxBytes: MAX_ARCHIVO_BYTES,
+      queEs: "el archivo",
+    });
+    if (aviso) return { status: "error", message: aviso };
+
+    try {
+      const resultado = await subirArchivoMenu(prev, formData);
+      // Vaciar el input tras subir evita mandar dos veces el mismo archivo.
+      if (resultado.status === "ok" && entrada.current) entrada.current.value = "";
+      return resultado;
+    } catch (error) {
+      console.error("subir archivo del menú", error);
+      return {
+        status: "error",
+        message: "No pudimos subir el archivo. Revisa tu conexión e inténtalo otra vez.",
+      };
+    }
   }, inicial);
 
   const esPdf = menu.file_mime === "application/pdf";

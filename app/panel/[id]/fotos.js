@@ -2,6 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import { subirFotos, borrarFoto } from "./actions";
+import { MAX_FOTO_BYTES, TIPOS_FOTO, revisarArchivos } from "../../../lib/subidas";
 
 const inicial = { status: "idle", message: "" };
 
@@ -56,10 +57,31 @@ function GrupoFotos({ id, categoria, titulo, pista, fotos, cupo, multiple = fals
   const entrada = useRef(null);
   const [state, action, pending] = useActionState(
     async (prev, formData) => {
-      const resultado = await subirFotos(prev, formData);
-      // Vaciar el input tras subir evita mandar dos veces las mismas fotos.
-      if (resultado.status === "ok" && entrada.current) entrada.current.value = "";
-      return resultado;
+      const archivos = formData.getAll("fotos").filter((f) => f && f.size > 0);
+      // Se revisa aquí antes de mandar: una foto de más de 5 MB reventaría la
+      // petición entera y con ella la página, borrando lo que la persona
+      // llevara escrito en la ficha.
+      const aviso = revisarArchivos(archivos, {
+        tipos: TIPOS_FOTO,
+        maxBytes: MAX_FOTO_BYTES,
+        queEs: "la foto",
+      });
+      if (aviso) return { status: "error", message: aviso };
+
+      try {
+        const resultado = await subirFotos(prev, formData);
+        // Vaciar el input tras subir evita mandar dos veces las mismas fotos.
+        if (resultado.status === "ok" && entrada.current) entrada.current.value = "";
+        return resultado;
+      } catch (error) {
+        // Cualquier fallo de la subida se queda aquí: dejarlo subir llevaría a
+        // la pantalla de error y a perder el resto del formulario.
+        console.error("subir fotos", error);
+        return {
+          status: "error",
+          message: "No pudimos subir la foto. Revisa tu conexión e inténtalo otra vez.",
+        };
+      }
     },
     inicial,
   );
