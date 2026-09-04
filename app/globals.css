@@ -4262,7 +4262,10 @@ img.menu-archivo-vista { min-height: 0; }
   gap: 10px;
 }
 
-.insignia {
+/* Una tarjeta, no una píldora: `insignia` a secas ya era de las etiquetas que
+   van encima de la foto en el buscador, y esta regla, al ir después en el
+   archivo, se las comía. */
+.insignia-tarjeta {
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -4272,9 +4275,12 @@ img.menu-archivo-vista { min-height: 0; }
   background: var(--paper);
 }
 
-.insignia-ganada { border-color: var(--accent); background: var(--paper); }
+.insignia-tarjeta-ganada { border-color: var(--accent); }
 
-.insignia-texto { display: flex; flex-direction: column; gap: 2px; }
+/* `flex: 1` para que el texto se quede con el ancho que sobra: sin eso, el
+   sello "Ganada" le robaba espacio y la descripción bajaba a una columna de
+   tres palabras por renglón. */
+.insignia-texto { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 
 .insignia-texto strong { font-size: 16px; }
 
@@ -4289,8 +4295,8 @@ img.menu-archivo-vista { min-height: 0; }
 .insignia-texto p { font-size: 14px; color: var(--ink-soft); margin: 4px 0 0; }
 
 .insignia-sello {
-  margin-left: auto;
-  align-self: center;
+  align-self: flex-start;
+  margin-top: 9px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--accent);

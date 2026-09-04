@@ -125,7 +125,11 @@ export default async function Insignias() {
             const ganada = total >= insignia.meta;
             return (
               <li
-                className={ganada ? "insignia insignia-ganada" : "insignia"}
+                className={
+                  ganada
+                    ? "insignia-tarjeta insignia-tarjeta-ganada"
+                    : "insignia-tarjeta"
+                }
                 key={insignia.slug}
               >
                 <span
@@ -143,8 +147,11 @@ export default async function Insignias() {
                       : `Con ${insignia.meta} reseñas`}
                   </span>
                   <p>{insignia.descripcion}</p>
+                  {/* Debajo del texto y no al lado: en una tarjeta angosta, el
+                      sello y la descripción se peleaban el ancho y la dejaban
+                      en tres palabras por renglón. */}
+                  {ganada ? <span className="insignia-sello">Ganada</span> : null}
                 </div>
-                {ganada ? <span className="insignia-sello">Ganada</span> : null}
               </li>
             );
           })}
