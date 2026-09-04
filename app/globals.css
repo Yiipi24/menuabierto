@@ -1,3 +1,33 @@
+/* Las dos letras de las plantillas. Se sirven desde /public/fuentes y no desde
+   Google Fonts: una carta se abre en la mesa, muchas veces con mala señal, y
+   una petición a otro dominio antes de la primera letra es la que se atora.
+
+   `swap` para que el menú se lea de inmediato con la letra del sistema y
+   cambie sola cuando llegue la nuestra; `unicode-range` latino para que el
+   navegador ni siquiera la pida si la carta no trae esas letras. Solo baja la
+   que la plantilla de ese menú use: quien eligió la clásica no paga ninguna. */
+@font-face {
+  font-family: "Yellowtail";
+  src: url("/fuentes/yellowtail-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Oswald";
+  src: url("/fuentes/oswald-latin.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --ink: #1c1917;
   --ink-soft: #57534e;
@@ -2485,6 +2515,7 @@ img.menu-archivo-vista { min-height: 0; }
   --carta-letra: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   --carta-letra-titulo: var(--carta-letra);
+  --carta-letra-nombre: var(--carta-letra);
   color: var(--carta-tinta);
   font-family: var(--carta-letra);
 }
@@ -2592,7 +2623,7 @@ img.menu-archivo-vista { min-height: 0; }
   gap: 12px;
 }
 
-.carta .menu-nombre { font-weight: 700; }
+.carta .menu-nombre { font-family: var(--carta-letra-nombre); font-weight: 700; }
 
 .carta .menu-desc { color: var(--carta-suave); }
 
@@ -2602,6 +2633,7 @@ img.menu-archivo-vista { min-height: 0; }
 
 .carta .menu-precio {
   margin-left: auto;
+  font-family: var(--carta-letra-nombre);
   color: var(--menu-acento);
   font-size: 20px;
   font-weight: 700;
@@ -2654,6 +2686,16 @@ img.menu-archivo-vista { min-height: 0; }
   border-radius: 6px;
 }
 
+/* En el pizarrón solo el título va a mano: los platillos, los precios y los
+   listones son de palo seco angosto, como en el menú de la pared. Es rasgo de
+   la plantilla, no del ajuste de letra —el dueño cambia la letra del título y
+   los platillos siguen apretados—, salvo que elija "Condensada", que aprieta
+   también lo demás. */
+.carta-pizarron {
+  --carta-letra-nombre: "Oswald", "Arial Narrow", "Helvetica Neue",
+    ui-sans-serif, system-ui, sans-serif;
+}
+
 .carta-pizarron .carta-tabla { padding: clamp(24px, 4.5vw, 54px); }
 
 .carta-pizarron .carta-cabeza { border-bottom: 0; padding-bottom: 10px; }
@@ -2664,7 +2706,10 @@ img.menu-archivo-vista { min-height: 0; }
 
 /* El listón de la sección. El pico de los lados es un clip-path sobre un
    bloque relleno: con borde no se puede recortar sin que se coma la línea. */
-.carta-pizarron .carta-seccion { justify-content: center; }
+.carta-pizarron .carta-seccion {
+  justify-content: center;
+  font-family: var(--carta-letra-nombre);
+}
 
 .carta-pizarron .carta-seccion::before,
 .carta-pizarron .carta-seccion::after {
@@ -2818,21 +2863,24 @@ img.menu-archivo-vista { min-height: 0; }
   --carta-letra-titulo: var(--carta-letra);
 }
 
-/* Condensada y manuscrita salen de lo que ya trae el sistema: bajar una fuente
-   son 100 KB antes de que se vea la primera letra, y una carta tiene que
-   abrir rápido en la mesa. */
+/* La condensada aprieta los títulos, las secciones, los platillos y los
+   precios, pero deja la descripción en la letra de siempre: en Oswald, tres
+   renglones de "acompañado de frijoles puercos" se leen mal. Es justo como está
+   el menú de pizarrón que copiamos. */
 .carta-letra-condensada {
-  --carta-letra: "Arial Narrow", "Helvetica Neue", ui-sans-serif, system-ui,
-    sans-serif;
-  --carta-letra-titulo: var(--carta-letra);
-  font-stretch: condensed;
+  --carta-letra-titulo: "Oswald", "Arial Narrow", "Helvetica Neue",
+    ui-sans-serif, system-ui, sans-serif;
+  --carta-letra-nombre: var(--carta-letra-titulo);
 }
 
 .carta-letra-condensada .carta-titulo { letter-spacing: 0.01em; }
 
+.carta-letra-condensada .carta-seccion { letter-spacing: 0.1em; }
+
+/* Las de sistema quedan de respaldo por si la nuestra tarda o no llega. */
 .carta-letra-manuscrita {
-  --carta-letra-titulo: "Segoe Script", "Bradley Hand", "Brush Script MT",
-    "Snell Roundhand", cursive;
+  --carta-letra-titulo: "Yellowtail", "Segoe Script", "Bradley Hand",
+    "Brush Script MT", "Snell Roundhand", cursive;
 }
 
 .carta-letra-manuscrita .carta-titulo {
