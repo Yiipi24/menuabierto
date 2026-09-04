@@ -17,8 +17,12 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   prefijo del nombre es el `version` de `supabase_migrations.schema_migrations`,
   no la hora en que se te ocurrió el cambio. `supabase db push` y `db diff`
   comparan por ese número: con una fecha inventada ven una migración local que
-  "falta" allá y una remota que no conocen, y dejan de servir. Cinco archivos
-  llevaban fecha propia y ya están renombrados.
+  "falta" allá y una remota que no conocen, y dejan de servir. Siete archivos
+  llevaban fecha propia y ya están renombrados; los dos últimos fueron
+  `perfil_destacados_redes_fotos` (20260903204500 → 20260903204955) y
+  `zona_horaria_del_restaurante` (20260903221500 → 20260903224920). La lista
+  de referencia es `supabase_migrations.schema_migrations`, no el reloj de
+  quien escribe la migración.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
