@@ -4387,3 +4387,11 @@ img.menu-archivo-vista { min-height: 0; }
   color: var(--ink-soft);
   margin-bottom: 9px;
 }
+
+/* Cuando la pregunta va arriba de las casillas y no debajo, la línea de
+   separación estorba: no está cerrando nada. */
+.servicio-detalle-primero {
+  margin: 4px 0 16px;
+  padding-top: 0;
+  border-top: 0;
+}
