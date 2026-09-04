@@ -5,7 +5,12 @@ import { guardarRestaurante, crearCategoria } from "./actions";
 import { ESTADOS } from "../../../lib/estados";
 import { REDES } from "../../../lib/redes";
 import { FORMAS_DE_PAGO, formasDePagoDe } from "../../../lib/pagos";
-import { COSTOS_ESTACIONAMIENTO, SERVICIOS, serviciosDe } from "../../../lib/servicios";
+import {
+  COSTOS_ESTACIONAMIENTO,
+  MODOS_DE_SERVICIO,
+  SERVICIOS,
+  serviciosDe,
+} from "../../../lib/servicios";
 import { IconoRed } from "../../redes-iconos";
 import { IconoPago } from "../../pagos-iconos";
 import { IconoServicio } from "../../servicios-iconos";
@@ -90,6 +95,7 @@ export default function EditarForm({
   const [servicios, setServicios] = useState(
     () => new Set(serviciosDe(restaurante.amenities)),
   );
+  const [modoServicio, setModoServicio] = useState(restaurante.service_mode ?? "");
   // El costo va aparte del servicio porque es su letra chica: aparece cuando
   // el estacionamiento se marca y desaparece —vacío— cuando se desmarca.
   const [costoEstacionamiento, setCostoEstacionamiento] = useState(
@@ -576,11 +582,42 @@ export default function EditarForm({
 
         <fieldset className="grupo">
           <legend>
-            Servicios <em>(marca los que tengas)</em>
+            Servicios <em>(cómo se sirve y qué hay en el local)</em>
           </legend>
           <p className="ayuda">
             Se pregunta antes de salir de casa, igual que la forma de pago.
           </p>
+
+          {/* Va arriba y como una sola respuesta: las tres se excluyen entre
+              sí, y es lo primero que decide si alguien va o no. */}
+          <div className="servicio-detalle servicio-detalle-primero">
+            <span className="servicio-detalle-titulo">¿Cómo se sirve?</span>
+            <div className="chips">
+              <label className="chip">
+                <input
+                  type="radio"
+                  name="service_mode"
+                  value=""
+                  checked={modoServicio === ""}
+                  onChange={() => setModoServicio("")}
+                />
+                <span>No lo digo</span>
+              </label>
+              {MODOS_DE_SERVICIO.map((modo) => (
+                <label className="chip" key={modo.slug}>
+                  <input
+                    type="radio"
+                    name="service_mode"
+                    value={modo.slug}
+                    checked={modoServicio === modo.slug}
+                    onChange={() => setModoServicio(modo.slug)}
+                  />
+                  <span>{modo.nombre}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="servicios-edicion">
             {SERVICIOS.map((servicio) => (
               <label className="servicio-opcion" key={servicio.slug}>
