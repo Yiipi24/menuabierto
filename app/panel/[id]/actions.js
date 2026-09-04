@@ -7,7 +7,12 @@ import { geocodificar, mismaDireccion } from "../../../lib/geocodificar";
 import { estadoValido } from "../../../lib/estados";
 import { conEsquema, redValida } from "../../../lib/redes";
 import { formasDePagoDe } from "../../../lib/pagos";
-import { costoDeEstacionamiento, modoDeServicio, serviciosDe } from "../../../lib/servicios";
+import {
+  costoDeEstacionamiento,
+  modoDeServicio,
+  serviciosDe,
+  tipoDeEstacionamiento,
+} from "../../../lib/servicios";
 import { iconoValido, ICONO_POR_DEFECTO, MAX_DESTACADOS } from "../../destacados";
 import { FOTOS_FACHADA, fotosPlatillosIncluidas } from "../../../lib/planes";
 import { MAX_FOTO_BYTES, TIPOS_FOTO } from "../../../lib/subidas";
@@ -114,6 +119,10 @@ export async function guardarRestaurante(_prevState, formData) {
     formData.get("parking_cost"),
     servicios,
   );
+  const tipoEstacionamiento = tipoDeEstacionamiento(
+    formData.get("parking_kind"),
+    servicios,
+  );
   const modo = modoDeServicio(formData.get("service_mode"));
   const cerrados = leerDiasCerrados(formData);
 
@@ -132,6 +141,7 @@ export async function guardarRestaurante(_prevState, formData) {
       payment_methods: pagos,
       amenities: servicios,
       parking_cost: costoEstacionamiento?.slug ?? null,
+      parking_kind: tipoEstacionamiento?.slug ?? null,
       service_mode: modo?.slug ?? null,
       closed_days: cerrados,
     })
