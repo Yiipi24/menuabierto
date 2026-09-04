@@ -5,6 +5,7 @@ import { currentUser } from "../../../lib/supabase";
 import { qrRuta } from "../../../lib/qr";
 import Brand from "../../brand";
 import Resenas from "./resenas";
+import { MedirVista, EnlaceMedido, BotonGuardar } from "../../medir";
 import { cargar, diaLocal, direccionDe, hora, repiteDireccion, DIAS, PRECIO } from "./datos";
 import { IconoDestacado } from "../../destacados";
 import { IconoRed } from "../../redes-iconos";
@@ -94,7 +95,9 @@ export default async function Ficha({ params }) {
 
   const direccion = direccionDe(r);
   const rutaMenu = `/r/${encodeURIComponent(slug)}/menu`;
-  const urlMenu = await urlAbsoluta(rutaMenu);
+  // El QR apunta al menú con su marca de origen: es la única manera de saber
+  // después cuántos de los que miraron el menú venían de la mesa.
+  const urlMenu = await urlAbsoluta(`${rutaMenu}?src=qr`);
   const hayMenu = menus.length > 0;
 
   // Una foto grande y el resto en tiras chicas. Antes las seis salían del mismo
@@ -140,6 +143,7 @@ export default async function Ficha({ params }) {
       </nav>
 
       <main className="ficha">
+        <MedirVista slug={slug} />
         <div className="wrap">
           <Link className="ficha-volver" href="/">
             <IconoFlechaAtras ancho={18} />
@@ -169,6 +173,7 @@ export default async function Ficha({ params }) {
                     Aún sin reseñas · escribe la primera
                   </a>
                 )}
+                <BotonGuardar slug={slug} nombre={r.name} />
               </p>
 
               {tiraDestacados.length ? (
@@ -212,7 +217,9 @@ export default async function Ficha({ params }) {
               </div>
             </div>
             {direccion ? (
-              <a
+              <EnlaceMedido
+                slug={slug}
+                evento="directions_click"
                 className="btn ficha-banda-boton"
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                   `${r.name} ${direccion}`,
@@ -222,7 +229,7 @@ export default async function Ficha({ params }) {
               >
                 <IconoCompartir ancho={19} />
                 Cómo llegar
-              </a>
+              </EnlaceMedido>
             ) : null}
           </section>
 
@@ -343,18 +350,28 @@ export default async function Ficha({ params }) {
                     <ul className="ficha-contacto">
                       {r.phone ? (
                         <li>
-                          <a href={`tel:${r.phone}`}>
+                          <EnlaceMedido
+                            slug={slug}
+                            evento="phone_click"
+                            href={`tel:${r.phone}`}
+                          >
                             <IconoTelefono ancho={18} />
                             {r.phone}
-                          </a>
+                          </EnlaceMedido>
                         </li>
                       ) : null}
                       {r.website ? (
                         <li>
-                          <a href={r.website} target="_blank" rel="noopener noreferrer">
+                          <EnlaceMedido
+                            slug={slug}
+                            evento="website_click"
+                            href={r.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <IconoGlobo ancho={18} />
                             Sitio web
-                          </a>
+                          </EnlaceMedido>
                         </li>
                       ) : null}
                     </ul>
@@ -366,13 +383,19 @@ export default async function Ficha({ params }) {
                     <ul className="ficha-redes">
                       {redes.map((red) => (
                         <li key={red.url}>
-                          <a href={red.url} target="_blank" rel="noopener noreferrer">
+                          <EnlaceMedido
+                            slug={slug}
+                            evento="social_click"
+                            href={red.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <span className={`ficha-red-logo red-${red.slug}`}>
                               <IconoRed slug={red.slug} ancho={20} />
                             </span>
                             <span className="ficha-red-nombre">{red.nombre}</span>
                             <IconoEnlaceExterno ancho={16} />
-                          </a>
+                          </EnlaceMedido>
                         </li>
                       ))}
                     </ul>
@@ -435,7 +458,13 @@ export default async function Ficha({ params }) {
               <div>
                 <strong>¿Tienes dudas?</strong>
                 <span>
-                  {r.phone ? <a href={`tel:${r.phone}`}>{r.phone}</a> : "Contacta al restaurante"}
+                  {r.phone ? (
+                    <EnlaceMedido slug={slug} evento="phone_click" href={`tel:${r.phone}`}>
+                      {r.phone}
+                    </EnlaceMedido>
+                  ) : (
+                    "Contacta al restaurante"
+                  )}
                 </span>
               </div>
             </li>

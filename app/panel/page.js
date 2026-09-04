@@ -4,6 +4,8 @@ import { supabaseSession } from "../../lib/supabase";
 import { cerrarSesion } from "./actions";
 import Brand from "../brand";
 import Tablero from "./tablero";
+import { metricasDe } from "./metricas-actions";
+import { PERIODO_POR_DEFECTO } from "../../lib/metricas";
 import { IconoCorona, IconoMas, IconoUsuario } from "./tablero-iconos";
 
 export const metadata = { title: "Tu panel — Menú Abierto" };
@@ -64,6 +66,13 @@ export default async function Panel() {
     };
   });
 
+  // Las métricas del primero se piden aquí para que la página llegue pintada;
+  // a partir de ahí las pide el tablero conforme el dueño cambia de periodo.
+  const primero = conFotos[0];
+  const inicial = primero
+    ? await metricasDe(primero.id, PERIODO_POR_DEFECTO)
+    : null;
+
   return (
     <div className="panel-wrap">
       <header className="panel-top">
@@ -120,7 +129,14 @@ export default async function Panel() {
           </div>
         ) : null}
 
-        {conFotos.length ? <Tablero restaurantes={conFotos} /> : null}
+        {conFotos.length ? (
+          <Tablero
+            restaurantes={conFotos}
+            periodoInicial={PERIODO_POR_DEFECTO}
+            datosIniciales={inicial?.datos ?? null}
+            errorInicial={Boolean(inicial?.error)}
+          />
+        ) : null}
       </main>
     </div>
   );

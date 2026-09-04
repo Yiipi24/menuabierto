@@ -3885,3 +3885,36 @@ img.menu-archivo-vista { min-height: 0; }
   .kpi:hover { transform: none; }
   .sel-chevron { transition: none; }
 }
+
+.tarjeta-vacia {
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  max-width: 32em;
+}
+
+/* Guardar una ficha. Vive junto a la calificación en la cabecera, que es
+   donde la gente decide si este restaurante le interesa. */
+.ficha-guardar {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.ficha-guardar:hover { border-color: var(--ink-faint); color: var(--ink); }
+
+.ficha-guardar.guardado {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--accent);
+}

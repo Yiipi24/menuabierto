@@ -84,6 +84,14 @@ export function IconoFlecha(props) {
   );
 }
 
+export function IconoMarcador(props) {
+  return (
+    <Svg {...props}>
+      <path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4-6.5 4v-16a1 1 0 0 1 1-1z" />
+    </Svg>
+  );
+}
+
 export function IconoEstrella(props) {
   return (
     <Svg {...props}>

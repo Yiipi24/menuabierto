@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import {
   PERIODOS,
-  PERIODO_POR_DEFECTO,
-  metricasDeRestaurante,
+  metricasDesdeRpc,
   insightsDeMetricas,
 } from "../../lib/metricas";
-import RejillaKpis from "./tablero-kpis";
+import { metricasDe } from "./metricas-actions";
+import RejillaKpis, { KpisCargando } from "./tablero-kpis";
 import { GraficaRendimiento, Lugares, FuentesDeTrafico } from "./tablero-graficas";
 import Ideas from "./tablero-ideas";
 import AccionesDelRestaurante from "./tablero-acciones";
@@ -113,32 +113,102 @@ function FiltroDePeriodo({ valor, alCambiar }) {
   );
 }
 
-export default function Tablero({ restaurantes }) {
+export default function Tablero({
+  restaurantes,
+  periodoInicial,
+  datosIniciales,
+  errorInicial,
+}) {
   const [id, setId] = useState(restaurantes[0].id);
-  const [periodo, setPeriodo] = useState(PERIODO_POR_DEFECTO);
+  const [periodo, setPeriodo] = useState(periodoInicial);
+  const [cargando, empezar] = useTransition();
+
+  // Lo que ya se pidió no se vuelve a pedir: cambiar de periodo y volver es
+  // instantáneo, y el servidor no recibe la misma consulta dos veces.
+  const cache = useRef(
+    new Map([[`${restaurantes[0].id}:${periodoInicial}`, datosIniciales]]),
+  );
+  const [datos, setDatos] = useState(datosIniciales);
+  const [error, setError] = useState(Boolean(errorInicial));
 
   const elegido = restaurantes.find((r) => r.id === id) ?? restaurantes[0];
 
-  // El cálculo es puro y depende del restaurante y del periodo: con useMemo,
-  // mover el ratón por la gráfica no vuelve a generar la serie entera.
+  const pedir = useCallback(
+    (nuevoId, nuevoPeriodo, forzar = false) => {
+      const llave = `${nuevoId}:${nuevoPeriodo}`;
+      if (!forzar && cache.current.has(llave)) {
+        setDatos(cache.current.get(llave));
+        setError(false);
+        return;
+      }
+      empezar(async () => {
+        const respuesta = await metricasDe(nuevoId, nuevoPeriodo);
+        if (respuesta?.error) {
+          setError(true);
+          return;
+        }
+        cache.current.set(llave, respuesta.datos);
+        setDatos(respuesta.datos);
+        setError(false);
+      });
+    },
+    [],
+  );
+
+  function elegirRestaurante(nuevoId) {
+    setId(nuevoId);
+    pedir(nuevoId, periodo);
+  }
+
+  function elegirPeriodo(nuevoPeriodo) {
+    setPeriodo(nuevoPeriodo);
+    pedir(id, nuevoPeriodo);
+  }
+
   const metricas = useMemo(
-    () => metricasDeRestaurante(elegido, periodo),
-    [elegido, periodo],
+    () => metricasDesdeRpc(datos, elegido, periodo),
+    [datos, elegido, periodo],
   );
   const ideas = useMemo(
     () => insightsDeMetricas(metricas, elegido),
     [metricas, elegido],
   );
 
-  const filtro = (
-    <FiltroDePeriodo valor={periodo} alCambiar={setPeriodo} />
-  );
+  const filtro = <FiltroDePeriodo valor={periodo} alCambiar={elegirPeriodo} />;
 
   return (
     <>
-      <Selector restaurantes={restaurantes} elegido={elegido} alElegir={setId} />
+      <Selector
+        restaurantes={restaurantes}
+        elegido={elegido}
+        alElegir={elegirRestaurante}
+      />
 
-      {metricas.hayDatos ? (
+      {error ? (
+        <section className="panel-tarjeta sin-datos">
+          <div className="sin-datos-cabeza">
+            <h2>No pudimos cargar tus estadísticas</h2>
+            {filtro}
+          </div>
+          <p>Puede haber sido un tropiezo de la red. Vuelve a intentarlo.</p>
+          <button
+            className="btn-linea"
+            type="button"
+            onClick={() => pedir(id, periodo, true)}
+          >
+            Reintentar
+          </button>
+        </section>
+      ) : cargando ? (
+        <>
+          <KpisCargando />
+          <div className="analitica" aria-hidden="true">
+            <div className="panel-tarjeta hueso-caja" />
+            <div className="panel-tarjeta hueso-caja" />
+            <div className="panel-tarjeta hueso-caja" />
+          </div>
+        </>
+      ) : metricas.hayDatos ? (
         <>
           <RejillaKpis kpis={metricas.kpis} comparativa={metricas.periodo.comparativa} />
 
