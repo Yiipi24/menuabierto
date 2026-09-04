@@ -218,7 +218,11 @@ export default function Tablero({
               puntos={metricas.serie.puntos}
               filtro={filtro}
             />
-            <Lugares lugares={metricas.lugares} />
+            <Lugares
+              lugares={metricas.lugares}
+              ficha={metricas.ficha}
+              nombre={elegido.name}
+            />
             <FuentesDeTrafico fuentes={metricas.fuentes} total={metricas.serie.total} />
           </div>
 

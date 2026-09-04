@@ -26,6 +26,11 @@ function limpio(valor) {
   }
 }
 
+function coordenada(valor, tope) {
+  const n = Number(valor);
+  return Number.isFinite(n) && Math.abs(n) <= tope ? n : null;
+}
+
 export async function POST(request) {
   let cuerpo;
   try {
@@ -49,6 +54,10 @@ export async function POST(request) {
   const ciudad = limpio(h.get("x-vercel-ip-city"));
   const estado = limpio(h.get("x-vercel-ip-country-region"));
   const pais = (h.get("x-vercel-ip-country") || "").slice(0, 2).toUpperCase() || null;
+  // El mismo borde que dice la ciudad manda su punto aproximado. Con él, el
+  // panel puede pintar un mapa sin geocodificar nada después.
+  const lat = coordenada(h.get("x-vercel-ip-latitude"), 90);
+  const lng = coordenada(h.get("x-vercel-ip-longitude"), 180);
 
   const supabase = supabaseServer();
 
@@ -70,6 +79,8 @@ export async function POST(request) {
       city: ciudad,
       region: estado,
       country: pais,
+      lat,
+      lng,
       visitor: visitante,
     });
 

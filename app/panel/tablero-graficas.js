@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { planoDeMapa } from "../../lib/mapa";
 
 const NUMERO = new Intl.NumberFormat("es-MX");
 
@@ -12,7 +13,7 @@ const NUMERO = new Intl.NumberFormat("es-MX");
 // El viewBox es fijo y el SVG se estira al ancho del contenedor: así el mismo
 // dibujo sirve en teléfono y en escritorio sin medir nada en el navegador.
 const ANCHO = 640;
-const ALTO = 270;
+const ALTO = 320;
 const MARGEN = { arriba: 14, derecha: 30, abajo: 30, izquierda: 46 };
 
 // Redondea hacia arriba de manera que las cuatro marcas del eje caigan en
@@ -166,7 +167,73 @@ export function GraficaRendimiento({ titulo, puntos, filtro }) {
   );
 }
 
-export function Lugares({ lugares }) {
+// Mapa de verdad: teselas de OpenStreetMap y un círculo por ciudad, del
+// tamaño de su parte del tráfico. No se arrastra ni se acerca a propósito —
+// aquí el mapa contesta "¿de dónde vienen?" de un vistazo, y un mapa que se
+// mueve invita a jugar con él en vez de leerlo.
+function MapaDeLugares({ lugares, ficha, nombre }) {
+  const plano = useMemo(() => planoDeMapa(lugares, ficha), [lugares, ficha]);
+  if (!plano) return null;
+
+  const mayor = Math.max(...plano.puntos.map((p) => p.valor ?? 0), 1);
+
+  return (
+    <figure className="mapa">
+      <div
+        className="mapa-caja"
+        style={{
+          aspectRatio: `${plano.columnas} / ${plano.filas}`,
+          gridTemplateColumns: `repeat(${plano.columnas}, 1fr)`,
+        }}
+      >
+        {plano.teselas.map((t) => (
+          <img key={t.clave} src={t.url} alt="" loading="lazy" width="256" height="256" />
+        ))}
+
+        {plano.puntos.map((p) => {
+          // El área del círculo crece con las visitas, no el diámetro: al ojo,
+          // el doble de área se lee como el doble, y el doble de ancho como
+          // cuatro veces.
+          const lado = 14 + 22 * Math.sqrt((p.valor ?? 0) / mayor);
+          return (
+            <span
+              key={p.nombre}
+              className="mapa-punto"
+              style={{
+                left: `${p.izquierda}%`,
+                top: `${p.arriba}%`,
+                width: `${lado}px`,
+                height: `${lado}px`,
+              }}
+              title={`${p.nombre}: ${NUMERO.format(p.valor ?? 0)} visitas`}
+            />
+          );
+        })}
+
+        {plano.ficha ? (
+          <span
+            className="mapa-local"
+            style={{ left: `${plano.ficha.izquierda}%`, top: `${plano.ficha.arriba}%` }}
+            title={nombre ? `Aquí está ${nombre}` : "Aquí está tu restaurante"}
+          />
+        ) : null}
+      </div>
+      <figcaption className="mapa-credito">
+        <span>
+          <span className="mapa-muestra local" aria-hidden="true" /> Tu restaurante
+          <span className="mapa-muestra visita" aria-hidden="true" /> Desde dónde te ven
+        </span>
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+          © OpenStreetMap
+        </a>
+      </figcaption>
+    </figure>
+  );
+}
+
+export function Lugares({ lugares, ficha, nombre }) {
+  const conPunto = lugares.filter((l) => l.lat != null && l.lng != null);
+
   return (
     <section className="panel-tarjeta">
       <div className="tarjeta-cabeza">
@@ -178,40 +245,24 @@ export function Lugares({ lugares }) {
           reciba visitas en este periodo.
         </p>
       ) : (
-      <div className="lugares">
-        <ul className="lugares-lista">
-          {lugares.map((l) => (
-            <li key={l.nombre} title={`${NUMERO.format(l.valor)} visitas`}>
-              <div className="lugar-fila">
-                <span className="lugar-nombre">{l.nombre}</span>
-                <span className="lugar-pct">{l.porcentaje}%</span>
-              </div>
-              <div className="lugar-barra">
-                <span style={{ width: `${l.porcentaje}%` }} />
-              </div>
-            </li>
-          ))}
-        </ul>
-        {/* Mapa decorativo. Es una silueta, no datos: el día que haya
-            coordenadas reales de origen se cambia este bloque por el mapa sin
-            tocar el ranking de al lado. */}
-        <div className="lugares-mapa" aria-hidden="true">
-          <svg viewBox="0 0 120 120" preserveAspectRatio="xMidYMid slice">
-            <rect width="120" height="120" rx="10" className="mapa-fondo" />
-            <path className="mapa-calle" d="M0 34h120M0 72h120M28 0v120M76 0v120M0 100h120" />
-            <path className="mapa-calle suave" d="M0 12l120 40M120 8L0 58" />
-            {[
-              [30, 40, 9],
-              [62, 30, 6],
-              [80, 58, 5],
-              [46, 78, 7],
-              [92, 86, 4],
-            ].map(([cx, cy, r]) => (
-              <circle key={`${cx}-${cy}`} className="mapa-punto" cx={cx} cy={cy} r={r} />
+        <div className="lugares">
+          <ul className="lugares-lista">
+            {lugares.map((l) => (
+              <li key={l.nombre} title={`${NUMERO.format(l.valor)} visitas`}>
+                <div className="lugar-fila">
+                  <span className="lugar-nombre">{l.nombre}</span>
+                  <span className="lugar-pct">{l.porcentaje}%</span>
+                </div>
+                <div className="lugar-barra">
+                  <span style={{ width: `${l.porcentaje}%` }} />
+                </div>
+              </li>
             ))}
-          </svg>
+          </ul>
+          {conPunto.length ? (
+            <MapaDeLugares lugares={conPunto} ficha={ficha} nombre={nombre} />
+          ) : null}
         </div>
-      </div>
       )}
     </section>
   );

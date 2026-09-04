@@ -3639,7 +3639,17 @@ img.menu-archivo-vista { min-height: 0; }
    el hueco que quedaba debajo. */
 .analitica .fuentes { flex: 1; align-content: center; }
 
-.grafica-lienzo { position: relative; }
+/* La tarjeta del mapa es la más alta de la fila y estira a las otras dos. En
+   vez de dejar el hueco abajo, la gráfica crece y se centra: el aire queda
+   repartido y la fila se lee pareja. */
+.grafica-lienzo {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.grafica-lienzo > svg { flex: 1; }
 
 .grafica-lienzo svg { width: 100%; height: auto; display: block; }
 
@@ -3697,9 +3707,9 @@ img.menu-archivo-vista { min-height: 0; }
 
 /* ---------- lugares ---------- */
 
-.lugares { display: grid; grid-template-columns: 1fr 118px; gap: 14px; align-items: start; }
+.lugares { display: grid; gap: 16px; }
 
-.lugares-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.lugares-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
 
 .lugar-fila { display: flex; justify-content: space-between; gap: 10px; }
 
@@ -3724,22 +3734,78 @@ img.menu-archivo-vista { min-height: 0; }
 
 .lugares-lista li { cursor: default; }
 
-.lugares-mapa {
+/* ---------- mapa ---------- */
+
+.mapa { margin: 0; display: grid; gap: 6px; }
+
+.mapa-caja {
+  position: relative;
+  display: grid;
   border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 1;
-  align-self: start;
+  border: 1px solid var(--line);
+  background: var(--paper-warm);
 }
 
-.lugares-mapa svg { width: 100%; height: 100%; display: block; }
+/* Las teselas de OSM son muy saturadas al lado del crema del panel: bajarles
+   el color las deja de fondo, que es su papel aquí. */
+.mapa-caja img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: saturate(0.55) contrast(0.95) brightness(1.04);
+}
 
-.mapa-fondo { fill: var(--paper-warm); }
+.mapa-punto,
+.mapa-local {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  pointer-events: auto;
+}
 
-.mapa-calle { stroke: var(--line); stroke-width: 2; }
+.mapa-punto {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  border: 1.5px solid var(--accent);
+  cursor: default;
+}
 
-.mapa-calle.suave { stroke-width: 1.2; opacity: 0.7; }
+.mapa-local {
+  width: 13px;
+  height: 13px;
+  background: var(--ink);
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(28, 25, 23, 0.4);
+}
 
-.mapa-punto { fill: var(--accent); opacity: 0.35; }
+.mapa-credito {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.mapa-credito a { color: inherit; }
+
+.mapa-muestra {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin: 0 5px 0 0;
+  vertical-align: baseline;
+}
+
+.mapa-muestra.local { background: var(--ink); }
+
+.mapa-muestra.visita {
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  border: 1.5px solid var(--accent);
+  margin-left: 12px;
+}
 
 /* ---------- fuentes de trafico ---------- */
 
@@ -3868,8 +3934,6 @@ img.menu-archivo-vista { min-height: 0; }
   .analitica > .panel-tarjeta:first-child { grid-column: auto; }
   .sel > summary { flex-wrap: wrap; padding: 16px; gap: 12px; }
   .sel-datos { flex-basis: calc(100% - 72px); }
-  .lugares { grid-template-columns: 1fr; }
-  .lugares-mapa { aspect-ratio: 16 / 7; }
   .fuentes { grid-template-columns: 1fr; }
   .dona { max-width: 190px; margin: 0 auto; }
   .gestion-botones { width: 100%; }
