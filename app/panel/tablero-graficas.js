@@ -54,6 +54,11 @@ export function GraficaRendimiento({ titulo, puntos, filtro }) {
 
   const marcas = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(maximo * f));
 
+  // Con treinta días no caben treinta etiquetas: se pone una de cada tantas y
+  // siempre la última, que es la que dice hasta dónde llega la gráfica.
+  const cada = Math.max(1, Math.ceil(puntos.length / 8));
+  const conEtiqueta = (i) => i % cada === 0 || i === puntos.length - 1;
+
   return (
     <section className="panel-tarjeta grafica">
       <div className="tarjeta-cabeza">
@@ -96,7 +101,7 @@ export function GraficaRendimiento({ titulo, puntos, filtro }) {
 
           {puntos.map((p, i) => (
             <circle
-              key={p.etiqueta}
+              key={`p-${i}`}
               className={`grafica-punto ${activo === i ? "activo" : ""}`}
               cx={x(i)}
               cy={y(p.valor)}
@@ -104,23 +109,25 @@ export function GraficaRendimiento({ titulo, puntos, filtro }) {
             />
           ))}
 
-          {puntos.map((p, i) => (
-            <text
-              key={`e-${p.etiqueta}`}
-              className="grafica-eje"
-              x={x(i)}
-              y={ALTO - 8}
-              textAnchor="middle"
-            >
-              {p.etiqueta}
-            </text>
-          ))}
+          {puntos.map((p, i) =>
+            conEtiqueta(i) ? (
+              <text
+                key={`e-${i}`}
+                className="grafica-eje"
+                x={x(i)}
+                y={ALTO - 8}
+                textAnchor="middle"
+              >
+                {p.etiqueta}
+              </text>
+            ) : null,
+          )}
 
           {/* Franjas invisibles: dan un blanco cómodo para el puntero y para
               el teclado sin ensuciar el dibujo. */}
           {puntos.map((p, i) => (
             <rect
-              key={`z-${p.etiqueta}`}
+              key={`z-${i}`}
               className="grafica-zona"
               x={x(i) - paso / 2}
               y={MARGEN.arriba}
@@ -165,6 +172,12 @@ export function Lugares({ lugares }) {
       <div className="tarjeta-cabeza">
         <h2>Lugares desde donde más te han visto</h2>
       </div>
+      {lugares.length === 0 ? (
+        <p className="tarjeta-vacia">
+          Todavía no sabemos desde dónde te ven. Aparecerá en cuanto tu ficha
+          reciba visitas en este periodo.
+        </p>
+      ) : (
       <div className="lugares">
         <ul className="lugares-lista">
           {lugares.map((l) => (
@@ -199,6 +212,7 @@ export function Lugares({ lugares }) {
           </svg>
         </div>
       </div>
+      )}
     </section>
   );
 }
@@ -225,6 +239,11 @@ export function FuentesDeTrafico({ fuentes, total }) {
       <div className="tarjeta-cabeza">
         <h2>Fuentes de tráfico</h2>
       </div>
+      {fuentes.length === 0 ? (
+        <p className="tarjeta-vacia">
+          Sin visitas en este periodo todavía no hay fuentes que repartir.
+        </p>
+      ) : (
       <div className="fuentes">
         <div className="dona">
           <svg viewBox="0 0 140 140" role="img" aria-label="Reparto de visitas por fuente">
@@ -268,6 +287,7 @@ export function FuentesDeTrafico({ fuentes, total }) {
           ))}
         </ul>
       </div>
+      )}
     </section>
   );
 }

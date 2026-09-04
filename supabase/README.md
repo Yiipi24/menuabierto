@@ -26,6 +26,15 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
 
 ## Decisiones que conviene no reabrir a la ligera
 
+- **Los eventos del panel son anónimos y se cuentan una vez por hora.**
+  `restaurant_events` no guarda IP ni cuenta: `visitor` es un id aleatorio de
+  una cookie httpOnly, y el índice `restaurant_events_sin_repetir` hace que
+  recargar la ficha cinco veces sea una sola visita. La ciudad la pone el borde
+  de Vercel y se queda en ciudad, estado y país. Escribir solo se puede sobre
+  fichas publicadas; leer, solo el dueño, y el tablero entra por
+  `restaurant_metrics`, que calcula el periodo en la zona horaria del local
+  porque "hoy" no significa lo mismo en Tijuana que en Cancún.
+
 - **`location` es `geography(point, 4326)`**, no dos columnas de latitud y
   longitud. Con el índice GiST, `ST_DWithin` resuelve "cerca de mí" contra un
   directorio grande; filtrar en JavaScript no escala más allá de un pueblo.
