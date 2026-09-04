@@ -9,9 +9,20 @@ import Resenas from "./resenas";
 import ComoLlegar from "./como-llegar";
 import QrDescarga from "./qr-descarga";
 import { MedirVista, EnlaceMedido, BotonGuardar } from "../medir";
-import { cargar, diaLocal, direccionDe, hora, repiteDireccion, DIAS, PRECIO } from "./datos";
+import {
+  cargar,
+  diaLocal,
+  direccionDe,
+  hora,
+  repiteDireccion,
+  resenasEscritas,
+  DIAS,
+  PRECIO,
+} from "./datos";
 import { IconoDestacado } from "../destacados";
 import { IconoRed } from "../redes-iconos";
+import { IconoPago } from "../pagos-iconos";
+import { IconoServicio } from "../servicios-iconos";
 import {
   IconoCubiertos,
   IconoEscudo,
@@ -83,14 +94,30 @@ export default async function Ficha({ slug }) {
   }
   if (!datos) notFound();
 
-  const { r, cocinas, horarios, fotos, menus, abierto, resenas, destacados, redes, cerrados } =
-    datos;
+  const {
+    r,
+    cocinas,
+    horarios,
+    fotos,
+    menus,
+    abierto,
+    resenas,
+    destacados,
+    redes,
+    pagos,
+    servicios,
+    cerrados,
+  } = datos;
 
   // La ficha es publica, asi que la sesion puede no existir. Solo sirve para
   // decidir que se ve bajo las resenas: el formulario, la puerta de entrada o
   // el aviso al dueno.
   const usuario = await currentUser();
   const esDueno = Boolean(usuario && r.owner_id === usuario.id);
+
+  // Cuántas reseñas lleva quien está leyendo: es lo que convierte el formulario
+  // en una meta ("te falta una para Catador") en vez de un cuadro de texto.
+  const misResenas = esDueno ? 0 : await resenasEscritas(usuario?.id ?? null);
 
   const direccion = direccionDe(r);
   const rutaMenu = rutaDeMenu(slug);
@@ -293,7 +320,12 @@ export default async function Ficha({ slug }) {
 
           {descripcion ? <p className="ficha-desc">{descripcion}</p> : null}
 
-          {r.phone || r.website || redes.length || semana.length ? (
+          {r.phone ||
+          r.website ||
+          redes.length ||
+          semana.length ||
+          pagos.length ||
+          servicios.length ? (
             <div className="ficha-detalles">
               {semana.length ? (
                 <div className="ficha-card ficha-card-horarios" id="horarios">
@@ -413,6 +445,60 @@ export default async function Ficha({ slug }) {
                   ) : null}
                 </div>
               ) : null}
+
+              {/* Las formas de pago van en su propia tarjeta y no en un
+                  renglón de texto: quien pregunta "¿aceptan tarjeta?" busca un
+                  sí o un no, no un párrafo que hay que leer entero. */}
+              {pagos.length ? (
+                <div className="ficha-card ficha-card-pagos" id="pagos">
+                  <div className="ficha-card-cabeza">
+                    <h3>
+                      <IconoTarjeta ancho={19} />
+                      Formas de pago
+                    </h3>
+                  </div>
+                  <ul className="ficha-pagos">
+                    {pagos.map((forma) => (
+                      <li key={forma.slug}>
+                        <span className="ficha-pago-icono">
+                          <IconoPago slug={forma.slug} ancho={20} />
+                        </span>
+                        <span className="ficha-pago-texto">
+                          <strong>{forma.nombre}</strong>
+                          <span>{forma.pista}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {/* Los servicios son la otra mitad de "¿qué me encuentro al
+                  llegar?", y se preguntan antes de salir de casa igual que la
+                  forma de pago. */}
+              {servicios.length ? (
+                <div className="ficha-card ficha-card-servicios" id="servicios">
+                  <div className="ficha-card-cabeza">
+                    <h3>
+                      <IconoServicio slug="estacionamiento" ancho={19} />
+                      Servicios
+                    </h3>
+                  </div>
+                  <ul className="ficha-pagos">
+                    {servicios.map((servicio) => (
+                      <li key={servicio.slug}>
+                        <span className="ficha-pago-icono">
+                          <IconoServicio slug={servicio.slug} ancho={20} />
+                        </span>
+                        <span className="ficha-pago-texto">
+                          <strong>{servicio.nombre}</strong>
+                          <span>{servicio.pista}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -435,6 +521,7 @@ export default async function Ficha({ slug }) {
               resenas={resenas}
               usuarioId={usuario?.id ?? null}
               esDueno={esDueno}
+              misResenas={misResenas}
             />
           </div>
         </section>
@@ -461,7 +548,13 @@ export default async function Ficha({ slug }) {
               <IconoTarjeta />
               <div>
                 <strong>Métodos de pago</strong>
-                <span>Confirma con el restaurante</span>
+                <span>
+                  {pagos.length ? (
+                    <a href="#pagos">{pagos.map((f) => f.nombre).join(" · ")}</a>
+                  ) : (
+                    "Confirma con el restaurante"
+                  )}
+                </span>
               </div>
             </li>
             <li>

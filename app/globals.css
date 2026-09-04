@@ -4060,3 +4060,306 @@ img.menu-archivo-vista { min-height: 0; }
   border-color: transparent;
   color: var(--accent);
 }
+
+/* ---------- Formas de pago y servicios ---------- */
+
+/* En el panel se marcan como cajas y no como una lista de casillas sueltas:
+   son cinco opciones cortas y así se ven de un golpe cuáles quedaron
+   prendidas. Es el mismo patrón que el rango de precio, con dos renglones. */
+.pagos-edicion,
+.servicios-edicion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.pago-opcion input,
+.servicio-opcion input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.pago-cara,
+.servicio-cara {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.pago-cara .icono,
+.servicio-cara .icono { color: var(--ink-faint); flex: none; }
+
+.pago-texto,
+.servicio-texto { display: flex; flex-direction: column; line-height: 1.3; }
+
+.pago-texto strong,
+.servicio-texto strong { font-size: 15px; }
+
+.pago-texto em,
+.servicio-texto em {
+  font-style: normal;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.pago-cara:hover,
+.servicio-cara:hover { border-color: var(--ink-faint); }
+
+.pago-opcion input:checked + .pago-cara,
+.servicio-cara {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.pago-opcion input:checked + .pago-cara .icono,
+.servicio-opcion input:checked + .servicio-cara .icono { color: var(--accent); }
+
+.pago-opcion input:focus-visible + .pago-cara,
+.servicio-cara {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* En la ficha es una lista de lectura, no de elección: cada forma con su
+   dibujo y la letra chica que dice qué incluye. */
+.ficha-pagos { list-style: none; margin: 0; padding: 0; }
+
+.ficha-pagos li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ficha-pagos li:last-child { border-bottom: 0; }
+
+.ficha-pago-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.ficha-pago-texto { display: flex; flex-direction: column; line-height: 1.3; }
+
+.ficha-pago-texto strong { font-size: 15px; font-weight: 600; }
+
+.ficha-pago-texto span { font-size: 13px; color: var(--ink-faint); }
+
+/* ---------- Insignias del comensal ---------- */
+
+/* El marcador de la página: cuántas reseñas lleva y en qué insignia va. Son
+   las dos cifras que se vienen a ver, así que van juntas y en grande. */
+.insignias-marcador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 28px;
+  padding: 20px 22px;
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-warm);
+}
+
+.insignias-marcador-cifra { display: flex; align-items: baseline; gap: 9px; }
+
+.insignias-marcador-cifra strong {
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.insignias-marcador-cifra span { color: var(--ink-soft); font-size: 15px; }
+
+.insignias-marcador-actual { display: flex; align-items: center; gap: 12px; }
+
+.insignias-marcador-actual div { display: flex; flex-direction: column; line-height: 1.3; }
+
+.insignias-marcador-actual span { font-size: 14px; color: var(--ink-soft); }
+
+.insignias-avance { margin-top: 18px; }
+
+.insignias-avance-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.insignias-avance-faltan { color: var(--accent); font-weight: 600; }
+
+.insignias-barra {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.insignias-barra span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.insignias-barra-chica { height: 7px; margin: 10px 0; }
+
+/* La medalla: el mismo círculo para todas, apagado mientras no se gana. Así
+   la insignia bloqueada se lee como "todavía no" y no como otra cosa. */
+.insignia-medalla {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-faint);
+}
+
+.insignia-medalla-on {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.insignias-rejilla {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.insignia {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.insignia-ganada { border-color: var(--accent); background: var(--paper); }
+
+.insignia-texto { display: flex; flex-direction: column; gap: 2px; }
+
+.insignia-texto strong { font-size: 16px; }
+
+.insignia-meta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.insignia-texto p { font-size: 14px; color: var(--ink-soft); margin: 4px 0 0; }
+
+.insignia-sello {
+  margin-left: auto;
+  align-self: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 4px 11px;
+  white-space: nowrap;
+}
+
+/* Las reseñas propias, en la misma página de insignias: son la prueba de lo
+   que dice el marcador. */
+.mis-resenas { list-style: none; margin: 12px 0 0; padding: 0; }
+
+.mis-resenas li {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.mis-resenas li:last-child { border-bottom: 0; }
+
+.mis-resenas-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.mis-resenas-cabeza a { font-weight: 600; }
+
+.mis-resenas-fecha { font-size: 13.5px; color: var(--ink-faint); }
+
+.mis-resenas-texto { color: var(--ink-soft); font-size: 15px; margin: 4px 0 0; }
+
+/* En la ficha: la insignia junto a quien firma la reseña, y la meta encima del
+   formulario de quien está por escribir la suya. */
+.resena-insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 9px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.resena-meta {
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-warm);
+}
+
+.resena-meta-texto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+
+.resena-meta-actual {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .insignias-marcador { gap: 14px; }
+  .insignias-marcador-cifra strong { font-size: 34px; }
+  .insignia-sello { margin-left: 0; }
+}

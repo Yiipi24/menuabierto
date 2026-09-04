@@ -1,6 +1,8 @@
 import Link from "next/link";
 import ResenaForm from "./resena-form";
 import { rutaFicha } from "../../lib/slug";
+import { insigniaActual, progresoDe } from "../../lib/insignias";
+import { IconoInsignia } from "../insignias-iconos";
 
 const FECHA = new Intl.DateTimeFormat("es-MX", {
   year: "numeric",
@@ -43,7 +45,20 @@ function reparto(resenas) {
   });
 }
 
-export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno }) {
+// La insignia de quien firma va junto al nombre y no en una fila aparte: es
+// parte de quién es esa persona, igual que la fecha dice cuándo comió ahí.
+function Insignia({ resenas }) {
+  const insignia = insigniaActual(resenas);
+  if (!insignia) return null;
+  return (
+    <span className="resena-insignia" title={`${insignia.nombre} · ${insignia.lema}`}>
+      <IconoInsignia slug={insignia.slug} ancho={15} />
+      {insignia.nombre}
+    </span>
+  );
+}
+
+export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno, misResenas }) {
   const total = resenas.length;
   const promedio = restaurante.rating_avg ?? null;
   const volverAqui = `${rutaFicha(slug)}#resenas`;
@@ -87,7 +102,10 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
               {deOtros.map((r) => (
                 <li className="resena" key={r.id}>
                   <div className="resena-cabeza">
-                    <span className="resena-autor">{r.author_name}</span>
+                    <span className="resena-autor">
+                      {r.author_name}
+                      <Insignia resenas={r.author_reviews} />
+                    </span>
                     <span className="resena-fecha">{fecha(r.created_at)}</span>
                   </div>
                   <Estrellas valor={r.rating} />
@@ -111,7 +129,10 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
             eso no puedes calificarlo.
           </p>
         ) : usuarioId ? (
-          <ResenaForm slug={slug} restaurantId={restaurante.id} mia={mia} />
+          <>
+            <MetaDelComensal misResenas={misResenas} />
+            <ResenaForm slug={slug} restaurantId={restaurante.id} mia={mia} />
+          </>
         ) : (
           // La puerta de entrada, no un muro: dice qué falta y lleva de vuelta
           // aquí mismo en cuanto la persona entra o se registra.
@@ -120,6 +141,10 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
             <p>
               Pedimos una cuenta para que cada persona califique una vez y su
               reseña tenga un nombre detrás. Es gratis y toma un minuto.
+            </p>
+            <p>
+              De paso, cada reseña que escribes te acerca a una insignia:
+              Catador a las tres, Explorador a las cinco, y así hasta Leyenda.
             </p>
             <div className="resena-puerta-botones">
               <Link className="btn" href={`/registro?next=${encodeURIComponent(volverAqui)}`}>
@@ -132,6 +157,52 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// El empujón: dice en qué va la persona y qué se lleva con la reseña que está
+// a punto de escribir. Sin números inventados —el conteo sale de su perfil— y
+// sin insistir cuando ya no queda nada por ganar.
+function MetaDelComensal({ misResenas }) {
+  const { total, actual, siguiente, faltan, porcentaje } = progresoDe(misResenas);
+
+  return (
+    <div className="resena-meta">
+      <div className="resena-meta-texto">
+        {actual ? (
+          <span className="resena-meta-actual">
+            <IconoInsignia slug={actual.slug} ancho={18} />
+            {actual.nombre}
+          </span>
+        ) : null}
+        <span>
+          {total === 0
+            ? "Esta sería tu primera reseña: con ella ganas tu primera insignia."
+            : siguiente
+              ? `Llevas ${total} ${total === 1 ? "reseña" : "reseñas"}. ${
+                  faltan === 1 ? "Una más" : `${faltan} más`
+                } y ganas ${siguiente.nombre}.`
+              : `Llevas ${total} reseñas y todas las insignias. Gracias.`}
+        </span>
+      </div>
+
+      {siguiente ? (
+        <div
+          className="insignias-barra insignias-barra-chica"
+          role="progressbar"
+          aria-valuenow={total}
+          aria-valuemin={0}
+          aria-valuemax={siguiente.meta}
+          aria-label={`Avance hacia ${siguiente.nombre}`}
+        >
+          <span style={{ width: `${porcentaje}%` }} />
+        </div>
+      ) : null}
+
+      <Link className="btn-texto" href="/panel/insignias">
+        Ver tus insignias
+      </Link>
     </div>
   );
 }

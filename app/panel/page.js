@@ -99,6 +99,9 @@ export default async function Panel() {
             <Link className="btn-linea" href="/reclamar">
               Reclamar uno existente
             </Link>
+            <Link className="btn-linea" href="/panel/insignias">
+              Tus insignias
+            </Link>
             <Link className="btn-linea" href="/panel/planes">
               <IconoCorona ancho={17} />
               Planes

@@ -1,7 +1,10 @@
-import { supabaseServer } from "../../lib/supabase";
+import { supabaseServer, supabaseSession } from "../../lib/supabase";
 import { plantillaValida } from "../../lib/plantillas";
 import { destacadosDe } from "../destacados";
 import { conEsquema, nombreDeRed } from "../../lib/redes";
+import { detallesDePago } from "../../lib/pagos";
+import { detallesDeServicio } from "../../lib/servicios";
+import { conteoDe } from "../../lib/insignias";
 import { agruparPlatillos } from "../../lib/menus";
 
 // La carga vive aquí y no en la página porque ahora son dos: la ficha y la
@@ -104,7 +107,7 @@ export async function cargar(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, closed_days",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, payment_methods, amenities, closed_days",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -162,6 +165,10 @@ export async function cargar(slug) {
         url: conEsquema(red?.url),
       }))
       .filter((red) => red.url),
+    // Las formas de pago se resuelven aquí, con su nombre y su pista: la
+    // ficha pinta lo que recibe y no traduce claves mientras genera HTML.
+    pagos: detallesDePago(r.payment_methods),
+    servicios: detallesDeServicio(r.amenities),
     cerrados: (r.closed_days ?? []).map(Number),
     cocinas: (cocinas.data ?? []).map((c) => c.cuisines?.name).filter(Boolean),
     horarios: horarios.data ?? [],
@@ -182,4 +189,19 @@ export async function cargar(slug) {
     abierto: abierto.data === true,
     resenas: resenas.data ?? [],
   };
+}
+
+// Cuántas reseñas lleva escritas quien está firmado. Va aparte de `cargar`
+// porque `cargar` corre con el cliente anónimo —la ficha es pública— y este
+// número exige sesión: un perfil solo se lee a sí mismo. Con él, la ficha le
+// puede decir a la persona cuánto le falta para su siguiente insignia.
+export async function resenasEscritas(userId) {
+  if (!userId) return 0;
+  const supabase = await supabaseSession();
+  const { data } = await supabase
+    .from("profiles")
+    .select("reviews_count")
+    .eq("id", userId)
+    .maybeSingle();
+  return conteoDe(data?.reviews_count);
 }

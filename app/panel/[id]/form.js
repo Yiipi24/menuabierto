@@ -4,7 +4,11 @@ import { useActionState, useState, useTransition } from "react";
 import { guardarRestaurante, crearCategoria } from "./actions";
 import { ESTADOS } from "../../../lib/estados";
 import { REDES } from "../../../lib/redes";
+import { FORMAS_DE_PAGO, formasDePagoDe } from "../../../lib/pagos";
+import { SERVICIOS, serviciosDe } from "../../../lib/servicios";
 import { IconoRed } from "../../redes-iconos";
+import { IconoPago } from "../../pagos-iconos";
+import { IconoServicio } from "../../servicios-iconos";
 import {
   ICONOS_DESTACADO,
   ICONO_POR_DEFECTO,
@@ -77,6 +81,16 @@ export default function EditarForm({
       .map((r) => ({ network: r.network || "otra", url: r.url }));
   });
 
+  // Las formas de pago se llevan en estado para poder pintar la caja marcada
+  // completa (icono y todo) y no solo el cuadrito del checkbox.
+  const [pagos, setPagos] = useState(
+    () => new Set(formasDePagoDe(restaurante.payment_methods)),
+  );
+
+  const [servicios, setServicios] = useState(
+    () => new Set(serviciosDe(restaurante.amenities)),
+  );
+
   // Los días cerrados se llevan en estado porque apagan sus dos campos de hora
   // en cuanto se marcan, sin esperar al guardado.
   const [cerrados, setCerrados] = useState(
@@ -140,6 +154,24 @@ export default function EditarForm({
 
   function alternar(slug) {
     setMarcadas((antes) => {
+      const copia = new Set(antes);
+      if (copia.has(slug)) copia.delete(slug);
+      else copia.add(slug);
+      return copia;
+    });
+  }
+
+  function alternarPago(slug) {
+    setPagos((antes) => {
+      const copia = new Set(antes);
+      if (copia.has(slug)) copia.delete(slug);
+      else copia.add(slug);
+      return copia;
+    });
+  }
+
+  function alternarServicio(slug) {
+    setServicios((antes) => {
       const copia = new Set(antes);
       if (copia.has(slug)) copia.delete(slug);
       else copia.add(slug);
@@ -492,6 +524,71 @@ export default function EditarForm({
                 <span className="opcion-cara">
                   <strong>{simbolo}</strong>
                   {texto}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="grupo">
+          <legend>
+            Formas de pago <em>(marca todas las que aceptes)</em>
+          </legend>
+          <p className="ayuda">
+            Es de lo que más te preguntan por teléfono. Sale en tu ficha, así
+            que el comensal llega sabiendo si trae efectivo o no.
+          </p>
+          <div className="pagos-edicion">
+            {FORMAS_DE_PAGO.map((forma) => (
+              <label className="pago-opcion" key={forma.slug}>
+                <input
+                  type="checkbox"
+                  name="payment_methods"
+                  value={forma.slug}
+                  checked={pagos.has(forma.slug)}
+                  onChange={() => alternarPago(forma.slug)}
+                />
+                <span className="pago-cara">
+                  <IconoPago slug={forma.slug} ancho={22} />
+                  <span className="pago-texto">
+                    <strong>{forma.nombre}</strong>
+                    <em>{forma.pista}</em>
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+          {pagos.size === 0 ? (
+            <p className="ayuda">
+              Si no marcas ninguna, tu ficha seguirá diciendo que hay que
+              confirmarlo con ustedes.
+            </p>
+          ) : null}
+        </fieldset>
+
+        <fieldset className="grupo">
+          <legend>
+            Servicios <em>(marca los que tengas)</em>
+          </legend>
+          <p className="ayuda">
+            Se pregunta antes de salir de casa, igual que la forma de pago.
+          </p>
+          <div className="servicios-edicion">
+            {SERVICIOS.map((servicio) => (
+              <label className="servicio-opcion" key={servicio.slug}>
+                <input
+                  type="checkbox"
+                  name="amenities"
+                  value={servicio.slug}
+                  checked={servicios.has(servicio.slug)}
+                  onChange={() => alternarServicio(servicio.slug)}
+                />
+                <span className="servicio-cara">
+                  <IconoServicio slug={servicio.slug} ancho={22} />
+                  <span className="servicio-texto">
+                    <strong>{servicio.nombre}</strong>
+                    <em>{servicio.pista}</em>
+                  </span>
                 </span>
               </label>
             ))}

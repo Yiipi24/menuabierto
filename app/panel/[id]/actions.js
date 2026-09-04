@@ -6,6 +6,8 @@ import { supabaseSession } from "../../../lib/supabase";
 import { geocodificar, mismaDireccion } from "../../../lib/geocodificar";
 import { estadoValido } from "../../../lib/estados";
 import { conEsquema, redValida } from "../../../lib/redes";
+import { formasDePagoDe } from "../../../lib/pagos";
+import { serviciosDe } from "../../../lib/servicios";
 import { iconoValido, ICONO_POR_DEFECTO, MAX_DESTACADOS } from "../../destacados";
 import { FOTOS_FACHADA, fotosPlatillosIncluidas } from "../../../lib/planes";
 import { MAX_FOTO_BYTES, TIPOS_FOTO } from "../../../lib/subidas";
@@ -102,6 +104,8 @@ export async function guardarRestaurante(_prevState, formData) {
   const website = conEsquema(limpio(formData, "website"));
   const destacados = leerDestacados(formData);
   const redes = leerRedes(formData);
+  const pagos = formasDePagoDe(formData.getAll("payment_methods").map(String));
+  const servicios = serviciosDe(formData.getAll("amenities").map(String));
   const cerrados = leerDiasCerrados(formData);
 
   const { error } = await supabase
@@ -116,6 +120,8 @@ export async function guardarRestaurante(_prevState, formData) {
       price_level: nivel,
       highlights: destacados,
       social_links: redes,
+      payment_methods: pagos,
+      amenities: servicios,
       closed_days: cerrados,
     })
     .eq("id", id);
