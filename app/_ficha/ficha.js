@@ -549,8 +549,15 @@ export default async function Ficha({ slug }) {
               <div>
                 <strong>Métodos de pago</strong>
                 <span>
+                  {/* Solo las dos primeras: el renglón vive en una tira de
+                      cuatro columnas y las cinco formas seguidas lo convertían
+                      en un párrafo subrayado de cuatro líneas. El resto está a
+                      un clic, en la tarjeta de arriba. */}
                   {pagos.length ? (
-                    <a href="#pagos">{pagos.map((f) => f.nombre).join(" · ")}</a>
+                    <a href="#pagos">
+                      {pagos.slice(0, 2).map((f) => f.nombre).join(" · ")}
+                      {pagos.length > 2 ? ` y ${pagos.length - 2} más` : ""}
+                    </a>
                   ) : (
                     "Confirma con el restaurante"
                   )}

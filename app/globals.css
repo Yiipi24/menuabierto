@@ -1762,12 +1762,20 @@ section { scroll-margin-top: 80px; }
   border-radius: 12px;
   display: block;
 }
+/* Por columnas y no por reja: las tarjetas tienen alturas muy distintas —la de
+   formas de pago son cinco renglones y la de servicios uno— y en una reja la
+   más alta marca el alto del renglón, así que la siguiente caía sola dejando
+   un hueco del tamaño de una tarjeta. En columnas se empaquetan y el navegador
+   las reparte parejo. El ancho manda sobre el número: a 390px queda una sola. */
 .ficha-detalles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  columns: 260px;
+  column-gap: 16px;
   margin-top: 28px;
-  align-items: start;
+}
+
+.ficha-detalles > * {
+  break-inside: avoid;
+  margin-bottom: 16px;
 }
 
 .ficha-desc { color: var(--ink-soft); margin-top: 28px; }
