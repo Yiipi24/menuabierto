@@ -107,7 +107,7 @@ export async function cargar(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, payment_methods, amenities, closed_days",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, payment_methods, amenities, parking_cost, closed_days",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -168,7 +168,7 @@ export async function cargar(slug) {
     // Las formas de pago se resuelven aquí, con su nombre y su pista: la
     // ficha pinta lo que recibe y no traduce claves mientras genera HTML.
     pagos: detallesDePago(r.payment_methods),
-    servicios: detallesDeServicio(r.amenities),
+    servicios: detallesDeServicio(r.amenities, r.parking_cost),
     cerrados: (r.closed_days ?? []).map(Number),
     cocinas: (cocinas.data ?? []).map((c) => c.cuisines?.name).filter(Boolean),
     horarios: horarios.data ?? [],
