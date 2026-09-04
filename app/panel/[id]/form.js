@@ -5,7 +5,7 @@ import { guardarRestaurante, crearCategoria } from "./actions";
 import { ESTADOS } from "../../../lib/estados";
 import { REDES } from "../../../lib/redes";
 import { FORMAS_DE_PAGO, formasDePagoDe } from "../../../lib/pagos";
-import { SERVICIOS, serviciosDe } from "../../../lib/servicios";
+import { COSTOS_ESTACIONAMIENTO, SERVICIOS, serviciosDe } from "../../../lib/servicios";
 import { IconoRed } from "../../redes-iconos";
 import { IconoPago } from "../../pagos-iconos";
 import { IconoServicio } from "../../servicios-iconos";
@@ -89,6 +89,11 @@ export default function EditarForm({
 
   const [servicios, setServicios] = useState(
     () => new Set(serviciosDe(restaurante.amenities)),
+  );
+  // El costo va aparte del servicio porque es su letra chica: aparece cuando
+  // el estacionamiento se marca y desaparece —vacío— cuando se desmarca.
+  const [costoEstacionamiento, setCostoEstacionamiento] = useState(
+    restaurante.parking_cost ?? "",
   );
 
   // Los días cerrados se llevan en estado porque apagan sus dos campos de hora
@@ -177,6 +182,9 @@ export default function EditarForm({
       else copia.add(slug);
       return copia;
     });
+    // Quitar el estacionamiento se lleva su costo: dejarlo guardado haría que
+    // volver a marcarlo trajera de vuelta un "Gratis" que nadie eligió hoy.
+    if (slug === "estacionamiento") setCostoEstacionamiento("");
   }
 
   function alternarCerrado(dia) {
@@ -593,6 +601,40 @@ export default function EditarForm({
               </label>
             ))}
           </div>
+
+          {/* Sale solo cuando hay estacionamiento: es su letra chica, y
+              preguntar el costo de algo que no existe no tiene sentido. */}
+          {servicios.has("estacionamiento") ? (
+            <div className="servicio-detalle">
+              <span className="servicio-detalle-titulo">
+                ¿Cómo se paga el estacionamiento?
+              </span>
+              <div className="chips">
+                <label className="chip">
+                  <input
+                    type="radio"
+                    name="parking_cost"
+                    value=""
+                    checked={costoEstacionamiento === ""}
+                    onChange={() => setCostoEstacionamiento("")}
+                  />
+                  <span>No lo digo</span>
+                </label>
+                {COSTOS_ESTACIONAMIENTO.map((costo) => (
+                  <label className="chip" key={costo.slug}>
+                    <input
+                      type="radio"
+                      name="parking_cost"
+                      value={costo.slug}
+                      checked={costoEstacionamiento === costo.slug}
+                      onChange={() => setCostoEstacionamiento(costo.slug)}
+                    />
+                    <span>{costo.nombre}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </fieldset>
 
         <fieldset className="grupo">
