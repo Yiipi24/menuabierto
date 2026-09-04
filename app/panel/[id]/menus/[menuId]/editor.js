@@ -3,6 +3,13 @@
 import { useActionState, useRef, useState } from "react";
 import { aTextoDePrecio, pesos } from "../../../../../lib/precios";
 import {
+  iconoDePlatillo,
+  sugerirIcono,
+  ICONOS_PLATILLO,
+  SIN_ICONO,
+} from "../../../../../lib/iconos-platillo";
+import { IconoPlatillo } from "../../../../menu-iconos";
+import {
   borrarPlatillo,
   borrarSeccion,
   cambiarDisponibilidad,
@@ -189,6 +196,7 @@ function Seccion({ id, menuId, seccion, platillos, primera, ultima }) {
               </li>
             ) : (
               <li key={p.id} className="editor-platillo">
+                <DibujoDeFila platillo={p} />
                 <div className="editor-platillo-datos">
                   <span className={p.is_available ? "menu-nombre" : "menu-nombre agotado"}>
                     {p.name}
@@ -363,14 +371,26 @@ function RenombrarSeccion({ id, menuId, seccion, alTerminar }) {
 // los dos se quede sin el siguiente campo que agreguemos.
 function PlatilloForm({ id, menuId, seccionId, platillo, alTerminar }) {
   const formulario = useRef(null);
+  // El nombre se lleva en estado porque de él sale el dibujo sugerido: se
+  // escribe "Hamburguesa" y el dibujo aparece antes de guardar.
+  const [nombre, setNombre] = useState(platillo?.name ?? "");
+  const [icono, setIcono] = useState(platillo?.icon ?? "auto");
   const [state, action, pending] = useActionState(async (prev, formData) => {
     const resultado = await guardarPlatillo(prev, formData);
     if (resultado.status === "ok") {
-      if (platillo) alTerminar();
-      else formulario.current?.reset();
+      if (platillo) {
+        alTerminar();
+      } else {
+        formulario.current?.reset();
+        setNombre("");
+        setIcono("auto");
+      }
     }
     return resultado;
   }, inicial);
+
+  const sugerido = sugerirIcono(nombre);
+  const dibujo = icono === SIN_ICONO ? null : icono === "auto" ? sugerido : icono;
 
   return (
     <form action={action} className="form-platillo" ref={formulario}>
@@ -385,7 +405,8 @@ function PlatilloForm({ id, menuId, seccionId, platillo, alTerminar }) {
           <input
             type="text"
             name="nombre"
-            defaultValue={platillo?.name ?? ""}
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
             required
             maxLength={120}
             placeholder="Taco de suadero"
@@ -419,6 +440,34 @@ function PlatilloForm({ id, menuId, seccionId, platillo, alTerminar }) {
         />
       </label>
 
+      {/* El dibujo del platillo. Se sugiere del nombre para que no sea un
+          campo más que llenar: quien no lo toque igual sale con dibujo. */}
+      <div className="campo campo-dibujo">
+        <span className="campo-etiqueta">
+          Dibujo <em>solo se ve en las plantillas que los traen puestos</em>
+        </span>
+        <div className="campo-dibujo-fila">
+          <span className="campo-dibujo-muestra">
+            {dibujo ? <IconoPlatillo slug={dibujo} ancho={30} /> : <em>sin dibujo</em>}
+          </span>
+          <select
+            name="icono"
+            value={icono}
+            onChange={(e) => setIcono(e.target.value)}
+          >
+            <option value="auto">
+              Automático{nombre.trim() ? ` — ${nombreDeIcono(sugerido)}` : ""}
+            </option>
+            <option value={SIN_ICONO}>Sin dibujo</option>
+            {ICONOS_PLATILLO.map(([slug, nombreIcono]) => (
+              <option key={slug} value={slug}>
+                {nombreIcono}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <label className="eleccion eleccion-sola">
         <input
           type="checkbox"
@@ -449,5 +498,21 @@ function PlatilloForm({ id, menuId, seccionId, platillo, alTerminar }) {
         </p>
       ) : null}
     </form>
+  );
+}
+
+function nombreDeIcono(slug) {
+  return ICONOS_PLATILLO.find(([s]) => s === slug)?.[1] ?? "";
+}
+
+// En la lista el dueño ve el mismo dibujo que va a salir en la carta, sin
+// tener que abrir el platillo para acordarse de cuál le tocó.
+function DibujoDeFila({ platillo }) {
+  const slug = iconoDePlatillo(platillo);
+  if (!slug) return null;
+  return (
+    <span className="editor-platillo-dibujo" aria-hidden="true">
+      <IconoPlatillo slug={slug} ancho={24} />
+    </span>
   );
 }

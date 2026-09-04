@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../../lib/supabase";
 import { menusIncluidos } from "../../../../lib/planes";
-import { plantillaValida } from "../../../../lib/plantillas";
+import { estiloDeMenu, nombreDePlantilla, plantillaValida } from "../../../../lib/plantillas";
+import { iconoPlatilloValido } from "../../../../lib/iconos-platillo";
 import { aCentavos } from "../../../../lib/precios";
 import { MAX_ARCHIVO_BYTES } from "../../../../lib/subidas";
 
@@ -39,7 +40,7 @@ async function sesionYRestaurante(id) {
 async function menuDelDueno(supabase, restauranteId, menuId) {
   const { data } = await supabase
     .from("menus")
-    .select("id, restaurant_id, name, kind, template, file_path, is_visible")
+    .select("id, restaurant_id, name, kind, template, style, file_path, is_visible")
     .eq("id", menuId)
     .eq("restaurant_id", restauranteId)
     .maybeSingle();
@@ -52,6 +53,20 @@ const NO_ES_TU_MENU = { status: "error", message: "Ese menú no es tuyo." };
 function limpio(formData, campo) {
   const valor = String(formData.get(campo) ?? "").trim();
   return valor || null;
+}
+
+// Los ajustes de la plantilla viajan en un solo campo con JSON y no en siete
+// casillas sueltas: una casilla sin palomita no llega en el formulario, así que
+// "quitar los iconos" y "no mandó nada" se verían igual. `estiloDeMenu` sanea
+// lo que salga de aquí, así que basura en ese campo no pasa de aquí.
+function estiloDelFormulario(formData, template) {
+  let crudo = null;
+  try {
+    crudo = JSON.parse(String(formData.get("estilo") ?? "null"));
+  } catch {
+    crudo = null;
+  }
+  return estiloDeMenu(template, crudo);
 }
 
 function esLimiteDeMenus(error) {
@@ -105,6 +120,9 @@ export async function crearMenu(_prevState, formData) {
       name: nombre,
       kind,
       template,
+      // Vacío a propósito: así el menú recién creado se ve como la plantilla
+      // diga hoy, incluso si mañana le cambiamos los valores de fábrica.
+      style: {},
       position: count ?? 0,
     })
     .select("id")
@@ -143,12 +161,14 @@ export async function guardarMenu(_prevState, formData) {
   }
 
   const tipo = String(formData.get("kind") ?? menu.kind);
+  const template = plantillaValida(String(formData.get("template") ?? menu.template));
   const { error } = await supabase
     .from("menus")
     .update({
       name: nombre,
       kind: TIPOS_MENU.includes(tipo) ? tipo : menu.kind,
-      template: plantillaValida(String(formData.get("template") ?? menu.template)),
+      template,
+      style: estiloDelFormulario(formData, template),
       is_visible: formData.get("visible") === "on",
     })
     .eq("id", menuId)
@@ -160,7 +180,14 @@ export async function guardarMenu(_prevState, formData) {
   }
 
   refrescar(id, menuId);
-  return { status: "ok", message: "Menú guardado." };
+  // El mensaje nombra la plantilla que quedó guardada. Antes decía "Menú
+  // guardado" a secas y, como el formulario se repinta, no había manera de
+  // saber si el cambio de plantilla se había ido o no.
+  return {
+    status: "ok",
+    message: `Guardado. Tu carta se ve con la plantilla ${nombreDePlantilla(template)}.`,
+    template,
+  };
 }
 
 export async function cambiarVisibilidadMenu(formData) {
@@ -482,11 +509,17 @@ export async function guardarPlatillo(_prevState, formData) {
     }
   }
 
+  // "auto" es el valor de fábrica: se guarda nulo y la carta lo deduce del
+  // nombre. Así, si el dueño le cambia el nombre al platillo, el dibujo se
+  // corrige solo en vez de quedarse con el del nombre viejo.
+  const icono = String(formData.get("icono") ?? "auto");
+
   const campos = {
     name: nombre,
     description: limpio(formData, "descripcion"),
     price_cents: centavos,
     section_id: seccionId,
+    icon: iconoPlatilloValido(icono) ? icono : null,
     is_available: formData.get("agotado") !== "on",
   };
 
