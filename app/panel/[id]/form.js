@@ -9,6 +9,7 @@ import {
   COSTOS_ESTACIONAMIENTO,
   MODOS_DE_SERVICIO,
   SERVICIOS,
+  TIPOS_ESTACIONAMIENTO,
   serviciosDe,
 } from "../../../lib/servicios";
 import { IconoRed } from "../../redes-iconos";
@@ -101,6 +102,9 @@ export default function EditarForm({
   const [costoEstacionamiento, setCostoEstacionamiento] = useState(
     restaurante.parking_cost ?? "",
   );
+  const [tipoEstacionamiento, setTipoEstacionamiento] = useState(
+    restaurante.parking_kind ?? "",
+  );
 
   // Los días cerrados se llevan en estado porque apagan sus dos campos de hora
   // en cuanto se marcan, sin esperar al guardado.
@@ -190,7 +194,10 @@ export default function EditarForm({
     });
     // Quitar el estacionamiento se lleva su costo: dejarlo guardado haría que
     // volver a marcarlo trajera de vuelta un "Gratis" que nadie eligió hoy.
-    if (slug === "estacionamiento") setCostoEstacionamiento("");
+    if (slug === "estacionamiento") {
+      setCostoEstacionamiento("");
+      setTipoEstacionamiento("");
+    }
   }
 
   function alternarCerrado(dia) {
@@ -641,9 +648,40 @@ export default function EditarForm({
 
           {/* Sale solo cuando hay estacionamiento: es su letra chica, y
               preguntar el costo de algo que no existe no tiene sentido. */}
+          {/* Las dos preguntas del estacionamiento: dónde se deja el carro y
+              cómo se paga. Son independientes —hay estacionamiento propio de
+              paga y calle gratis— y las dos salen solo si hay estacionamiento. */}
           {servicios.has("estacionamiento") ? (
             <div className="servicio-detalle">
               <span className="servicio-detalle-titulo">
+                ¿Dónde se estaciona?
+              </span>
+              <div className="chips">
+                <label className="chip">
+                  <input
+                    type="radio"
+                    name="parking_kind"
+                    value=""
+                    checked={tipoEstacionamiento === ""}
+                    onChange={() => setTipoEstacionamiento("")}
+                  />
+                  <span>No lo digo</span>
+                </label>
+                {TIPOS_ESTACIONAMIENTO.map((tipo) => (
+                  <label className="chip" key={tipo.slug}>
+                    <input
+                      type="radio"
+                      name="parking_kind"
+                      value={tipo.slug}
+                      checked={tipoEstacionamiento === tipo.slug}
+                      onChange={() => setTipoEstacionamiento(tipo.slug)}
+                    />
+                    <span>{tipo.nombre}</span>
+                  </label>
+                ))}
+              </div>
+
+              <span className="servicio-detalle-titulo servicio-detalle-segundo">
                 ¿Cómo se paga el estacionamiento?
               </span>
               <div className="chips">

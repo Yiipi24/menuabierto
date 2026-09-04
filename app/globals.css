@@ -4400,3 +4400,7 @@ img.menu-archivo-vista { min-height: 0; }
   padding-top: 0;
   border-top: 0;
 }
+
+/* La segunda pregunta del mismo bloque necesita aire arriba; si no, sus chips
+   se pegan a los de la primera y las dos se leen como una sola lista. */
+.servicio-detalle-segundo { margin-top: 16px; }
