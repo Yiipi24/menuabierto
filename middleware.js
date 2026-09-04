@@ -1,6 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import { COOKIE_VISITANTE, DIAS_COOKIE } from "./lib/eventos";
+import { segmentoReservado } from "./lib/slug";
+
+// Las rutas fijas del sitio no son fichas, y ahora comparten la raíz con
+// ellas: la cookie del visitante solo tiene sentido donde se generan eventos.
+// La lista es la misma que `lib/slug.js` le prohíbe a un restaurante, así que
+// un nombre no puede colarse por aquí.
+function esFichaPublica(ruta) {
+  const primero = ruta.split("/")[1] ?? "";
+  return Boolean(primero) && !segmentoReservado(primero);
+}
 
 // Refresca el token antes de que lo lean las páginas. Sin esto, la sesión de
 // un dueño que deja el panel abierto caduca a media edición.
@@ -55,10 +65,7 @@ export async function middleware(request) {
   // personas. Poniéndola aquí, los tres llegan ya identificados igual.
   //
   // Es anónima y solo se pone en las fichas, que es de donde salen eventos.
-  if (
-    request.nextUrl.pathname.startsWith("/r/") &&
-    !request.cookies.get(COOKIE_VISITANTE)
-  ) {
+  if (esFichaPublica(request.nextUrl.pathname) && !request.cookies.get(COOKIE_VISITANTE)) {
     response.cookies.set(COOKIE_VISITANTE, crypto.randomUUID(), {
       httpOnly: true,
       sameSite: "lax",
@@ -71,9 +78,12 @@ export async function middleware(request) {
   return response;
 }
 
-// La ficha entra aquí porque ahora muestra el formulario de reseñas y necesita
-// una sesión viva. No le cuesta nada a quien pasa sin cuenta: sin cookie de
-// sesión el middleware devuelve la respuesta sin hablar con Supabase.
+// Las fichas cuelgan de la raíz (menuabierto.com/jcsmokehouse), así que ya no
+// hay un prefijo que enumerar: el matcher tiene que ver casi todo y se define
+// por lo que deja fuera. Lo excluido son los archivos que sirve Next tal cual
+// (_next, favicon, el logo, las fuentes) y /api, donde no hay página que
+// refrescar. No le cuesta nada a quien pasa sin cuenta: sin cookie de sesión
+// el middleware devuelve la respuesta sin hablar con Supabase.
 export const config = {
-  matcher: ["/", "/panel/:path*", "/entrar", "/registro", "/reclamar", "/r/:path*"],
+  matcher: ["/((?!_next/|api/|.*\\.[a-zA-Z0-9]+$).*)"],
 };

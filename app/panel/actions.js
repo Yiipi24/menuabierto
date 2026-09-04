@@ -14,17 +14,6 @@ export async function cerrarSesion() {
   redirect("/entrar");
 }
 
-// Convierte "Taquería La Esquina" en "taqueria-la-esquina".
-function aSlug(texto) {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-}
-
 export async function crearRestaurante(_prevState, formData) {
   const supabase = await supabaseSession();
   const { data: auth } = await supabase.auth.getUser();
@@ -47,10 +36,23 @@ export async function crearRestaurante(_prevState, formData) {
     return { status: "error", message: "Elige un rango de precio." };
   }
 
-  const base = aSlug(nombre) || "restaurante";
-  // Sufijo corto para que dos taquerías con el mismo nombre no choquen. El
-  // índice único de la base sigue siendo la garantía final.
-  const slug = `${base}-${Math.random().toString(36).slice(2, 7)}`;
+  // La dirección la reparte la base y no esta función: para saber si
+  // "tacoselgordo" está libre hay que ver TODAS las fichas, y la RLS aquí solo
+  // deja ver las publicadas. `slug_disponible` mira desde dentro y devuelve el
+  // nombre pelado, el nombre con la colonia si el pelado ya está tomado, y
+  // numerado solo si tampoco eso alcanza.
+  const { data: slug, error: errorSlug } = await supabase.rpc("slug_disponible", {
+    p_nombre: nombre,
+    p_colonia: colonia || null,
+  });
+
+  if (errorSlug || !slug) {
+    console.error("slug del restaurante", errorSlug?.message);
+    return {
+      status: "error",
+      message: "No pudimos guardar el restaurante. Inténtalo otra vez.",
+    };
+  }
 
   const { data: creado, error } = await supabase
     .from("restaurants")
@@ -70,10 +72,17 @@ export async function crearRestaurante(_prevState, formData) {
     .single();
 
   if (error) {
+    // 23505 es el índice único del slug: entre la consulta de arriba y este
+    // insert alguien más se quedó con esa dirección. Es raro y se resuelve
+    // solo repitiendo el alta, así que se dice en vez de enseñar el error de
+    // la base.
     console.error("crear restaurante", error.message);
     return {
       status: "error",
-      message: "No pudimos guardar el restaurante. Inténtalo otra vez.",
+      message:
+        error.code === "23505"
+          ? "Alguien acaba de registrar un restaurante con ese nombre. Inténtalo otra vez."
+          : "No pudimos guardar el restaurante. Inténtalo otra vez.",
     };
   }
 

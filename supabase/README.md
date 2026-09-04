@@ -30,6 +30,21 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
 
 ## Decisiones que conviene no reabrir a la ligera
 
+- **La direccion de una ficha es su nombre pegado, y la reparte la base.**
+  `slug` guarda la ruta completa (`jcsmokehouse`, o `jcsmokehouse/centro`
+  cuando el nombre ya estaba tomado), no un tramo suelto: lo unico que tiene
+  que ser unico es la direccion entera, y de eso ya se encarga el indice unico
+  de la columna. El CHECK `restaurants_slug_formato` obliga la forma y ademas
+  impide que un restaurante se quede con `/panel` o `/entrar`; la misma lista
+  de rutas reservadas vive en `lib/slug.js` y las dos tienen que decir lo
+  mismo. El slug lo elige `slug_disponible`, que es `security definer` a
+  proposito: para saber si "tacoselgordo" esta libre hay que ver todas las
+  fichas y la RLS solo deja ver las publicadas.
+- **El slug no cambia cuando el restaurante cambia de nombre.** Es la
+  direccion que esta impresa en el QR de la mesa, y el dueno no puede
+  reimprimir los viniles porque le corrigio una falta de ortografia al
+  letrero. `legacy_slug` guarda el slug anterior a la estandarizacion para que
+  `/r/<slug viejo>` siga redirigiendo a la ficha en vez de dar un 404.
 - **Los eventos del panel son anónimos y se cuentan una vez por hora.**
   `restaurant_events` no guarda IP ni cuenta: `visitor` es un id aleatorio de
   una cookie httpOnly, y el índice `restaurant_events_sin_repetir` hace que

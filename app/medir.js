@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fuenteDeReferente } from "../lib/eventos";
-import { IconoMarcador } from "./r/[slug]/iconos";
+import { IconoMarcador } from "./_ficha/iconos";
 
 // Lo que el panel enseña sale de aquí: cada cosa que alguien hace en una ficha
 // pública se manda a /api/eventos. No se guarda quién; el servidor pone una

@@ -1,5 +1,5 @@
-import { estiloDeMenu } from "../../../lib/plantillas";
-import MenuPintado from "../../menu-render";
+import { estiloDeMenu } from "../../lib/plantillas";
+import MenuPintado from "../menu-render";
 
 // El marcado de la carta vive aparte porque la ficha ya no la pinta: ahora la
 // enseña la página /menu, y el día que vuelva a hacer falta en otro lado no hay

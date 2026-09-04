@@ -1,6 +1,6 @@
 // Los logos de las redes viven aparte porque los usan dos pantallas: la ficha
 // pública y el panel donde el dueño pega sus enlaces.
-import { IconoGlobo } from "./r/[slug]/iconos";
+import { IconoGlobo } from "./_ficha/iconos";
 
 // Van rellenos y no de trazo: así se reconoce cada marca. El resto de la
 // interfaz dibuja de trazo, por eso estos traen su propio `fill`.

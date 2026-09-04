@@ -2,15 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { supabaseSession } from "../../../lib/supabase";
-
-const MAX_TEXTO = 1500;
-
+import { supabaseSession } from "../../lib/supabase";
 // El slug viaja en el formulario solo para saber a dónde volver y qué ruta
 // revalidar. Quién puede escribir lo decide la RLS con el restaurant_id.
-function rutaFicha(slug) {
-  return `/r/${encodeURIComponent(slug)}`;
-}
+import { rutaFicha } from "../../lib/slug";
+
+const MAX_TEXTO = 1500;
 
 async function sesion(slug) {
   const supabase = await supabaseSession();
