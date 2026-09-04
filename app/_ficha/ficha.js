@@ -480,7 +480,10 @@ export default async function Ficha({ slug }) {
                 <div className="ficha-card ficha-card-servicios" id="servicios">
                   <div className="ficha-card-cabeza">
                     <h3>
-                      <IconoServicio slug="estacionamiento" ancho={19} />
+                      {/* El dibujo del primero de la lista y no uno fijo: una
+                          tarjeta que solo trae wifi encabezada por la P del
+                          estacionamiento se lee como un error. */}
+                      <IconoServicio slug={servicios[0].slug} ancho={19} />
                       Servicios
                     </h3>
                   </div>
