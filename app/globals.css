@@ -668,6 +668,11 @@ section { scroll-margin-top: 80px; }
 
 .panel-angosto { max-width: 620px; }
 
+/* La página del menú necesita dos columnas: los controles de un lado y la
+   carta del otro. Lo que se sigue leyendo como formulario se queda angosto
+   por su cuenta. */
+.panel-taller { max-width: 1080px; }
+
 .panel-encabezado {
   display: flex;
   align-items: center;
@@ -2621,9 +2626,24 @@ img.menu-archivo-vista { min-height: 0; }
   display: flex;
   align-items: baseline;
   gap: 12px;
+  /* Con dos columnas la caja se hace más angosta que "HAMBURGUESAS" y el
+     precio se salía por la derecha: un elemento de flex no baja de su palabra
+     más larga si no se le dice. Así el nombre puede encogerse y, cuando ya no
+     cabe, el precio se va al renglón de abajo en vez de desbordarse. */
+  flex-wrap: wrap;
 }
 
-.carta .menu-nombre { font-family: var(--carta-letra-nombre); font-weight: 700; }
+.carta .menu-nombre {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.carta .menu-precio { flex: none; }
+
+.carta .menu-nombre {
+  font-family: var(--carta-letra-nombre);
+  font-weight: 700;
+}
 
 .carta .menu-desc { color: var(--carta-suave); }
 
@@ -2892,12 +2912,19 @@ img.menu-archivo-vista { min-height: 0; }
 
 .carta-aire-apretada { --carta-aire: 8px; }
 
-.carta-dos-columnas .carta-cuerpo { column-count: 2; column-gap: 42px; }
+/* Rejilla y no `column-count`: con columnas de texto una sección se partía a
+   la mitad y los dos encabezados quedaban pegados arriba, como si fueran un
+   solo listón. Aquí cada sección es una celda entera.
 
-.carta-dos-columnas .menu-seccion { break-inside: avoid; }
-
-@media (max-width: 760px) {
-  .carta-dos-columnas .carta-cuerpo { column-count: 1; }
+   El `auto-fit` con ancho mínimo hace que vuelva a una columna cuando la caja
+   es angosta —el teléfono, o la vista previa del panel— sin preguntarle a la
+   ventana, que es lo que importa: la carta puede ir dentro de algo estrecho
+   aunque la pantalla sea grande. */
+.carta-dos-columnas .carta-cuerpo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(270px, 100%), 1fr));
+  column-gap: 42px;
+  align-items: start;
 }
 
 @media (max-width: 640px) {
@@ -3290,3 +3317,65 @@ img.menu-archivo-vista { min-height: 0; }
 }
 
 .editor-platillo-dibujo { flex: none; color: var(--accent); opacity: 0.8; }
+
+/* ---------- panel: el taller de la plantilla ---------- */
+
+.ajuste-basicos { max-width: 620px; }
+
+.ajuste-taller { display: grid; gap: 28px; }
+
+/* De 1000px para arriba caben los controles y la carta lado a lado, y la
+   carta se queda pegada arriba mientras se mueven las perillas. Abajo de eso
+   no cabe, así que se apilan y lo que se pega es la barra de guardar. */
+@media (min-width: 1000px) {
+  .ajuste-taller {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 36px;
+    align-items: start;
+  }
+
+  /* La columna cabe en la pantalla completa: el título y el botón de guardar
+     se quedan quietos y lo que se recorre por dentro es la carta. Si se
+     recorriera la columna entera, guardar quedaría escondido hasta el fondo,
+     que es justo lo que se quería evitar. */
+  .ajuste-vista {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 48px);
+  }
+
+  .ajuste-vista .vista-previa {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .ajuste-vista .ajuste-acciones { flex: none; }
+
+  .ajuste-controles .ajuste-bloque:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .ajuste-vista .ajuste-titulo { margin-top: 0; }
+}
+
+.ajuste-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.ajuste-acciones .form-msg { flex-basis: 100%; margin: 0; }
+
+/* Apilado —teléfono y tableta— la carta va debajo de los controles y guardar
+   justo después de ella. Pegarla a la pantalla ahí necesitaría sacar el botón
+   del formulario o mover el orden del marcado, y ninguna de las dos vale por
+   lo poco que se gana en una pantalla donde igual no caben las dos cosas. */
+
+.ajuste-vista .vista-previa { padding: 14px; }
