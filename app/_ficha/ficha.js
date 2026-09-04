@@ -22,6 +22,7 @@ import {
 import { IconoDestacado } from "../destacados";
 import { IconoRed } from "../redes-iconos";
 import { IconoPago } from "../pagos-iconos";
+import { IconoServicio } from "../servicios-iconos";
 import {
   IconoCubiertos,
   IconoEscudo,
@@ -93,8 +94,20 @@ export default async function Ficha({ slug }) {
   }
   if (!datos) notFound();
 
-  const { r, cocinas, horarios, fotos, menus, abierto, resenas, destacados, redes, pagos, cerrados } =
-    datos;
+  const {
+    r,
+    cocinas,
+    horarios,
+    fotos,
+    menus,
+    abierto,
+    resenas,
+    destacados,
+    redes,
+    pagos,
+    servicios,
+    cerrados,
+  } = datos;
 
   // La ficha es publica, asi que la sesion puede no existir. Solo sirve para
   // decidir que se ve bajo las resenas: el formulario, la puerta de entrada o
@@ -307,7 +320,12 @@ export default async function Ficha({ slug }) {
 
           {descripcion ? <p className="ficha-desc">{descripcion}</p> : null}
 
-          {r.phone || r.website || redes.length || semana.length || pagos.length ? (
+          {r.phone ||
+          r.website ||
+          redes.length ||
+          semana.length ||
+          pagos.length ||
+          servicios.length ? (
             <div className="ficha-detalles">
               {semana.length ? (
                 <div className="ficha-card ficha-card-horarios" id="horarios">
@@ -448,6 +466,33 @@ export default async function Ficha({ slug }) {
                         <span className="ficha-pago-texto">
                           <strong>{forma.nombre}</strong>
                           <span>{forma.pista}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {/* Los servicios son la otra mitad de "¿qué me encuentro al
+                  llegar?", y se preguntan antes de salir de casa igual que la
+                  forma de pago. */}
+              {servicios.length ? (
+                <div className="ficha-card ficha-card-servicios" id="servicios">
+                  <div className="ficha-card-cabeza">
+                    <h3>
+                      <IconoServicio slug="estacionamiento" ancho={19} />
+                      Servicios
+                    </h3>
+                  </div>
+                  <ul className="ficha-pagos">
+                    {servicios.map((servicio) => (
+                      <li key={servicio.slug}>
+                        <span className="ficha-pago-icono">
+                          <IconoServicio slug={servicio.slug} ancho={20} />
+                        </span>
+                        <span className="ficha-pago-texto">
+                          <strong>{servicio.nombre}</strong>
+                          <span>{servicio.pista}</span>
                         </span>
                       </li>
                     ))}

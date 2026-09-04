@@ -3,6 +3,7 @@ import { plantillaValida } from "../../lib/plantillas";
 import { destacadosDe } from "../destacados";
 import { conEsquema, nombreDeRed } from "../../lib/redes";
 import { detallesDePago } from "../../lib/pagos";
+import { detallesDeServicio } from "../../lib/servicios";
 import { conteoDe } from "../../lib/insignias";
 import { agruparPlatillos } from "../../lib/menus";
 
@@ -106,7 +107,7 @@ export async function cargar(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, payment_methods, closed_days",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, payment_methods, amenities, closed_days",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -167,6 +168,7 @@ export async function cargar(slug) {
     // Las formas de pago se resuelven aquí, con su nombre y su pista: la
     // ficha pinta lo que recibe y no traduce claves mientras genera HTML.
     pagos: detallesDePago(r.payment_methods),
+    servicios: detallesDeServicio(r.amenities),
     cerrados: (r.closed_days ?? []).map(Number),
     cocinas: (cocinas.data ?? []).map((c) => c.cuisines?.name).filter(Boolean),
     horarios: horarios.data ?? [],

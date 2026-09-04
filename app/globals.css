@@ -4061,25 +4061,28 @@ img.menu-archivo-vista { min-height: 0; }
   color: var(--accent);
 }
 
-/* ---------- Formas de pago ---------- */
+/* ---------- Formas de pago y servicios ---------- */
 
 /* En el panel se marcan como cajas y no como una lista de casillas sueltas:
    son cinco opciones cortas y así se ven de un golpe cuáles quedaron
    prendidas. Es el mismo patrón que el rango de precio, con dos renglones. */
-.pagos-edicion {
+.pagos-edicion,
+.servicios-edicion {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 8px;
 }
 
-.pago-opcion input {
+.pago-opcion input,
+.servicio-opcion input {
   position: absolute;
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.pago-cara {
+.pago-cara,
+.servicio-cara {
   display: flex;
   align-items: center;
   gap: 11px;
@@ -4092,28 +4095,36 @@ img.menu-archivo-vista { min-height: 0; }
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-.pago-cara .icono { color: var(--ink-faint); flex: none; }
+.pago-cara .icono,
+.servicio-cara .icono { color: var(--ink-faint); flex: none; }
 
-.pago-texto { display: flex; flex-direction: column; line-height: 1.3; }
+.pago-texto,
+.servicio-texto { display: flex; flex-direction: column; line-height: 1.3; }
 
-.pago-texto strong { font-size: 15px; }
+.pago-texto strong,
+.servicio-texto strong { font-size: 15px; }
 
-.pago-texto em {
+.pago-texto em,
+.servicio-texto em {
   font-style: normal;
   font-size: 13px;
   color: var(--ink-faint);
 }
 
-.pago-cara:hover { border-color: var(--ink-faint); }
+.pago-cara:hover,
+.servicio-cara:hover { border-color: var(--ink-faint); }
 
-.pago-opcion input:checked + .pago-cara {
+.pago-opcion input:checked + .pago-cara,
+.servicio-cara {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
 
-.pago-opcion input:checked + .pago-cara .icono { color: var(--accent); }
+.pago-opcion input:checked + .pago-cara .icono,
+.servicio-opcion input:checked + .servicio-cara .icono { color: var(--accent); }
 
-.pago-opcion input:focus-visible + .pago-cara {
+.pago-opcion input:focus-visible + .pago-cara,
+.servicio-cara {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }

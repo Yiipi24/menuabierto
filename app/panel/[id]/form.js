@@ -5,8 +5,10 @@ import { guardarRestaurante, crearCategoria } from "./actions";
 import { ESTADOS } from "../../../lib/estados";
 import { REDES } from "../../../lib/redes";
 import { FORMAS_DE_PAGO, formasDePagoDe } from "../../../lib/pagos";
+import { SERVICIOS, serviciosDe } from "../../../lib/servicios";
 import { IconoRed } from "../../redes-iconos";
 import { IconoPago } from "../../pagos-iconos";
+import { IconoServicio } from "../../servicios-iconos";
 import {
   ICONOS_DESTACADO,
   ICONO_POR_DEFECTO,
@@ -85,6 +87,10 @@ export default function EditarForm({
     () => new Set(formasDePagoDe(restaurante.payment_methods)),
   );
 
+  const [servicios, setServicios] = useState(
+    () => new Set(serviciosDe(restaurante.amenities)),
+  );
+
   // Los días cerrados se llevan en estado porque apagan sus dos campos de hora
   // en cuanto se marcan, sin esperar al guardado.
   const [cerrados, setCerrados] = useState(
@@ -157,6 +163,15 @@ export default function EditarForm({
 
   function alternarPago(slug) {
     setPagos((antes) => {
+      const copia = new Set(antes);
+      if (copia.has(slug)) copia.delete(slug);
+      else copia.add(slug);
+      return copia;
+    });
+  }
+
+  function alternarServicio(slug) {
+    setServicios((antes) => {
       const copia = new Set(antes);
       if (copia.has(slug)) copia.delete(slug);
       else copia.add(slug);
@@ -549,6 +564,35 @@ export default function EditarForm({
               confirmarlo con ustedes.
             </p>
           ) : null}
+        </fieldset>
+
+        <fieldset className="grupo">
+          <legend>
+            Servicios <em>(marca los que tengas)</em>
+          </legend>
+          <p className="ayuda">
+            Se pregunta antes de salir de casa, igual que la forma de pago.
+          </p>
+          <div className="servicios-edicion">
+            {SERVICIOS.map((servicio) => (
+              <label className="servicio-opcion" key={servicio.slug}>
+                <input
+                  type="checkbox"
+                  name="amenities"
+                  value={servicio.slug}
+                  checked={servicios.has(servicio.slug)}
+                  onChange={() => alternarServicio(servicio.slug)}
+                />
+                <span className="servicio-cara">
+                  <IconoServicio slug={servicio.slug} ancho={22} />
+                  <span className="servicio-texto">
+                    <strong>{servicio.nombre}</strong>
+                    <em>{servicio.pista}</em>
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
         </fieldset>
 
         <fieldset className="grupo">

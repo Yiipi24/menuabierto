@@ -21,7 +21,7 @@ export default async function Editar({ params }) {
   const { data: restaurante } = await supabase
     .from("restaurants")
     .select(
-      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status, plan, premium_until, highlights, social_links, payment_methods, closed_days",
+      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status, plan, premium_until, highlights, social_links, payment_methods, amenities, closed_days",
     )
     .eq("id", id)
     .eq("owner_id", auth.user.id)
