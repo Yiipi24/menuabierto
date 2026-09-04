@@ -1,8 +1,8 @@
-import { supabaseServer } from "../../../lib/supabase";
-import { plantillaValida } from "../../../lib/plantillas";
-import { destacadosDe } from "../../destacados";
-import { conEsquema, nombreDeRed } from "../../../lib/redes";
-import { agruparPlatillos } from "../../../lib/menus";
+import { supabaseServer } from "../../lib/supabase";
+import { plantillaValida } from "../../lib/plantillas";
+import { destacadosDe } from "../destacados";
+import { conEsquema, nombreDeRed } from "../../lib/redes";
+import { agruparPlatillos } from "../../lib/menus";
 
 // La carga vive aquí y no en la página porque ahora son dos: la ficha y la
 // carta completa. Las dos necesitan lo mismo y ninguna debería tener su propia

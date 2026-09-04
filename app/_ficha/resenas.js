@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ResenaForm from "./resena-form";
+import { rutaFicha } from "../../lib/slug";
 
 const FECHA = new Intl.DateTimeFormat("es-MX", {
   year: "numeric",
@@ -45,7 +46,7 @@ function reparto(resenas) {
 export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno }) {
   const total = resenas.length;
   const promedio = restaurante.rating_avg ?? null;
-  const volverAqui = `/r/${encodeURIComponent(slug)}#resenas`;
+  const volverAqui = `${rutaFicha(slug)}#resenas`;
 
   // La propia sube al formulario, donde se edita; repetirla abajo la mostraria
   // dos veces en la misma pantalla.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { rutaFicha } from "../lib/slug";
 import { supabaseServer } from "../lib/supabase";
 import Brand from "./brand";
 import Buscador from "./buscador";
@@ -293,7 +294,7 @@ export default async function Home({ searchParams }) {
             {resultados.map((r) => {
               const icono = iconoCocina(slugPorNombre.get(r.cuisines?.[0]));
               return (
-                <Link className="tarjeta" key={r.id} href={`/r/${r.slug}`}>
+                <Link className="tarjeta" key={r.id} href={rutaFicha(r.slug)}>
                   <div className="tarjeta-foto">
                     {r.foto ? (
                       <img src={r.foto} alt="" loading="lazy" />

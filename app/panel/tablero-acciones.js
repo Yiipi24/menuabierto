@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { rutaFicha } from "../../lib/slug";
 import { cambiarEstado } from "./actions";
 import BorrarRestaurante from "./borrar";
 import {
@@ -30,7 +31,7 @@ export default function AccionesDelRestaurante({ restaurante }) {
           <IconoCarta ancho={17} />
           Menús
         </Link>
-        <Link className="btn-linea" href={`/r/${restaurante.slug}#resenas`}>
+        <Link className="btn-linea" href={`${rutaFicha(restaurante.slug)}#resenas`}>
           <IconoEstrella ancho={17} />
           Reseñas
         </Link>

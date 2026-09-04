@@ -3032,6 +3032,49 @@ img.menu-archivo-vista { min-height: 0; }
   white-space: nowrap;
 }
 
+/* "Cómo llegar" no manda a una sola app: pregunta con cuál. El menú se ancla
+   al botón y no al centro de la pantalla porque la banda de la dirección puede
+   quedar a media página. */
+.ficha-comollegar { position: relative; }
+
+.ficha-comollegar-menu {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 200px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.14);
+}
+
+.ficha-comollegar-titulo {
+  padding: 4px 10px 8px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.ficha-comollegar-opcion {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.ficha-comollegar-opcion:hover,
+.ficha-comollegar-opcion:focus-visible {
+  background: var(--paper-warm);
+}
+
 /* La tarjeta que reemplaza al menú desplegado: un botón para verlo en esta
    pantalla y un QR para abrirlo en el celular sin teclear la dirección. */
 .ficha-menu-cta {
@@ -3090,6 +3133,40 @@ img.menu-archivo-vista { min-height: 0; }
   border: 1px solid var(--line);
 }
 
+/* El bloque del dueño: el QR y, debajo, los dos formatos para llevárselo a la
+   imprenta. Va en columna para que los botones queden bajo el código y no
+   compitan con el texto de al lado. Con los botones y la nota, la columna del
+   QR crece: sin este ancho extra, el texto de al lado queda en una tira de
+   cuatro palabras por renglón. */
+.ficha-menu-qr:has(.qr-descarga) { max-width: 520px; }
+
+.qr-descarga {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.qr-descarga-botones { display: flex; gap: 8px; }
+
+.qr-descarga-botones .btn-linea {
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+/* Con el selector a secas gana `.ficha-menu-qr p`, que está más abajo y
+   pinta la nota del tamaño del párrafo de al lado. */
+.ficha-menu-qr .qr-descarga-nota {
+  max-width: 190px;
+  margin-top: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
 .ficha-menu-qr h3 { font-size: 16px; line-height: 1.3; }
 
 .ficha-menu-qr p { color: var(--ink-soft); font-size: 14px; margin-top: 8px; }
@@ -3125,7 +3202,8 @@ img.menu-archivo-vista { min-height: 0; }
   .ficha-hero { grid-template-columns: 1fr; gap: 24px; }
   .ficha-hero-texto h1 { font-size: 34px; }
   .ficha-banda { grid-template-columns: 1fr; gap: 18px; }
-  .ficha-banda-boton { justify-content: center; }
+  .ficha-banda-boton { justify-content: center; width: 100%; }
+  .ficha-comollegar-menu { left: 0; right: 0; }
   .resenas-banda-encabezado h2 { font-size: 25px; }
 }
 
