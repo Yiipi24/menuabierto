@@ -21,6 +21,14 @@ function Svg({ children, ancho = 22 }) {
 }
 
 const DIBUJOS = {
+  // La casa con la flecha entrando: la comida va hacia allá. Una moto de
+  // reparto a 20 píxeles se convierte en un borrón de ruedas.
+  domicilio: (
+    <>
+      <path d="M4 11.5 12 5l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z" />
+      <path d="M8.5 15h6M12 12.5l2.5 2.5-2.5 2.5" />
+    </>
+  ),
   // Los cubiertos, que en el resto del sitio ya significan "comer": un plato
   // visto desde arriba son dos círculos y se lee como una diana.
   "comer-aqui": (
