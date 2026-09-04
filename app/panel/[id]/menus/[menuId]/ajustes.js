@@ -94,6 +94,7 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
         <input type="hidden" name="template" value={template} />
         <input type="hidden" name="estilo" value={JSON.stringify(estilo)} />
 
+        <div className="ajuste-basicos">
         <label className="campo">
           <span>Nombre</span>
           <input
@@ -130,9 +131,14 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
             <em>Quítale la palomita para prepararlo sin que nadie lo vea.</em>
           </span>
         </label>
+        </div>
 
+        {/* De un lado lo que se toca y del otro cómo va quedando. La vista
+            previa se queda fija: antes había que bajar a verla, subir a mover
+            el color y volver a bajar, y así con cada cambio. */}
         {tipo === "digital" ? (
-          <>
+          <div className="ajuste-taller">
+            <div className="ajuste-controles">
             <div className="ajuste-bloque">
               <h3 className="ajuste-titulo">Plantilla</h3>
               <p className="ayuda">
@@ -292,7 +298,9 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
               </button>
             </div>
 
-            <div className="ajuste-bloque">
+            </div>
+
+            <aside className="ajuste-vista">
               <h3 className="ajuste-titulo">Así se va a ver</h3>
               <p className="ayuda">
                 Es tu carta de verdad, con esta plantilla. Guarda para que se
@@ -308,35 +316,53 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
                   TituloSeccion="p"
                 />
               </div>
-            </div>
-          </>
-        ) : null}
 
-        <div className="form-platillo-acciones">
-          <button className="btn" type="submit" disabled={pending}>
-            {pending ? "Guardando…" : "Guardar ajustes"}
-          </button>
-          {sinCambios ? null : (
-            <button
-              className="btn-texto"
-              type="button"
-              onClick={() => setCampos(camposDe(menu))}
-            >
-              Deshacer los cambios
-            </button>
-          )}
-        </div>
-
-        {state.status !== "idle" ? (
-          <p
-            className={state.status === "ok" ? "form-msg ok" : "form-msg err"}
-            role={state.status === "ok" ? "status" : "alert"}
-          >
-            {state.message}
-          </p>
-        ) : null}
+              <Guardar
+                pending={pending}
+                sinCambios={sinCambios}
+                state={state}
+                alDeshacer={() => setCampos(camposDe(menu))}
+              />
+            </aside>
+          </div>
+        ) : (
+          <Guardar
+            pending={pending}
+            sinCambios={sinCambios}
+            state={state}
+            alDeshacer={() => setCampos(camposDe(menu))}
+          />
+        )}
       </form>
     </section>
+  );
+}
+
+// Guardar va pegado a la vista previa: se mueve un color y el botón está ahí
+// mismo, no quince pantallas más abajo.
+function Guardar({ pending, sinCambios, state, alDeshacer }) {
+  return (
+    <div className="ajuste-acciones">
+      <button className="btn" type="submit" disabled={pending}>
+        {pending ? "Guardando…" : "Guardar ajustes"}
+      </button>
+      {sinCambios ? (
+        <span className="ayuda">Todo guardado.</span>
+      ) : (
+        <button className="btn-texto" type="button" onClick={alDeshacer}>
+          Deshacer los cambios
+        </button>
+      )}
+
+      {state.status !== "idle" ? (
+        <p
+          className={state.status === "ok" ? "form-msg ok" : "form-msg err"}
+          role={state.status === "ok" ? "status" : "alert"}
+        >
+          {state.message}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

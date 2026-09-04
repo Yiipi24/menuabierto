@@ -65,7 +65,7 @@ export default async function EditarMenu({ params }) {
         </Link>
       </header>
 
-      <main className="wrap panel-main panel-angosto">
+      <main className="wrap panel-main panel-taller">
         <div className="panel-encabezado">
           <h1>{menu.name}</h1>
           <BorrarMenu id={id} menuId={menu.id} nombre={menu.name} />
