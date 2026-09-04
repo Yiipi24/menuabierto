@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
+import { COOKIE_VISITANTE, DIAS_COOKIE } from "./lib/eventos";
 
 // Refresca el token antes de que lo lean las páginas. Sin esto, la sesión de
 // un dueño que deja el panel abierto caduca a media edición.
@@ -45,6 +46,26 @@ export async function middleware(request) {
 
   if (tieneSesion) {
     await supabase.auth.getUser();
+  }
+
+  // La cookie del visitante se pone al servir la ficha, no cuando llega el
+  // primer evento. Los tres eventos de una carga (la vista, el escaneo del QR
+  // y el menú) salen a la vez: si cada uno se encontrara sin cookie, cada uno
+  // se inventaría un visitante distinto y un solo escaneo contaría como tres
+  // personas. Poniéndola aquí, los tres llegan ya identificados igual.
+  //
+  // Es anónima y solo se pone en las fichas, que es de donde salen eventos.
+  if (
+    request.nextUrl.pathname.startsWith("/r/") &&
+    !request.cookies.get(COOKIE_VISITANTE)
+  ) {
+    response.cookies.set(COOKIE_VISITANTE, crypto.randomUUID(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: DIAS_COOKIE * 24 * 60 * 60,
+    });
   }
 
   return response;
