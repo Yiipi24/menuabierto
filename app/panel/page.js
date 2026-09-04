@@ -1,17 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../lib/supabase";
-import { cerrarSesion, cambiarEstado, borrarRestaurante } from "./actions";
+import { cerrarSesion } from "./actions";
 import Brand from "../brand";
-import BorrarRestaurante from "./borrar";
+import Tablero from "./tablero";
+import { IconoCorona, IconoMas, IconoUsuario } from "./tablero-iconos";
 
 export const metadata = { title: "Tu panel — Menú Abierto" };
 
-const ETIQUETA_ESTADO = {
-  borrador: "Borrador",
-  publicado: "Publicado",
-  oculto: "Oculto",
-};
+const BUCKET_FOTOS = "restaurantes";
 
 export default async function Panel() {
   const supabase = await supabaseSession();
@@ -22,20 +19,61 @@ export default async function Panel() {
   // explícito sobra por seguridad pero deja clara la intención al leer.
   const { data: restaurantes, error } = await supabase
     .from("restaurants")
-    .select("id, slug, name, city, neighborhood, status, rating_avg, rating_count")
+    .select(
+      "id, slug, name, city, neighborhood, status, plan, rating_avg, rating_count",
+    )
     .eq("owner_id", auth.user.id)
     .order("created_at", { ascending: false });
+
+  // Las fotos sirven para dos cosas en el tablero: la miniatura del selector
+  // (la de la fachada) y una de las ideas ("agrega más fotos"). Se piden en
+  // una sola consulta para todos y no una por restaurante.
+  let fotosPorRestaurante = new Map();
+  if (restaurantes?.length) {
+    const { data: fotos } = await supabase
+      .from("restaurant_media")
+      .select("restaurant_id, storage_path, category, position")
+      .in(
+        "restaurant_id",
+        restaurantes.map((r) => r.id),
+      )
+      .order("position");
+
+    for (const f of fotos ?? []) {
+      const actual = fotosPorRestaurante.get(f.restaurant_id) ?? {
+        total: 0,
+        portada: null,
+      };
+      actual.total += 1;
+      // La miniatura es la fachada; si no hay, la primera foto que exista.
+      const esMejor = f.category === "fachada" && actual.portada?.category !== "fachada";
+      if (!actual.portada || esMejor) actual.portada = f;
+      fotosPorRestaurante.set(f.restaurant_id, actual);
+    }
+  }
+
+  const conFotos = (restaurantes ?? []).map((r) => {
+    const info = fotosPorRestaurante.get(r.id);
+    return {
+      ...r,
+      fotos: info?.total ?? 0,
+      foto: info?.portada
+        ? supabase.storage.from(BUCKET_FOTOS).getPublicUrl(info.portada.storage_path)
+            .data.publicUrl
+        : null,
+    };
+  });
 
   return (
     <div className="panel-wrap">
       <header className="panel-top">
         <Brand href="/" />
         <div className="panel-top-derecha">
-          <Link className="btn-texto" href="/panel/planes">
-            Planes
-          </Link>
-          <Link className="btn-texto" href="/panel/cuenta">
-            {auth.user.email}
+          <Link className="btn-texto panel-usuario" href="/panel/cuenta">
+            <span className="panel-correo">{auth.user.email}</span>
+            <span className="panel-avatar" aria-hidden="true">
+              <IconoUsuario ancho={18} />
+            </span>
           </Link>
           <form action={cerrarSesion}>
             <button className="btn-texto" type="submit">
@@ -45,14 +83,19 @@ export default async function Panel() {
         </div>
       </header>
 
-      <main className="wrap panel-main">
+      <main className="wrap panel-main panel-tablero">
         <div className="panel-encabezado">
           <h1>Tus restaurantes</h1>
           <div className="panel-acciones">
-            <Link className="btn-texto" href="/reclamar">
+            <Link className="btn-linea" href="/reclamar">
               Reclamar uno existente
             </Link>
+            <Link className="btn-linea" href="/panel/planes">
+              <IconoCorona ancho={17} />
+              Planes
+            </Link>
             <Link className="btn" href="/panel/nuevo">
+              <IconoMas ancho={17} />
               Agregar restaurante
             </Link>
           </div>
@@ -64,7 +107,7 @@ export default async function Panel() {
           </p>
         ) : null}
 
-        {!error && restaurantes?.length === 0 ? (
+        {!error && conFotos.length === 0 ? (
           <div className="vacio">
             <h2>Todavía no tienes ninguno</h2>
             <p>
@@ -77,53 +120,7 @@ export default async function Panel() {
           </div>
         ) : null}
 
-        {restaurantes?.length ? (
-          <ul className="lista-restaurantes">
-            {restaurantes.map((r) => (
-              <li key={r.id} className="fila-restaurante">
-                <div>
-                  <h2>{r.name}</h2>
-                  <p className="fila-meta">
-                    {[r.neighborhood, r.city].filter(Boolean).join(" · ")}
-                  </p>
-                </div>
-                <div className="fila-derecha">
-                  <span className={`estado estado-${r.status}`}>
-                    {ETIQUETA_ESTADO[r.status] ?? r.status}
-                  </span>
-                  <span className="fila-rating">
-                    {r.rating_count > 0
-                      ? `★ ${r.rating_avg} · ${r.rating_count}`
-                      : "Sin reseñas"}
-                  </span>
-                  <div className="fila-botones">
-                    <Link className="btn-texto" href={`/panel/${r.id}`}>
-                      Seguir editando
-                    </Link>
-                    <Link className="btn-texto" href={`/panel/${r.id}/menus`}>
-                      Menús
-                    </Link>
-                    <form action={cambiarEstado}>
-                      <input type="hidden" name="id" value={r.id} />
-                      <input
-                        type="hidden"
-                        name="status"
-                        value={r.status === "publicado" ? "oculto" : "publicado"}
-                      />
-                      <button
-                        className={r.status === "publicado" ? "btn-texto" : "btn btn-chico"}
-                        type="submit"
-                      >
-                        {r.status === "publicado" ? "Ocultar" : "Publicar"}
-                      </button>
-                    </form>
-                    <BorrarRestaurante id={r.id} nombre={r.name} />
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        {conFotos.length ? <Tablero restaurantes={conFotos} /> : null}
       </main>
     </div>
   );
