@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Brand from "../brand";
+import Nav from "../nav";
 import Carta from "./carta";
 import { MedirVista } from "../medir";
 import { cargar, PRECIO } from "./datos";
@@ -46,17 +46,7 @@ export default async function CartaPagina({ slug }) {
 
   return (
     <>
-      <nav className="nav">
-        <div className="wrap nav-inner">
-          <Brand />
-          <div className="nav-links">
-            <Link href="/">Buscar</Link>
-            <Link className="btn btn-sm" href="/registro">
-              Publica tu menú
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       <main className="wrap ficha ficha-menu-pagina">
         {/* El menú también es una visita a la ficha: quien llega por el QR

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
 import { qrRuta } from "../../lib/qr";
 import { rutaMenu as rutaDeMenu } from "../../lib/slug";
-import Brand from "../brand";
+import Nav from "../nav";
 import Resenas from "./resenas";
 import ComoLlegar from "./como-llegar";
 import QrDescarga from "./qr-descarga";
@@ -156,17 +156,7 @@ export default async function Ficha({ slug }) {
 
   return (
     <>
-      <nav className="nav">
-        <div className="wrap nav-inner">
-          <Brand />
-          <div className="nav-links">
-            <Link href="/">Buscar</Link>
-            <Link className="btn btn-sm" href="/registro">
-              Publica tu menú
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
       <main className="ficha">
         <MedirVista slug={slug} />

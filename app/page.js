@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { rutaFicha } from "../lib/slug";
 import { supabaseServer } from "../lib/supabase";
-import Brand from "./brand";
+import Nav from "./nav";
 import Buscador from "./buscador";
 import Orden from "./orden";
 import Waitlist from "./waitlist";
@@ -179,22 +179,7 @@ export default async function Home({ searchParams }) {
 
   return (
     <>
-      <nav className="nav">
-        <div className="wrap nav-inner">
-          <Brand />
-          <div className="nav-links">
-            <Link className="hide-sm" href="#restaurantes">
-              Para restaurantes
-            </Link>
-            <Link className="hide-sm" href="/entrar">
-              Iniciar sesión
-            </Link>
-            <Link className="btn btn-sm" href="/registro">
-              Publica tu menú
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Nav landing />
 
       <header className="hero-buscar">
         {fotoPortada ? (
