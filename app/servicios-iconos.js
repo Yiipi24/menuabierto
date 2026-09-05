@@ -70,6 +70,17 @@ const DIBUJOS = {
       <path d="M4.5 21h15" />
     </>
   ),
+  // Un grande y un chico. Comparé los tres candidatos al tamaño en que se ven
+  // de verdad, 20 píxeles: la resbaladilla se vuelve un borrón de líneas y el
+  // globo se lee como una paleta; las dos figuras se distinguen enteras.
+  ninos: (
+    <>
+      <circle cx="8" cy="6" r="2.4" />
+      <path d="M8 8.6v5M5.5 10.8h5M8 13.6 6 19M8 13.6 10 19" />
+      <circle cx="17" cy="9.5" r="1.9" />
+      <path d="M17 11.6v4M15.2 13h3.6M17 15.6l-1.4 3.8M17 15.6l1.4 3.8" />
+    </>
+  ),
 };
 
 export function IconoServicio({ slug, ancho = 22 }) {
