@@ -81,6 +81,43 @@ const DIBUJOS = {
       <path d="M17 11.6v4M15.2 13h3.6M17 15.6l-1.4 3.8M17 15.6l1.4 3.8" />
     </>
   ),
+  // El calendario con su palomita. El marco y las patas lo separan de la
+  // paloma genérica de abajo, que es solo un círculo.
+  reservaciones: (
+    <>
+      <rect x="3.2" y="5.2" width="17.6" height="15.6" rx="2.4" />
+      <path d="M3.2 9.6h17.6M8 3.4v3.6M16 3.4v3.6" />
+      <path d="M9 14.6l2.2 2.2 4-4" />
+    </>
+  ),
+  // El símbolo de siempre. No se inventa nada aquí a propósito: quien lo
+  // busca lo busca por su forma, no por una versión bonita.
+  accesibilidad: (
+    <>
+      <circle cx="11.2" cy="4.6" r="1.9" />
+      <path d="M10 8.2v5.4h5.2l2.6 5.6" />
+      <circle cx="10.4" cy="15.6" r="5.2" />
+    </>
+  ),
+  // Copo con puntas y no una estrella de seis brazos: el brazo pelado se lee
+  // como asterisco, y las puntas son lo que lo vuelve hielo.
+  "aire-acondicionado": (
+    <>
+      <path d="M12 2.8v18.4M4.2 7.4l15.6 9M19.8 7.4l-15.6 9" />
+      <path d="M9.6 4.9 12 6.9l2.4-2M9.6 19.1 12 17.1l2.4 2" />
+    </>
+  ),
+  // La única sólida de todo el archivo. La misma huella de contorno se
+  // convierte a 20 píxeles en un amasijo de anillos; rellena se lee entera.
+  mascotas: (
+    <>
+      <ellipse cx="12" cy="15.6" rx="4.6" ry="3.9" fill="currentColor" stroke="none" />
+      <circle cx="6.3" cy="10.2" r="2" fill="currentColor" stroke="none" />
+      <circle cx="10" cy="7.2" r="2" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="7.2" r="2" fill="currentColor" stroke="none" />
+      <circle cx="17.7" cy="10.2" r="2" fill="currentColor" stroke="none" />
+    </>
+  ),
   // El cigarro con su humo saliendo de la punta. Probé el humo despegado de la
   // brasa y a 20 píxeles queda flotando aparte, como dos comillas sueltas.
   fumadores: (
