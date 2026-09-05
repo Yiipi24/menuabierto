@@ -1184,9 +1184,9 @@ section { scroll-margin-top: 84px; }
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(253, 250, 245, 0.8) 0%,
-    rgba(253, 250, 245, 0.66) 45%,
-    rgba(253, 250, 245, 0.94) 100%
+    rgba(253, 250, 245, 0.74) 0%,
+    rgba(253, 250, 245, 0.82) 45%,
+    rgba(253, 250, 245, 0.96) 100%
   );
 }
 
@@ -1512,7 +1512,12 @@ section { scroll-margin-top: 84px; }
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(255, 255, 255, 0.93) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 42%,
+    rgba(255, 255, 255, 0.86) 74%,
+    rgba(255, 255, 255, 0.99) 100%
+  );
 }
 
 .categoria-icono {
