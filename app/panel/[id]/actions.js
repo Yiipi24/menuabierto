@@ -110,7 +110,15 @@ export async function guardarRestaurante(_prevState, formData) {
   const destacados = leerDestacados(formData);
   const redes = leerRedes(formData);
   const pagos = formasDePagoDe(formData.getAll("payment_methods").map(String));
-  const servicios = serviciosDe(formData.getAll("amenities").map(String));
+  // El catálogo se relee al guardar: si alguien agregó un servicio mientras el
+  // dueño tenía el formulario abierto, la casilla nueva se guarda igual. La
+  // base tiene la última palabra con su trigger; esto solo evita que un
+  // formulario viejo tumbe el guardado entero.
+  const { data: catalogo } = await supabase.from("amenities").select("slug");
+  const servicios = serviciosDe(
+    (catalogo ?? []).map((s) => ({ slug: s.slug })),
+    formData.getAll("amenities").map(String),
+  );
   // Sin estacionamiento no hay costo que contar. La base también lo prohíbe;
   // limpiarlo aquí evita que el guardado falle por algo que el dueño no hizo:
   // el navegador manda el radio que quedó marcado aunque ya haya desmarcado

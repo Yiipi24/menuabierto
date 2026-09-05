@@ -83,8 +83,17 @@ const DIBUJOS = {
   ),
 };
 
+// Un servicio del catálogo puede llegar antes que su dibujo: se agrega con un
+// INSERT y el icono se dibuja después. Esta paloma en su círculo es lo que se
+// pinta mientras tanto —"sí, lo tenemos"— en vez de un hueco donde los demás
+// tienen algo.
+const GENERICO = (
+  <>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M8.4 12.2l2.5 2.5 4.7-5" />
+  </>
+);
+
 export function IconoServicio({ slug, ancho = 22 }) {
-  const dibujo = DIBUJOS[slug];
-  if (!dibujo) return null;
-  return <Svg ancho={ancho}>{dibujo}</Svg>;
+  return <Svg ancho={ancho}>{DIBUJOS[slug] ?? GENERICO}</Svg>;
 }
