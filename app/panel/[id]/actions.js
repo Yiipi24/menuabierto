@@ -109,11 +109,15 @@ export async function guardarRestaurante(_prevState, formData) {
   const website = conEsquema(limpio(formData, "website"));
   const destacados = leerDestacados(formData);
   const redes = leerRedes(formData);
-  const pagos = formasDePagoDe(formData.getAll("payment_methods").map(String));
-  // El catálogo se relee al guardar: si alguien agregó un servicio mientras el
-  // dueño tenía el formulario abierto, la casilla nueva se guarda igual. La
-  // base tiene la última palabra con su trigger; esto solo evita que un
-  // formulario viejo tumbe el guardado entero.
+  // Los dos catálogos se releen al guardar: si alguien agregó una forma de
+  // pago o un servicio mientras el dueño tenía el formulario abierto, la
+  // casilla nueva se guarda igual. La base tiene la última palabra con sus
+  // triggers; esto solo evita que un formulario viejo tumbe el guardado.
+  const { data: catalogoPagos } = await supabase.from("payment_methods").select("slug");
+  const pagos = formasDePagoDe(
+    (catalogoPagos ?? []).map((f) => ({ slug: f.slug })),
+    formData.getAll("payment_methods").map(String),
+  );
   const { data: catalogo } = await supabase.from("amenities").select("slug");
   const servicios = serviciosDe(
     (catalogo ?? []).map((s) => ({ slug: s.slug })),

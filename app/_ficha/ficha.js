@@ -461,7 +461,7 @@ export default async function Ficha({ slug }) {
                     {pagos.map((forma) => (
                       <li key={forma.slug}>
                         <span className="ficha-pago-icono">
-                          <IconoPago slug={forma.slug} ancho={20} />
+                          <IconoPago slug={forma.icono} ancho={20} />
                         </span>
                         <span className="ficha-pago-texto">
                           <strong>{forma.nombre}</strong>
