@@ -24,8 +24,15 @@ comment on column public.amenities.icon is
 comment on column public.amenities.position is
   'Orden en el panel y en la ficha. Primero lo que más pesa al decidir a dónde ir.';
 
+-- La pista de 'domicilio' se corrigió después: decía solo "Te lo llevan a tu
+-- casa" y callaba que el reparto suele costar aparte, que es justo lo que
+-- reclama quien lo pide creyendo que va incluido. Se edita aquí, en el
+-- archivo, en vez de agregar una migración con un UPDATE, por lo mismo que la
+-- semilla de al lado usa `do nothing`: un UPDATE le impondría este texto a
+-- cualquier entorno donde alguien lo haya ajustado. Producción ya está
+-- corregida a mano.
 insert into public.amenities (slug, name, hint, icon, position) values
-  ('domicilio', 'Servicio a domicilio', 'Te lo llevan a tu casa', 'domicilio', 10),
+  ('domicilio', 'Servicio a domicilio', 'Te lo llevan a tu casa; pueden aplicar cargos adicionales', 'domicilio', 10),
   ('estacionamiento', 'Estacionamiento', 'Hay dónde dejar el carro', 'estacionamiento', 20),
   ('wifi', 'Wifi', 'Internet para los comensales', 'wifi', 30),
   ('terraza', 'Terraza', 'Mesas al aire libre', 'terraza', 40),
