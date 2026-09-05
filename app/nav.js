@@ -3,13 +3,11 @@ import { currentUser } from "../lib/supabase";
 import Brand from "./brand";
 
 // El menú de arriba es el mismo en todas las páginas públicas, pero cambia en
-// tres ejes. `sobreAzul` lo viste de azul cobalto para la portada, donde la
-// barra es la parte de arriba del mismo azulejo del encabezado y no una franja
-// clara cortándolo. Los otros dos: el primer enlace lleva a lo que no estás
-// viendo (la portada ya es la búsqueda, así que ahí ofrece la parte de
-// restaurantes), y el segundo depende de si hay sesión: quien ya entró no
-// necesita "Iniciar sesión", sino la puerta a su panel.
-export default async function Nav({ landing = false, sobreAzul = false }) {
+// dos ejes: el primer enlace lleva a lo que no estás viendo (la portada ya es
+// la búsqueda, así que ahí ofrece la parte de restaurantes), y el segundo
+// depende de si hay sesión: quien ya entró no necesita "Iniciar sesión", sino
+// la puerta a su panel.
+export default async function Nav({ landing = false }) {
   let usuario = null;
   try {
     usuario = await currentUser();
@@ -19,7 +17,7 @@ export default async function Nav({ landing = false, sobreAzul = false }) {
   }
 
   return (
-    <nav className={sobreAzul ? "nav nav-sobre-azul" : "nav"}>
+    <nav className="nav">
       <div className="wrap nav-inner">
         <Brand />
         <div className="nav-links">

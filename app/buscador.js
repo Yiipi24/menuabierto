@@ -98,35 +98,37 @@ export default function Buscador({ q = "", lugar = "", conUbicacion = false }) {
         </button>
       </div>
 
-      {/* "Cerca de mí" cuelga debajo de la barra: es la tercera forma de lanzar
-          la misma búsqueda, y dentro de la barra dejaba un hueco. */}
+      {/* "Cerca de mí" cuelga justo debajo de "Buscar": son las dos formas de
+          lanzar la misma búsqueda, y dentro de la barra dejaba un hueco. */}
       <div className="buscador-pie">
-        <button
-          className={conUbicacion ? "btn-ubicacion btn-ubicacion-on" : "btn-ubicacion"}
-          type="button"
-          onClick={cercaDeMi}
-          disabled={ubicando}
-        >
-          <span className="btn-ubicacion-icono" aria-hidden="true">
-            <svg viewBox="0 0 20 20">
-              <circle cx="10" cy="10" r="3.2" />
-              <circle cx="10" cy="10" r="6.6" />
-              <path d="M10 1v2.2M10 16.8V19M1 10h2.2M16.8 10H19" />
-            </svg>
-          </span>
-          {ubicando ? "Buscando tu ubicación…" : "Cerca de mí"}
-        </button>
-        {conUbicacion ? (
+        <div className="buscador-acciones">
           <button
-            className="buscador-quitar"
+            className={conUbicacion ? "btn-ubicacion btn-ubicacion-on" : "btn-ubicacion"}
             type="button"
-            onClick={() => irA({ lat: null, lng: null })}
+            onClick={cercaDeMi}
+            disabled={ubicando}
           >
-            Quitar mi ubicación
+            <span className="btn-ubicacion-icono" aria-hidden="true">
+              <svg viewBox="0 0 20 20">
+                <circle cx="10" cy="10" r="3.2" />
+                <circle cx="10" cy="10" r="6.6" />
+                <path d="M10 1v2.2M10 16.8V19M1 10h2.2M16.8 10H19" />
+              </svg>
+            </span>
+            {ubicando ? "Buscando tu ubicación…" : "Cerca de mí"}
           </button>
-        ) : (
-          <span className="buscador-nota">Ordena los resultados por distancia</span>
-        )}
+          {conUbicacion ? (
+            <button
+              className="buscador-quitar"
+              type="button"
+              onClick={() => irA({ lat: null, lng: null })}
+            >
+              Quitar mi ubicación
+            </button>
+          ) : (
+            <span className="buscador-nota">Ordenar por distancia</span>
+          )}
+        </div>
       </div>
 
       {aviso ? (
