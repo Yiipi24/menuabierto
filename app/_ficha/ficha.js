@@ -483,7 +483,7 @@ export default async function Ficha({ slug }) {
                       {/* El dibujo del primero de la lista y no uno fijo: una
                           tarjeta que solo trae wifi encabezada por la P del
                           estacionamiento se lee como un error. */}
-                      <IconoServicio slug={servicios[0].slug} ancho={19} />
+                      <IconoServicio slug={servicios[0].icono} ancho={19} />
                       Servicios
                     </h3>
                   </div>
@@ -491,7 +491,7 @@ export default async function Ficha({ slug }) {
                     {servicios.map((servicio) => (
                       <li key={servicio.slug}>
                         <span className="ficha-pago-icono">
-                          <IconoServicio slug={servicio.slug} ancho={20} />
+                          <IconoServicio slug={servicio.icono} ancho={20} />
                         </span>
                         <span className="ficha-pago-texto">
                           <strong>{servicio.nombre}</strong>

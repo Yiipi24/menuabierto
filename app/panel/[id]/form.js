@@ -8,7 +8,6 @@ import { FORMAS_DE_PAGO, formasDePagoDe } from "../../../lib/pagos";
 import {
   COSTOS_ESTACIONAMIENTO,
   MODOS_DE_SERVICIO,
-  SERVICIOS,
   TIPOS_ESTACIONAMIENTO,
   serviciosDe,
 } from "../../../lib/servicios";
@@ -56,6 +55,9 @@ export default function EditarForm({
   elegidas,
   horarios,
   coords,
+  // El catálogo de servicios llega de la base, no de un import: así, uno nuevo
+  // aparece en el formulario sin desplegar.
+  catalogoServicios,
   children,
 }) {
   const [state, action, pending] = useActionState(guardarRestaurante, inicial);
@@ -94,7 +96,7 @@ export default function EditarForm({
   );
 
   const [servicios, setServicios] = useState(
-    () => new Set(serviciosDe(restaurante.amenities)),
+    () => new Set(serviciosDe(catalogoServicios, restaurante.amenities)),
   );
   const [modoServicio, setModoServicio] = useState(restaurante.service_mode ?? "");
   // El costo va aparte del servicio porque es su letra chica: aparece cuando
@@ -626,7 +628,7 @@ export default function EditarForm({
           </div>
 
           <div className="servicios-edicion">
-            {SERVICIOS.map((servicio) => (
+            {catalogoServicios.map((servicio) => (
               <label className="servicio-opcion" key={servicio.slug}>
                 <input
                   type="checkbox"
@@ -636,7 +638,7 @@ export default function EditarForm({
                   onChange={() => alternarServicio(servicio.slug)}
                 />
                 <span className="servicio-cara">
-                  <IconoServicio slug={servicio.slug} ancho={22} />
+                  <IconoServicio slug={servicio.icono} ancho={22} />
                   <span className="servicio-texto">
                     <strong>{servicio.nombre}</strong>
                     <em>{servicio.pista}</em>

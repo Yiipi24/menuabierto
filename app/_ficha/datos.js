@@ -3,7 +3,7 @@ import { plantillaValida } from "../../lib/plantillas";
 import { destacadosDe } from "../destacados";
 import { conEsquema, nombreDeRed } from "../../lib/redes";
 import { detallesDePago } from "../../lib/pagos";
-import { detallesDeServicio } from "../../lib/servicios";
+import { catalogoDeServicios, detallesDeServicio } from "../../lib/servicios";
 import { conteoDe } from "../../lib/insignias";
 import { agruparPlatillos } from "../../lib/menus";
 
@@ -114,7 +114,17 @@ export async function cargar(slug) {
 
   if (!r) return null;
 
-  const [cocinas, horarios, fotos, menus, secciones, platillos, abierto, resenas] = await Promise.all([
+  const [
+    cocinas,
+    horarios,
+    fotos,
+    menus,
+    secciones,
+    platillos,
+    abierto,
+    resenas,
+    catalogoServicios,
+  ] = await Promise.all([
     supabase.from("restaurant_cuisines").select("cuisines (name)").eq("restaurant_id", r.id),
     supabase
       .from("restaurant_hours")
@@ -151,7 +161,13 @@ export async function cargar(slug) {
     // Por RPC y no por join: profiles es privado, y esta funcion devuelve el
     // nombre de quien firma sin abrir el resto del perfil.
     supabase.rpc("resenas_restaurante", { rid: r.id }),
+    // El catálogo de servicios vive en la base para que agregar uno no exija
+    // desplegar. Va en el mismo Promise.all que todo lo demás: es una consulta
+    // diminuta y en paralelo no cuesta nada.
+    supabase.from("amenities").select("slug, name, hint, icon").order("position"),
   ]);
+
+  const servicios = catalogoDeServicios(catalogoServicios.data ?? []);
 
   return {
     r,
@@ -168,7 +184,13 @@ export async function cargar(slug) {
     // Las formas de pago se resuelven aquí, con su nombre y su pista: la
     // ficha pinta lo que recibe y no traduce claves mientras genera HTML.
     pagos: detallesDePago(r.payment_methods),
-    servicios: detallesDeServicio(r.amenities, r.parking_cost, r.service_mode, r.parking_kind),
+    servicios: detallesDeServicio(
+      servicios,
+      r.amenities,
+      r.parking_cost,
+      r.service_mode,
+      r.parking_kind,
+    ),
     cerrados: (r.closed_days ?? []).map(Number),
     cocinas: (cocinas.data ?? []).map((c) => c.cuisines?.name).filter(Boolean),
     horarios: horarios.data ?? [],
