@@ -2,3 +2,6 @@ node_modules
 .next
 .vercel
 .env*.local
+
+# Claude Code: configuración personal (no compartida)
+.claude/settings.local.json
