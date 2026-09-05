@@ -58,6 +58,16 @@ const DIBUJOS = {
       <path d="M4 19.5c4.5 0 9-1 13-3" />
     </>
   ),
+  // El boleto con sus muescas. Es el único de los seis cuya silueta no es un
+  // rectángulo, y eso es a propósito: un cupón dibujado como rectángulo con
+  // una línea punteada se confunde con el efectivo y con las tarjetas, que ya
+  // son tres rectángulos parecidos entre sí.
+  vales: (
+    <>
+      <path d="M4 7h16v3.2a1.8 1.8 0 0 0 0 3.6V17H4v-3.2a1.8 1.8 0 0 0 0-3.6z" />
+      <path d="M14.5 9.6v1.2M14.5 13.2v1.2" />
+    </>
+  ),
 };
 
 // Una forma de pago del catálogo puede llegar antes que su dibujo: se agrega
