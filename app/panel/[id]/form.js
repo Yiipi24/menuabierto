@@ -4,7 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { guardarRestaurante, crearCategoria } from "./actions";
 import { ESTADOS } from "../../../lib/estados";
 import { REDES } from "../../../lib/redes";
-import { FORMAS_DE_PAGO, formasDePagoDe } from "../../../lib/pagos";
+import { formasDePagoDe } from "../../../lib/pagos";
 import {
   COSTOS_ESTACIONAMIENTO,
   MODOS_DE_SERVICIO,
@@ -55,9 +55,10 @@ export default function EditarForm({
   elegidas,
   horarios,
   coords,
-  // El catálogo de servicios llega de la base, no de un import: así, uno nuevo
+  // Los dos catálogos llegan de la base, no de un import: así, uno nuevo
   // aparece en el formulario sin desplegar.
   catalogoServicios,
+  catalogoPagos,
   children,
 }) {
   const [state, action, pending] = useActionState(guardarRestaurante, inicial);
@@ -92,7 +93,7 @@ export default function EditarForm({
   // Las formas de pago se llevan en estado para poder pintar la caja marcada
   // completa (icono y todo) y no solo el cuadrito del checkbox.
   const [pagos, setPagos] = useState(
-    () => new Set(formasDePagoDe(restaurante.payment_methods)),
+    () => new Set(formasDePagoDe(catalogoPagos, restaurante.payment_methods)),
   );
 
   const [servicios, setServicios] = useState(
@@ -562,7 +563,7 @@ export default function EditarForm({
             que el comensal llega sabiendo si trae efectivo o no.
           </p>
           <div className="pagos-edicion">
-            {FORMAS_DE_PAGO.map((forma) => (
+            {catalogoPagos.map((forma) => (
               <label className="pago-opcion" key={forma.slug}>
                 <input
                   type="checkbox"
@@ -572,7 +573,7 @@ export default function EditarForm({
                   onChange={() => alternarPago(forma.slug)}
                 />
                 <span className="pago-cara">
-                  <IconoPago slug={forma.slug} ancho={22} />
+                  <IconoPago slug={forma.icono} ancho={22} />
                   <span className="pago-texto">
                     <strong>{forma.nombre}</strong>
                     <em>{forma.pista}</em>

@@ -2,7 +2,7 @@ import { supabaseServer, supabaseSession } from "../../lib/supabase";
 import { plantillaValida } from "../../lib/plantillas";
 import { destacadosDe } from "../destacados";
 import { conEsquema, nombreDeRed } from "../../lib/redes";
-import { detallesDePago } from "../../lib/pagos";
+import { catalogoDePagos, detallesDePago } from "../../lib/pagos";
 import { catalogoDeServicios, detallesDeServicio } from "../../lib/servicios";
 import { conteoDe } from "../../lib/insignias";
 import { agruparPlatillos } from "../../lib/menus";
@@ -124,6 +124,7 @@ export async function cargar(slug) {
     abierto,
     resenas,
     catalogoServicios,
+    catalogoPagos,
   ] = await Promise.all([
     supabase.from("restaurant_cuisines").select("cuisines (name)").eq("restaurant_id", r.id),
     supabase
@@ -165,9 +166,11 @@ export async function cargar(slug) {
     // desplegar. Va en el mismo Promise.all que todo lo demás: es una consulta
     // diminuta y en paralelo no cuesta nada.
     supabase.from("amenities").select("slug, name, hint, icon").order("position"),
+    supabase.from("payment_methods").select("slug, name, hint, icon").order("position"),
   ]);
 
   const servicios = catalogoDeServicios(catalogoServicios.data ?? []);
+  const pagos = catalogoDePagos(catalogoPagos.data ?? []);
 
   return {
     r,
@@ -183,7 +186,7 @@ export async function cargar(slug) {
       .filter((red) => red.url),
     // Las formas de pago se resuelven aquí, con su nombre y su pista: la
     // ficha pinta lo que recibe y no traduce claves mientras genera HTML.
-    pagos: detallesDePago(r.payment_methods),
+    pagos: detallesDePago(pagos, r.payment_methods),
     servicios: detallesDeServicio(
       servicios,
       r.amenities,

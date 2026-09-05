@@ -1,8 +1,6 @@
 // Los dibujos de las formas de pago, de trazo y sin librería, igual que el
 // resto de los iconos del sitio. Son decorativos: al lado siempre va el nombre
 // escrito, así que van con aria-hidden y no anuncian nada de más.
-import { FORMAS_DE_PAGO } from "../lib/pagos";
-
 function Svg({ children, ancho = 22 }) {
   return (
     <svg
@@ -62,15 +60,18 @@ const DIBUJOS = {
   ),
 };
 
-export function IconoPago({ slug, ancho = 22 }) {
-  const dibujo = DIBUJOS[slug];
-  if (!dibujo) return null;
-  return <Svg ancho={ancho}>{dibujo}</Svg>;
-}
+// Una forma de pago del catálogo puede llegar antes que su dibujo: se agrega
+// con un INSERT y el icono se dibuja después. Mientras tanto se pinta la misma
+// paloma que los servicios sin dibujo —"sí, se acepta"— y no un billete
+// genérico: un rectángulo con un círculo es casi el dibujo del efectivo, y una
+// forma nueva no debería parecerse a otra que ya existe.
+const GENERICO = (
+  <>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M8.4 12.2l2.5 2.5 4.7-5" />
+  </>
+);
 
-// La lista con su dibujo, que es lo que pintan el panel y la ficha. Vive aquí
-// y no en `lib/pagos` porque un módulo de datos no debería exportar JSX.
-export const PAGOS_CON_ICONO = FORMAS_DE_PAGO.map((f) => ({
-  ...f,
-  icono: DIBUJOS[f.slug] ? f.slug : null,
-}));
+export function IconoPago({ slug, ancho = 22 }) {
+  return <Svg ancho={ancho}>{DIBUJOS[slug] ?? GENERICO}</Svg>;
+}

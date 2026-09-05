@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { menusIncluidos, fotosPlatillosIncluidas } from "../../../lib/planes";
 import { catalogoDeServicios } from "../../../lib/servicios";
+import { catalogoDePagos } from "../../../lib/pagos";
 import EditarForm from "./form";
 import Fotos from "./fotos";
 import Brand from "../../brand";
@@ -38,6 +39,7 @@ export default async function Editar({ params }) {
     { data: coords },
     { data: menus },
     { data: catalogoServicios },
+    { data: catalogoPagos },
   ] = await Promise.all([
     supabase.from("cuisines").select("slug, name").order("name"),
     supabase
@@ -65,6 +67,7 @@ export default async function Editar({ params }) {
     // El catálogo de servicios: el formulario pinta las casillas que haya en
     // la tabla, así que uno nuevo aparece aquí sin tocar el código.
     supabase.from("amenities").select("slug, name, hint, icon").order("position"),
+    supabase.from("payment_methods").select("slug, name, hint, icon").order("position"),
   ]);
 
   const conUrl = (fotos ?? []).map((f) => ({
@@ -120,6 +123,7 @@ export default async function Editar({ params }) {
           horarios={horarios ?? []}
           coords={coords?.[0] ?? null}
           catalogoServicios={catalogoDeServicios(catalogoServicios ?? [])}
+          catalogoPagos={catalogoDePagos(catalogoPagos ?? [])}
         >
 
           <section className="bloque-menu">
