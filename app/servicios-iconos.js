@@ -81,6 +81,16 @@ const DIBUJOS = {
       <path d="M17 11.6v4M15.2 13h3.6M17 15.6l-1.4 3.8M17 15.6l1.4 3.8" />
     </>
   ),
+  // El cigarro con su humo saliendo de la punta. Probé el humo despegado de la
+  // brasa y a 20 píxeles queda flotando aparte, como dos comillas sueltas.
+  fumadores: (
+    <>
+      <rect x="2.6" y="15.2" width="13.6" height="3.2" rx="1.2" />
+      <path d="M12.4 15.2v3.2" />
+      <path d="M15.6 12.6c1.6-1.2.2-2.5 1.2-3.8" />
+      <path d="M18.9 12.6c1.6-1.2.2-2.5 1.2-3.8" />
+    </>
+  ),
 };
 
 // Un servicio del catálogo puede llegar antes que su dibujo: se agrega con un
