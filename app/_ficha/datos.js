@@ -108,7 +108,7 @@ export async function cargar(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, highlights, social_links, payment_methods, amenities, parking_cost, parking_kind, service_mode, closed_days",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, followers_count, highlights, social_links, payment_methods, amenities, parking_cost, parking_kind, service_mode, closed_days",
     )
     .eq("slug", slug)
     .maybeSingle();

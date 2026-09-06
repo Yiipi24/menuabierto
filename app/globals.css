@@ -154,6 +154,10 @@ a { color: inherit; }
 @media (max-width: 640px) {
   .nav-links a.hide-sm { display: none; }
   .nav-links { gap: 14px; }
+  /* El enlace a las novedades se queda con su campana: la palabra completa no
+     cabe junto al botón de crear cuenta y lo empujaba a un segundo renglón. */
+  .nav-avisos-texto { display: none; }
+
 }
 
 /* ---------- botones ---------- */
@@ -3536,125 +3540,10 @@ img.menu-archivo-vista { min-height: 0; }
   font-size: 13px;
 }
 
-/* El acordeón de cartas. Cada fila es una tarjeta blanca sobre el fondo
-   crema de la sección: el mismo trato que las tarjetas del resto de la ficha,
-   para que la lista no parezca un componente traído de otro sitio. */
-.menu-acordeon {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 12px;
-}
-
-.menu-acordeon-fila {
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--paper);
-  overflow: hidden;
-}
-
-.menu-acordeon-fila.abierta { box-shadow: var(--sombra); }
-
-/* La cabecera es un botón que ocupa la fila entera: en un teléfono, atinarle
-   solo al chevron es pedir demasiado. */
-.menu-acordeon-cabeza {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.menu-acordeon-cabeza:hover { background: var(--accent-soft); }
-
-.menu-acordeon-cabeza:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.menu-acordeon-icono {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.menu-acordeon-texto { flex: 1; min-width: 0; }
-
-.menu-acordeon-nombre { display: block; font-size: 17px; font-weight: 700; }
-
-/* La línea de abajo se arma con las secciones de la carta, así que puede
-   salir larga: se corta en vez de partir la fila en dos renglones. */
-.menu-acordeon-resumen {
-  display: block;
-  margin-top: 3px;
-  color: var(--ink-soft);
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.menu-acordeon-chevron {
-  flex: none;
-  display: grid;
-  place-items: center;
-  color: var(--ink-faint);
-  /* Cerrado apunta a la derecha —hay algo más allá—, abierto hacia abajo. */
-  transform: rotate(-90deg);
-  transition: transform 0.18s ease, color 0.18s ease;
-}
-
-.menu-acordeon-fila.abierta .menu-acordeon-chevron {
-  transform: rotate(0deg);
-  color: var(--accent);
-}
-
-/* `display: flex` gana sobre el `display: none` que el navegador le da a
-   `[hidden]`, así que el panel cerrado se quedaba abierto. */
-.menu-acordeon-panel[hidden] { display: none; }
-
-.menu-acordeon-panel {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  padding: 22px 20px 24px;
-  margin: 0 20px;
-  border-top: 1px solid var(--line);
-}
-
-.menu-acordeon-boton {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .ficha-menu-nota {
   color: var(--ink-soft);
   font-size: 13.5px;
   line-height: 1.6;
-}
-
-@media (max-width: 720px) {
-  .menu-acordeon-panel {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 20px;
-  }
-
-  .menu-acordeon-boton { justify-content: center; }
 }
 
 /* En puntos por pulgada el QR es una rejilla, no un dibujo: sin el tamaño fijo
@@ -5109,4 +4998,1067 @@ img.menu-archivo-vista { min-height: 0; }
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
+}
+
+/* ---------- historias, publicaciones y seguidores ---------- */
+/* Todo lo social usa la misma paleta que el resto de la ficha: el ladrillo para
+   lo que se pulsa, el crema para el fondo de las tarjetas y la misma línea. Un
+   feed con los azules y los grises de otras redes se leería como una pieza
+   pegada de otro sitio. */
+
+/* La calificación y el botón de reseñas, junto al nombre. */
+.ficha-meta-calificacion { gap: 12px; margin-top: 12px; }
+
+.ficha-resenas-enlace {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.ficha-resenas-enlace .icono { color: var(--ink); }
+
+.ficha-resenas-enlace strong { font-weight: 700; }
+
+.ficha-resenas-enlace,
+.ficha-resenas-enlace strong { text-decoration: none; }
+
+.ficha-resenas-enlace:hover { text-decoration: none; }
+
+.ficha-resenas-enlace:hover strong { text-decoration: underline; }
+
+/* "Ver reseñas" es un botón de línea y no un enlace suelto: comparte fila con
+   "Seguir" y dos textos planos ahí no se distinguirían de la ficha. */
+.ficha-ver-resenas {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  transition: background 0.16s ease;
+}
+
+.ficha-ver-resenas:hover { background: var(--accent-soft); }
+
+/* El chevron apunta hacia abajo: lo que hay al pulsar está más abajo en la
+   misma página, no en otra. */
+.ficha-ver-resenas .icono { transform: rotate(0deg); }
+
+.ficha-meta-social { gap: 14px; margin-top: 12px; }
+
+.social-seguidores {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+
+.social-seguidores .icono { color: var(--ink-faint); }
+
+.social-seguidores strong { color: var(--ink); font-weight: 700; }
+
+.social-seguir-botones { display: inline-flex; align-items: center; gap: 10px; }
+
+.social-seguir {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.social-seguir:hover { background: var(--accent-soft); }
+
+/* Siguiendo se invierte: relleno en vez de contorno. El cambio de color solo
+   sería demasiado sutil para decir "ya está". */
+.social-seguir-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.social-seguir-on:hover { background: var(--accent-hondo); }
+
+.social-seguir:disabled { opacity: 0.6; cursor: default; }
+
+/* La campana es redonda y del tamaño del botón de al lado: es un interruptor
+   de un solo estado y no necesita texto. */
+.social-campana {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+
+.social-campana:hover { border-color: var(--accent); color: var(--accent); }
+
+.social-campana-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.social-campana:disabled { opacity: 0.6; cursor: default; }
+
+/* La puerta de entrada de las acciones sociales. */
+.social-puerta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-warm);
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.social-puerta-enlaces { display: inline-flex; gap: 14px; }
+
+.social-puerta a { color: var(--accent); font-weight: 600; }
+
+.social-puerta-cerrar {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ink-faint);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ---------- el carrusel de historias ---------- */
+
+.historias {
+  margin-top: 24px;
+  padding: 20px 22px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.historias-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.historias-cabeza h2 { font-size: 19px; }
+
+.historias-flechas { display: flex; gap: 8px; }
+
+.historias-flecha {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.historias-flecha:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+.historias-flecha:disabled { opacity: 0.35; cursor: default; }
+
+/* La tira se desliza a lo ancho. La barra de scroll se esconde porque los
+   chevrons ya dicen que hay más, y en un teléfono el gesto es el dedo. */
+.historias-tira {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 6px;
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.historias-tira::-webkit-scrollbar { display: none; }
+
+.historias-tira > li { scroll-snap-align: start; }
+
+.historia-circulo {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 92px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  position: relative;
+}
+
+/* El anillo es el indicador de "nuevo": encendido cuando queda algo por ver,
+   apagado cuando ya se vio. Es el mismo gesto que la gente ya conoce. */
+.historia-anillo {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  padding: 3px;
+  background: var(--line);
+  transition: background 0.2s ease;
+}
+
+.historia-nueva .historia-anillo {
+  background: linear-gradient(140deg, var(--accent), var(--oro));
+}
+
+.historia-anillo img,
+.historia-anillo video {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--paper);
+  display: block;
+}
+
+.historia-nombre {
+  font-size: 12.5px;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--ink-soft);
+  max-width: 92px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.historia-marca {
+  position: absolute;
+  top: 52px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 2px solid var(--paper);
+}
+
+/* ---------- el visor de historias ---------- */
+
+.visor {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.visor-fondo {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(20, 14, 11, 0.9);
+  cursor: pointer;
+}
+
+.visor-caja {
+  position: relative;
+  width: min(420px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.visor-barras { display: flex; gap: 4px; }
+
+.visor-barra {
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.visor-barra-llena {
+  display: block;
+  height: 100%;
+  background: #fff;
+  /* Sin transición: el ancho se recalcula cada 50 ms y una transición encima
+     lo dejaría siempre un paso atrás. */
+}
+
+.visor-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #fff;
+}
+
+.visor-quien { display: grid; }
+
+.visor-quien strong { font-size: 15px; }
+
+.visor-quien span { font-size: 12.5px; opacity: 0.75; }
+
+.visor-acciones { display: flex; gap: 6px; }
+
+.visor-boton {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+}
+
+.visor-boton:hover { background: rgba(255, 255, 255, 0.28); }
+
+.visor-media {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+}
+
+.visor-media img,
+.visor-media video {
+  width: 100%;
+  height: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+}
+
+/* Las dos mitades invisibles: izquierda regresa, derecha avanza. */
+.visor-zona {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.visor-zona-izq { left: 0; }
+
+.visor-zona-der { right: 0; width: 60%; }
+
+.visor-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #fff;
+}
+
+.visor-texto { font-size: 14.5px; line-height: 1.45; }
+
+.visor-vistas {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* ---------- novedades: las publicaciones ---------- */
+
+.novedades { margin-top: 34px; }
+
+.novedades-titulo { font-size: 26px; margin-bottom: 18px; }
+
+.publicaciones { display: grid; gap: 18px; }
+
+.publicacion {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 16px 18px 8px;
+}
+
+.publicacion-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.publicacion-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.publicacion-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.publicacion-quien { display: grid; flex: 1; min-width: 0; }
+
+.publicacion-nombre { font-size: 15px; font-weight: 700; text-decoration: none; }
+
+a.publicacion-nombre:hover { text-decoration: underline; }
+
+.publicacion-fecha { font-size: 12.5px; color: var(--ink-faint); }
+
+.publicacion-quitar {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.publicacion-quitar:hover { color: var(--accent); }
+
+.publicacion-media { margin: 0; border-radius: 12px; overflow: hidden; background: var(--paper-warm); }
+
+.publicacion-media img,
+.publicacion-media video {
+  width: 100%;
+  max-height: 520px;
+  object-fit: cover;
+  display: block;
+}
+
+.publicacion-texto { margin-top: 14px; font-size: 15px; line-height: 1.5; }
+
+.publicacion-acciones {
+  display: flex;
+  gap: 22px;
+  margin-top: 12px;
+}
+
+.publicacion-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.publicacion-accion:hover { color: var(--ink); }
+
+/* El corazón dado es del ladrillo de la marca y no de un rojo distinto: es el
+   único color de "esto se pulsa" que tiene el sitio. */
+.publicacion-accion.es-activa { color: var(--accent); }
+
+.publicacion-accion:disabled { opacity: 0.6; cursor: default; }
+
+.publicacion-hilo { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+.publicacion-cargando { font-size: 13.5px; color: var(--ink-faint); padding: 4px 0 8px; }
+
+.comentarios { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+
+.comentarios > li { display: flex; align-items: flex-start; gap: 10px; }
+
+.comentario-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.comentario-cuerpo { flex: 1; min-width: 0; display: grid; gap: 2px; }
+
+.comentario-quien { display: flex; align-items: baseline; gap: 8px; }
+
+.comentario-quien strong { font-size: 13.5px; }
+
+.comentario-quien span { font-size: 12px; color: var(--ink-faint); }
+
+.comentario-texto { font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+
+.comentario-borrar {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 2px;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.comentario-borrar:hover { color: var(--accent); }
+
+/* El campo de comentar: siempre visible, como en la referencia. Es la
+   diferencia entre "se puede comentar" y "hay que buscar cómo". */
+.comentario-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.comentario-avatar-mio { background: var(--paper-warm); }
+
+.comentario-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: var(--paper-warm);
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.comentario-form input::placeholder { color: var(--ink-faint); }
+
+.comentario-form input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.publicaciones-mas { justify-self: center; }
+
+/* ---------- el feed del comensal ---------- */
+
+.feed { padding: 28px 0 60px; }
+
+.feed-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.feed-encabezado h1 { font-size: 34px; }
+
+.feed-encabezado p { color: var(--ink-soft); margin-top: 6px; }
+
+.feed-acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.feed-historias { display: grid; gap: 14px; margin-bottom: 24px; }
+
+.feed-publicaciones { max-width: 620px; }
+
+.feed-vacio { text-align: center; }
+
+.feed-vacio-botones {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.feed-seguidos { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
+
+.feed-seguidos-lista {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px 20px;
+}
+
+.feed-seguidos-lista li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.feed-seguidos-lista a { font-weight: 600; text-decoration: none; }
+
+.feed-seguidos-lista a:hover { text-decoration: underline; }
+
+.feed-seguidos-lista span { color: var(--ink-faint); font-size: 13px; }
+
+.feed-alerta {
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+/* ---------- la bandeja de avisos ---------- */
+
+.nav-avisos { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+
+.nav-punto {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.aviso a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  text-decoration: none;
+}
+
+.aviso a:hover { border-color: var(--accent); }
+
+.aviso.sin-leer a { background: var(--accent-soft); border-color: var(--accent-soft); }
+
+.aviso-media {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--paper-warm);
+  color: var(--accent);
+}
+
+.aviso-media img { width: 100%; height: 100%; object-fit: cover; }
+
+.aviso-texto { flex: 1; min-width: 0; font-size: 14.5px; }
+
+.aviso-texto em { font-style: normal; color: var(--ink-faint); }
+
+.aviso-fecha { flex: none; font-size: 12.5px; color: var(--ink-faint); }
+
+.aviso-punto { flex: none; color: var(--accent); display: grid; place-items: center; }
+
+/* ---------- el panel del dueño ---------- */
+
+.bloque-post { margin-top: 32px; }
+
+.post-form { display: grid; gap: 22px; margin-top: 14px; }
+
+.post-tipos { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.post-tipos legend { margin-bottom: 8px; }
+
+.post-tipo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.post-tipo:hover { border-color: var(--accent); }
+
+.post-tipo.elegido { border-color: var(--accent); background: var(--accent-soft); }
+
+.post-tipo input { margin-top: 4px; accent-color: var(--accent); }
+
+.post-tipo-icono { color: var(--accent); display: grid; place-items: center; margin-top: 2px; }
+
+.post-tipo-texto { display: grid; gap: 2px; }
+
+.post-tipo-texto strong { font-size: 15px; }
+
+.post-tipo-texto span { font-size: 13.5px; color: var(--ink-soft); }
+
+.post-campo { display: grid; gap: 8px; position: relative; }
+
+.post-opcional { font-weight: 400; color: var(--ink-faint); }
+
+.post-contador { justify-self: end; font-size: 12.5px; color: var(--ink-faint); }
+
+/* La vista previa con el mismo recorte que va a tener: vertical si es historia,
+   como sale en la ficha si es publicación. */
+.post-vista {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--paper-warm);
+}
+
+.post-vista-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.post-vista-media { margin: 0; border-radius: 12px; overflow: hidden; background: #000; }
+
+.post-vista-media img,
+.post-vista-media video {
+  width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+  display: block;
+}
+
+.post-vista-media.es-historia {
+  max-width: 240px;
+  aspect-ratio: 9 / 16;
+}
+
+.post-vista-media.es-historia img,
+.post-vista-media.es-historia video { height: 100%; object-fit: cover; }
+
+.post-vista-texto { font-size: 14px; color: var(--ink-soft); }
+
+.post-donde { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.post-todos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+
+.post-todos input,
+.post-restaurantes input { accent-color: var(--accent); }
+
+.post-restaurantes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+.post-restaurantes label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  cursor: pointer;
+}
+
+.post-restaurantes label:hover { border-color: var(--accent); }
+
+.post-restaurante-nombre { flex: 1; font-size: 14.5px; font-weight: 600; }
+
+.post-restaurante-nombre .estado {
+  font-style: normal;
+  margin-left: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
+.post-restaurante-lugar { font-size: 13px; color: var(--ink-faint); }
+
+/* La lista de lo publicado. */
+.post-lista { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 14px; }
+
+.post-fila {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.post-fila-ida { color: var(--ink-faint); font-size: 14px; }
+
+.post-fila-media {
+  flex: none;
+  width: 92px;
+  height: 92px;
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper-warm);
+}
+
+.post-fila-media img,
+.post-fila-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.post-fila-cuerpo { flex: 1; min-width: 0; display: grid; gap: 8px; align-content: start; }
+
+.post-fila-cabeza { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.post-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.post-etiqueta.es-historia { background: var(--accent-soft); color: var(--accent); }
+
+.post-fila-fecha { font-size: 12.5px; color: var(--ink-faint); }
+
+.post-fila-texto { font-size: 14.5px; line-height: 1.45; }
+
+.post-sin-texto { color: var(--ink-faint); font-size: 13.5px; }
+
+.post-fila-donde { font-size: 13px; color: var(--ink-faint); }
+
+.post-numeros {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.post-numeros li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.post-numeros .icono { color: var(--ink-faint); }
+
+.post-numeros strong { color: var(--ink); }
+
+.post-fila-acciones { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 4px; }
+
+.post-fila-acciones .btn-texto { display: inline-flex; align-items: center; gap: 6px; }
+
+.es-peligro { color: #b42318; }
+
+.post-editar { display: grid; gap: 10px; }
+
+.post-editar textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14.5px;
+  resize: vertical;
+}
+
+.post-editar-botones { display: flex; gap: 12px; align-items: center; }
+
+.post-borrar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+/* ---------- la sección del menú, plegable desde su encabezado ---------- */
+
+/* La cabecera entera es el botón que pliega la sección; el chevron va al
+   extremo derecho, como en el resto de las tarjetas de la ficha. */
+.ficha-menu-cabeza {
+  width: 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  align-items: center;
+}
+
+.ficha-menu-titulo { flex: 1; min-width: 0; }
+
+.ficha-menu-titulo h2 { font-size: 24px; }
+
+.ficha-menu-titulo span {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 15.5px;
+  margin-top: 6px;
+}
+
+.ficha-menu-chevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--ink-faint);
+  /* Cerrado apunta a la derecha —hay algo más allá—, abierto hacia abajo. */
+  transform: rotate(-90deg);
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.ficha-menu-chevron.abierto { transform: rotate(0deg); color: var(--accent); }
+
+.ficha-menu-panel[hidden] { display: none; }
+
+.ficha-menu-panel { display: grid; gap: 14px; }
+
+.menu-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+/* Cada carta es una tarjeta blanca sobre el fondo crema de la sección: el mismo
+   trato que las tarjetas del resto de la ficha. */
+.menu-fila {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.menu-fila-icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+}
+
+.menu-fila-texto { flex: 1; min-width: 0; }
+
+.menu-fila-nombre { display: block; font-size: 17px; font-weight: 700; }
+
+.menu-fila-resumen {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Al extremo derecho de la fila: es el destino de la fila entera y ahí es donde
+   la vista lo busca. */
+.menu-fila-boton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* La tarjeta ya no lleva hueco de sobra abajo: con el botón dentro de cada
+   fila, el `gap` de la sección era espacio muerto entre la última carta y los
+   horarios. */
+.ficha-menu-cta { gap: 18px; padding-bottom: 24px; }
+
+@media (max-width: 720px) {
+  .ficha-meta-calificacion,
+  .ficha-meta-social { gap: 10px; }
+
+  .novedades-titulo { font-size: 22px; }
+
+  .publicacion { padding: 14px 14px 6px; }
+
+  .historias { padding: 16px 14px 18px; }
+
+  .historia-circulo { width: 78px; }
+
+  .historia-anillo { width: 68px; height: 68px; }
+
+  .historia-nombre { max-width: 78px; }
+
+  .historia-marca { top: 44px; }
+
+  .visor { padding: 0; }
+
+  .visor-caja { width: 100%; height: 100%; padding: 14px; }
+
+  .visor-media img,
+  .visor-media video { max-height: none; }
+
+  .menu-fila { flex-wrap: wrap; }
+
+  .menu-fila-boton { width: 100%; justify-content: center; }
+
+  .feed-encabezado h1 { font-size: 27px; }
+
+  .post-fila { flex-direction: column; }
+
+  .post-fila-media { width: 100%; height: 160px; }
 }

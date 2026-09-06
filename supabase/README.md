@@ -43,7 +43,9 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   de la columna. El CHECK `restaurants_slug_formato` obliga la forma y ademas
   impide que un restaurante se quede con `/panel` o `/entrar`; la misma lista
   de rutas reservadas vive en `lib/slug.js` y las dos tienen que decir lo
-  mismo. El slug lo elige `slug_disponible`, que es `security definer` a
+  mismo; cada ruta fija nueva tiene que entrar en las dos, y `novedades` y
+  `avisos` —el feed del comensal y su bandeja— se agregaron con las historias.
+  El slug lo elige `slug_disponible`, que es `security definer` a
   proposito: para saber si "tacoselgordo" esta libre hay que ver todas las
   fichas y la RLS solo deja ver las publicadas.
 - **El slug no cambia cuando el restaurante cambia de nombre.** Es la
@@ -84,6 +86,63 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   Que la carta sea de esa ficha y esté visible lo comprueba la política de
   `INSERT` con `menu_es_de_la_ficha`, no solo la ruta que recibe los eventos.
 
+- **Una historia o publicación es una fila, aunque salga en cuatro fichas.**
+  `social_posts` guarda el contenido y `social_post_restaurants` dice dónde
+  sale. Un dueño con cuatro sucursales publica la misma promoción en las
+  cuatro, y duplicar la fila habría duplicado también sus likes, sus
+  comentarios y su conteo de vistas: la misma foto acabaría con cuatro cifras
+  distintas debajo. La regla de "solo publicas en lo tuyo" vive en la política
+  de `social_post_restaurants`, que exige ser el autor del contenido *y* el
+  dueño de la ficha; una fila suelta en `social_posts` sin restaurantes no la
+  ve nadie, así que no es una fuga sino basura.
+- **La caducidad de una historia es un dato, no un cálculo.** `expires_at` se
+  llena al insertar, en la base y no en el navegador: veinticuatro horas
+  contadas desde el reloj de quien publica durarían lo que ese reloj diga. Las
+  lecturas filtran por esa columna, así que la historia deja de verse en el
+  instante exacto aunque su fila siga ahí; `limpiar_historias` solo recoge lo
+  caducado hace más de una semana y la llama la carga de la ficha, de vez en
+  cuando, en vez de un cron.
+- **Los conteos de likes, comentarios y vistas son columnas, no `count(*)`.**
+  Una ficha con diez publicaciones haría treinta consultas agregadas para
+  dibujarse. Los mantienen triggers y el cliente no los puede escribir: un
+  BEFORE UPDATE los congela. Eso mismo congelaba al trigger que sí debe
+  moverlos, así que `contar_social` enciende una marca local a la transacción
+  (`menuabierto.contando`) que el guardia respeta. `contar_social` no está
+  concedida a nadie desde la API: publicada, servía para poner mil Me gusta
+  sin dejar una fila en `social_likes`.
+- **La campana va en la fila de seguidor y no en su propia tabla.**
+  `restaurant_followers.notify_stories` es del mismo grano —una persona y un
+  restaurante— y separarlo habría sido una tabla 1:1 que unir en cada lectura
+  para leer un booleano. Dejar de seguir se lleva la preferencia por delante,
+  que es lo que se espera.
+- **A quién sigues es privado; cuántos te siguen es público.** La tabla solo
+  se lee a sí misma, igual que los favoritos, y el número que enseña la ficha
+  es `restaurants.followers_count`, una columna que lleva un trigger. Abrir la
+  lista de seguidores para poder contarlos habría sido enseñar nombres para
+  pintar una cifra.
+- **Los avisos los reparte un trigger y nadie más.** `notifications` no tiene
+  política de INSERT a propósito: el reparto va sobre
+  `social_post_restaurants` —hasta que el contenido no tiene ficha no hay nada
+  que avisar— y corre como `security definer`. Que el cliente no pueda
+  escribir ahí es lo que garantiza que un aviso siempre corresponde a algo que
+  pasó. El índice único `notifications_sin_repetir` es el antiduplicado: una
+  historia publicada a la vez en tres sucursales que sigues son tres avisos
+  —son tres restaurantes— pero nunca dos por la misma.
+- **Lo social se lee por función.** `historias_restaurante`,
+  `publicaciones_restaurante`, `comentarios_publicacion`, `feed_seguidos`,
+  `social_mias` y `mis_avisos`. Por lo mismo que `resenas_restaurante`: el
+  nombre de quien comenta vive en `profiles`, que es privado, y el feed cruza
+  cinco tablas. Paginan por fecha (`antes`) y no por número de página, porque
+  publicar mientras alguien baja movería todas las páginas un lugar.
+- **El bucket `social` va por autor y no por restaurante.** La ruta es
+  `<author_id>/<archivo>` porque el mismo archivo puede salir en cuatro
+  sucursales: la carpeta dice quién lo subió, que es lo único que no cambia.
+  Es un bucket aparte del de fotos porque acepta video, y el de fotos tiene un
+  tope de 5 MB que un video de quince segundos se salta.
+- **El archivo de una publicación no se puede cambiar al editar.** Solo el
+  texto. Cambiar la foto de algo que ya tiene likes y comentarios convertiría
+  esos likes en likes de otra cosa; quien se equivocó la borra y sube la
+  buena.
 - **`location` es `geography(point, 4326)`**, no dos columnas de latitud y
   longitud. Con el índice GiST, `ST_DWithin` resuelve "cerca de mí" contra un
   directorio grande; filtrar en JavaScript no escala más allá de un pueblo.
@@ -175,6 +234,17 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   que es cualquiera que abra una carta. Responde sí o no a "este menú visible
   es de esta ficha", que es justo lo que ya se ve en la página. Es el mismo
   caso —y el mismo aviso— que `restaurant_is_public`.
+- `social_post_visible` y `social_post_mine` ejecutables por `anon` como
+  `security definer`: el mismo caso otra vez. Las llaman las políticas de
+  likes, comentarios y vistas, así que tiene que poder correrlas quien
+  escribe, que es cualquiera que comente. Responden sí o no a "esta
+  publicación se puede ver" y "es mía", que es lo que la página ya enseña.
+- `limpiar_historias` ejecutable por `authenticated`: borra historias caducadas
+  hace más de una semana, contenido que nadie puede ver desde entonces. Va
+  concedida para que la dispare la carga de una ficha —de vez en cuando, no
+  siempre— en lugar de depender de un cron. A `anon` no: borrar filas, aunque
+  sean invisibles, no es algo que deba poder disparar quien solo abrió una
+  página.
 
 # Correos de autenticación
 
