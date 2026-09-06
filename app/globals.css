@@ -3474,13 +3474,11 @@ img.menu-archivo-vista { min-height: 0; }
   background: var(--paper-warm);
 }
 
-/* La tarjeta que reemplaza al menú desplegado: un botón para verlo en esta
-   pantalla y un QR para abrirlo en el celular sin teclear la dirección. */
+/* La tarjeta que reemplaza al menú desplegado: la lista de cartas, cada una
+   con su página y su QR para abrirla en el celular sin teclear la dirección. */
 .ficha-menu-cta {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 32px;
-  align-items: center;
+  gap: 22px;
   margin-top: 20px;
   padding: 28px 30px;
   border: 1px solid var(--line);
@@ -3488,7 +3486,7 @@ img.menu-archivo-vista { min-height: 0; }
   background: var(--accent-soft);
 }
 
-.ficha-menu-cta-vacia { grid-template-columns: 1fr; background: var(--paper-warm); }
+.ficha-menu-cta-vacia { background: var(--paper-warm); }
 
 .ficha-menu-texto { display: flex; align-items: flex-start; gap: 18px; }
 
@@ -3508,37 +3506,9 @@ img.menu-archivo-vista { min-height: 0; }
 
 .ficha-menu-texto p { color: var(--ink-soft); font-size: 15.5px; margin-top: 8px; }
 
-.ficha-menu-boton {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.ficha-menu-qr {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding-left: 32px;
-  border-left: 1px solid var(--line);
-  max-width: 420px;
-}
-
-.ficha-menu-qr-caja {
-  flex: none;
-  padding: 10px;
-  border-radius: 12px;
-  background: #fff;
-  border: 1px solid var(--line);
-}
-
-/* El bloque del dueño: el QR y, debajo, los dos formatos para llevárselo a la
-   imprenta. Va en columna para que los botones queden bajo el código y no
-   compitan con el texto de al lado. Con los botones y la nota, la columna del
-   QR crece: sin este ancho extra, el texto de al lado queda en una tira de
-   cuatro palabras por renglón. */
-.ficha-menu-qr:has(.qr-descarga) { max-width: 520px; }
-
+/* El bloque del código y sus dos formatos: el PNG para Canva y el chat del que
+   hace las lonas, el SVG para la imprenta. Quien lo pinta decide cómo se
+   acomodan sus tres partes; aquí solo va lo común. */
 .qr-descarga {
   flex: none;
   display: flex;
@@ -3555,20 +3525,175 @@ img.menu-archivo-vista { min-height: 0; }
   font-size: 13px;
 }
 
-/* Con el selector a secas gana `.ficha-menu-qr p`, que está más abajo y
-   pinta la nota del tamaño del párrafo de al lado. */
-.ficha-menu-qr .qr-descarga-nota {
-  max-width: 190px;
-  margin-top: 0;
-  text-align: center;
-  font-size: 12px;
+/* El acordeón de cartas. Cada fila es una tarjeta blanca sobre el fondo
+   crema de la sección: el mismo trato que las tarjetas del resto de la ficha,
+   para que la lista no parezca un componente traído de otro sitio. */
+.menu-acordeon {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.menu-acordeon-fila {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.menu-acordeon-fila.abierta { box-shadow: var(--sombra); }
+
+/* La cabecera es un botón que ocupa la fila entera: en un teléfono, atinarle
+   solo al chevron es pedir demasiado. */
+.menu-acordeon-cabeza {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-acordeon-cabeza:hover { background: var(--accent-soft); }
+
+.menu-acordeon-cabeza:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.menu-acordeon-icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.menu-acordeon-texto { flex: 1; min-width: 0; }
+
+.menu-acordeon-nombre { display: block; font-size: 17px; font-weight: 700; }
+
+/* La línea de abajo se arma con las secciones de la carta, así que puede
+   salir larga: se corta en vez de partir la fila en dos renglones. */
+.menu-acordeon-resumen {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-acordeon-chevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--ink-faint);
+  /* Cerrado apunta a la derecha —hay algo más allá—, abierto hacia abajo. */
+  transform: rotate(-90deg);
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.menu-acordeon-fila.abierta .menu-acordeon-chevron {
+  transform: rotate(0deg);
+  color: var(--accent);
+}
+
+/* `display: flex` gana sobre el `display: none` que el navegador le da a
+   `[hidden]`, así que el panel cerrado se quedaba abierto. */
+.menu-acordeon-panel[hidden] { display: none; }
+
+.menu-acordeon-panel {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 22px 20px 24px;
+  margin: 0 20px;
+  border-top: 1px solid var(--line);
+}
+
+.menu-acordeon-boton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* El QR con sus descargas: el código a la izquierda y, a su derecha, los dos
+   formatos con la nota debajo. `QrDescarga` pinta los tres hermanos en fila
+   —código, botones, nota— y la rejilla los acomoda sin tocar su marcado. */
+.menu-acordeon-panel .qr-descarga {
+  margin-left: auto;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "codigo botones"
+    "codigo nota";
+  align-items: center;
+  gap: 6px 18px;
+}
+
+.menu-acordeon-qr {
+  grid-area: codigo;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.menu-acordeon-panel .qr-descarga-botones { grid-area: botones; }
+
+.menu-acordeon-panel .qr-descarga-nota {
+  grid-area: nota;
+  max-width: 200px;
+  margin: 0;
+  text-align: left;
+  font-size: 12.5px;
   line-height: 1.4;
   color: var(--ink-soft);
 }
 
-.ficha-menu-qr h3 { font-size: 16px; line-height: 1.3; }
+.ficha-menu-nota {
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
 
-.ficha-menu-qr p { color: var(--ink-soft); font-size: 14px; margin-top: 8px; }
+@media (max-width: 720px) {
+  .menu-acordeon-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .menu-acordeon-boton { justify-content: center; }
+
+  /* En un teléfono el código se pone en medio con sus botones debajo: en fila
+     no caben sin encoger el QR por debajo de lo que una cámara lee. */
+  .menu-acordeon-panel .qr-descarga {
+    margin-left: 0;
+    justify-items: center;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "codigo"
+      "botones"
+      "nota";
+    gap: 12px;
+  }
+
+  .menu-acordeon-panel .qr-descarga-nota { text-align: center; max-width: none; }
+}
 
 /* En puntos por pulgada el QR es una rejilla, no un dibujo: sin el tamaño fijo
    el navegador lo interpola y la cámara pierde los módulos. */
@@ -3591,11 +3716,6 @@ img.menu-archivo-vista { min-height: 0; }
 .ficha-tira strong { display: block; font-size: 15px; }
 
 .ficha-tira span { display: block; font-size: 14px; color: var(--ink-soft); }
-
-@media (max-width: 980px) {
-  .ficha-menu-cta { grid-template-columns: 1fr; }
-  .ficha-menu-qr { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); padding-top: 22px; max-width: none; }
-}
 
 @media (max-width: 860px) {
   .ficha-hero { grid-template-columns: 1fr; gap: 24px; }

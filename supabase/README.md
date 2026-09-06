@@ -22,7 +22,13 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   `perfil_destacados_redes_fotos` (20260903204500 → 20260903204955) y
   `zona_horaria_del_restaurante` (20260903221500 → 20260903224920). La lista
   de referencia es `supabase_migrations.schema_migrations`, no el reloj de
-  quien escribe la migración.
+  quien escribe la migración. Los dos que faltaban se renombraron después:
+  `favoritos_del_comensal` (20260905120500 → 20260905092700) y
+  `busqueda_con_servicios_y_coordenadas` (20260905120000 → 20260905092729),
+  que además iban en el orden equivocado entre ellos: la fecha inventada
+  ponía la búsqueda antes que los favoritos y en la base fue al revés. Hoy
+  cada archivo del directorio coincide con una versión registrada, y no
+  sobra ninguna.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
