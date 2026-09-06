@@ -6,7 +6,7 @@ import { signInWithPassword } from "./actions";
 
 const inicial = { status: "idle", message: "" };
 
-export default function EntrarForm({ next = "/panel" }) {
+export default function EntrarForm({ next = "" }) {
   const [state, action, pending] = useActionState(signInWithPassword, inicial);
 
   return (

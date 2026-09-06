@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { destinoTrasEntrar } from "../../lib/destino";
 import { rutaInterna } from "../../lib/rutas";
 import { currentUser } from "../../lib/supabase";
 import EntrarForm from "./form";
@@ -12,13 +13,14 @@ export const metadata = {
 
 export default async function Entrar({ searchParams }) {
   const params = await searchParams;
-  const next = rutaInterna(params?.next);
+  const next = rutaInterna(params?.next, "");
 
   // Al destino pedido y no siempre al panel: quien venía de una ficha a dejar
   // su reseña y ya tenía sesión abierta acababa en el panel, lejos del
   // restaurante que estaba viendo.
-  if (await currentUser()) {
-    redirect(next);
+  const user = await currentUser();
+  if (user) {
+    redirect(next || (await destinoTrasEntrar(user)));
   }
 
   return (
