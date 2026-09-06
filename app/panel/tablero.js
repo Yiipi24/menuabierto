@@ -8,7 +8,7 @@ import {
 } from "../../lib/metricas";
 import { metricasDe } from "./metricas-actions";
 import RejillaKpis, { KpisCargando } from "./tablero-kpis";
-import { GraficaRendimiento, Lugares, FuentesDeTrafico } from "./tablero-graficas";
+import { Cartas, GraficaRendimiento, Lugares, FuentesDeTrafico } from "./tablero-graficas";
 import Ideas from "./tablero-ideas";
 import AccionesDelRestaurante from "./tablero-acciones";
 import { IconoChevron, IconoTienda } from "./tablero-iconos";
@@ -224,6 +224,7 @@ export default function Tablero({
               nombre={elegido.name}
             />
             <FuentesDeTrafico fuentes={metricas.fuentes} total={metricas.serie.total} />
+            <Cartas cartas={metricas.cartas} restauranteId={elegido.id} />
           </div>
 
           <Ideas ideas={ideas} />

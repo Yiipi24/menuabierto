@@ -53,6 +53,15 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   fichas publicadas; leer, solo el dueño, y el tablero entra por
   `restaurant_metrics`, que calcula el periodo en la zona horaria del local
   porque "hoy" no significa lo mismo en Tijuana que en Cancún.
+- **Un evento puede tener carta.** `menu_id` la guarda cuando pasó en la
+  página de una sola (`/<slug>/menu/<id>`), que es la que abre el QR de esa
+  carta. Es nulo en todo lo demás —la ficha, el teléfono, la página con todas
+  las cartas— porque ahí no hay un menú en particular y forzarle uno sería
+  inventar el dato. El índice que evita los duplicados lo incluye con un
+  `coalesce`: en un índice único Postgres considera distintos a dos NULL, y sin
+  el `coalesce` los eventos sin carta —casi todos— dejarían de deduplicarse.
+  Que la carta sea de esa ficha y esté visible lo comprueba la política de
+  `INSERT` con `menu_es_de_la_ficha`, no solo la ruta que recibe los eventos.
 
 - **`location` es `geography(point, 4326)`**, no dos columnas de latitud y
   longitud. Con el índice GiST, `ST_DWithin` resuelve "cerca de mí" contra un
@@ -126,6 +135,11 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   rompería las referencias existentes a cambio de nada.
 - `cuisines_created_by_fkey` sin índice: la columna se escribe al proponer una
   categoría y no se consulta por ella; el catálogo son decenas de filas.
+- `menu_es_de_la_ficha` ejecutable por `anon` como `security definer`: dentro
+  de una política, la función tiene que poder correrla quien escribe el evento,
+  que es cualquiera que abra una carta. Responde sí o no a "este menú visible
+  es de esta ficha", que es justo lo que ya se ve en la página. Es el mismo
+  caso —y el mismo aviso— que `restaurant_is_public`.
 
 # Correos de autenticación
 

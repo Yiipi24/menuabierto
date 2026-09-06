@@ -75,7 +75,11 @@ export default async function CartaPagina({ slug, menuId = null }) {
       <main className="wrap ficha ficha-menu-pagina">
         {/* El menú también es una visita a la ficha: quien llega por el QR
             nunca pasa por la portada, y sin esto su visita no existiría. */}
-        <MedirVista slug={slug} eventos={["restaurant_view", "menu_view"]} />
+        <MedirVista
+          slug={slug}
+          eventos={["restaurant_view", "menu_view"]}
+          menuId={solo?.id ?? null}
+        />
         {/* Las dos salidas van en la misma fila: apiladas dejaban un hueco de
             dos renglones antes de la carta, que es lo único que se vino a
             ver. */}

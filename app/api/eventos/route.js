@@ -7,6 +7,7 @@ import {
   eventoValido,
   fuenteValida,
 } from "../../../lib/eventos";
+import { menuIdValido } from "../../../lib/slug";
 
 // Aquí aterrizan los eventos de las fichas públicas. Va por el servidor y no
 // directo a Supabase desde el navegador por tres razones: la ciudad la sabe el
@@ -42,6 +43,11 @@ export async function POST(request) {
   const slug = String(cuerpo?.slug ?? "").slice(0, 80);
   const evento = String(cuerpo?.evento ?? "");
   const fuente = fuenteValida(String(cuerpo?.fuente ?? "directo"));
+  // La carta solo viaja desde la página de una sola: es lo que separa "vieron
+  // el menú" de "vieron el de bebidas". Un id con mala forma se descarta en
+  // vez de tumbar el evento: el escaneo sigue contando aunque no se sepa de
+  // qué carta.
+  const menu = menuIdValido(cuerpo?.menu) ? String(cuerpo.menu) : null;
 
   if (!slug || !eventoValido(evento)) return new Response(null, { status: 400 });
 
@@ -71,9 +77,26 @@ export async function POST(request) {
     .eq("status", "publicado")
     .maybeSingle();
 
+  // La carta tiene que ser de esta ficha y estar visible. Lo vuelve a
+  // comprobar la política de la tabla; aquí se filtra antes para que un id de
+  // otro restaurante no convierta el evento entero en un error de RLS y se
+  // pierda la visita.
+  let menuId = null;
+  if (ficha?.id && menu) {
+    const { data: carta } = await supabase
+      .from("menus")
+      .select("id")
+      .eq("id", menu)
+      .eq("restaurant_id", ficha.id)
+      .eq("is_visible", true)
+      .maybeSingle();
+    menuId = carta?.id ?? null;
+  }
+
   if (ficha?.id) {
     const { error } = await supabase.from("restaurant_events").insert({
       restaurant_id: ficha.id,
+      menu_id: menuId,
       event: evento,
       source: fuente,
       city: ciudad,
