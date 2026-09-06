@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../lib/supabase";
+import { vinoAPublicar } from "../../lib/destino";
 import { cerrarSesion } from "./actions";
 import Brand from "../brand";
 import Tablero from "./tablero";
@@ -26,6 +27,14 @@ export default async function Panel() {
     )
     .eq("owner_id", auth.user.id)
     .order("created_at", { ascending: false });
+
+  // El panel es la casa de los restaurantes: planes, reclamar una ficha,
+  // "Tus restaurantes". A quien no administra ninguno ni vino a publicar el
+  // suyo nada de eso le habla, asi que su cuenta esta en /panel/cuenta.
+  // Si la consulta fallo no lo echamos: abajo se le explica el fallo.
+  if (!error && !restaurantes?.length && !vinoAPublicar(auth.user)) {
+    redirect("/panel/cuenta");
+  }
 
   // Las fotos sirven para dos cosas en el tablero: la miniatura del selector
   // (la de la fachada) y una de las ideas ("agrega más fotos"). Se piden en

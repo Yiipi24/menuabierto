@@ -5,6 +5,7 @@ import { rutaFicha } from "../../../lib/slug";
 import { INSIGNIAS, conteoDe, progresoDe } from "../../../lib/insignias";
 import { IconoInsignia } from "../../insignias-iconos";
 import Brand from "../../brand";
+import { esRestaurantero } from "../../../lib/destino";
 
 export const metadata = { title: "Tus insignias — Menú Abierto" };
 
@@ -23,6 +24,10 @@ export default async function Insignias() {
   const supabase = await supabaseSession();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth?.user) redirect("/entrar?next=/panel/insignias");
+
+  // Las insignias son cosa de comensales, y al comensal el panel no le
+  // pertenece: vuelve a su cuenta, que es de donde vino.
+  const atras = (await esRestaurantero(auth.user)) ? "/panel" : "/panel/cuenta";
 
   const [{ data: perfil }, { data: mias }] = await Promise.all([
     supabase
@@ -49,8 +54,8 @@ export default async function Insignias() {
   return (
     <div className="panel-wrap">
       <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href="/panel">
+        <Brand href={atras} />
+        <Link className="btn-texto" href={atras}>
           Volver
         </Link>
       </header>

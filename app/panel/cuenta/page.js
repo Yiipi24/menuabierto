@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
+import { esRestaurantero } from "../../../lib/destino";
 import CuentaForm from "./form";
 import Brand from "../../brand";
 import { conteoDe, insigniaActual } from "../../../lib/insignias";
@@ -21,6 +22,11 @@ export default async function Cuenta() {
     .eq("id", auth.user.id)
     .maybeSingle();
 
+  // El "volver" del comensal no puede apuntar al panel: ahi no tiene nada y
+  // ademas lo devolveria a esta misma pagina.
+  const restaurantero = await esRestaurantero(auth.user);
+  const atras = restaurantero ? "/panel" : "/";
+
   const resenas = conteoDe(perfil?.reviews_count);
   const insignia = insigniaActual(resenas);
 
@@ -33,8 +39,8 @@ export default async function Cuenta() {
   return (
     <div className="panel-wrap">
       <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href="/panel">
+        <Brand href={atras} />
+        <Link className="btn-texto" href={atras}>
           Volver
         </Link>
       </header>
@@ -62,6 +68,19 @@ export default async function Cuenta() {
           {insignia ? <IconoInsignia slug={insignia.slug} ancho={18} /> : null}
           Ver tus insignias
         </Link>
+
+        {restaurantero ? null : (
+          <>
+            <h2 className="sub">¿Tienes un restaurante?</h2>
+            <p className="panel-lead">
+              Publica tu menú, tus fotos y tus precios. Es gratis, y desde ahí
+              administras tu ficha.
+            </p>
+            <Link className="btn-linea" href="/panel/nuevo">
+              Dar de alta tu restaurante
+            </Link>
+          </>
+        )}
 
         <h2 className="sub">Contraseña</h2>
         <p className="panel-lead">

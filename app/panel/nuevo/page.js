@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import NuevoForm from "./form";
 import Brand from "../../brand";
+import { esRestaurantero } from "../../../lib/destino";
 
 export const metadata = { title: "Agregar restaurante — Menú Abierto" };
 
@@ -10,6 +11,10 @@ export default async function Nuevo() {
   const supabase = await supabaseSession();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth?.user) redirect("/entrar");
+
+  // Quien todavia no administra nada llega aqui desde su cuenta, no desde
+  // el panel, asi que ahi lo devolvemos si se arrepiente.
+  const atras = (await esRestaurantero(auth.user)) ? "/panel" : "/panel/cuenta";
 
   const { data: cuisines } = await supabase
     .from("cuisines")
@@ -19,8 +24,8 @@ export default async function Nuevo() {
   return (
     <div className="panel-wrap">
       <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href="/panel">
+        <Brand href={atras} />
+        <Link className="btn-texto" href={atras}>
           Volver
         </Link>
       </header>
