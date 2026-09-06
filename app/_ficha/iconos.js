@@ -135,6 +135,17 @@ export function IconoEnlaceExterno(props) {
   );
 }
 
+// El mismo trazo que el chevron del panel. Se repite en vez de importarse de
+// allá porque el panel y la ficha pública no comparten hoja de iconos, y una
+// flecha de una línea no vale un archivo común.
+export function IconoChevron(props) {
+  return (
+    <Svg {...props}>
+      <path d="M6.5 9.5l5.5 5.5 5.5-5.5" />
+    </Svg>
+  );
+}
+
 export function IconoDescargar(props) {
   return (
     <Svg {...props}>

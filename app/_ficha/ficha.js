@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
-import { qrRuta } from "../../lib/qr";
-import { rutaMenu as rutaDeMenu } from "../../lib/slug";
+import { urlAbsoluta } from "../../lib/url";
+import { aSegmento, rutaMenuCarta } from "../../lib/slug";
+import { descripcionDeMenu } from "../../lib/menus";
 import Nav from "../nav";
 import Resenas from "./resenas";
 import ComoLlegar from "./como-llegar";
-import QrDescarga from "./qr-descarga";
+import Qr from "./qr";
+import MenusAcordeon from "./menus-acordeon";
+import { IconoDeMenu } from "./iconos-menu";
 import { MedirVista, EnlaceMedido, BotonGuardar } from "../medir";
 import {
   cargar,
@@ -27,7 +29,6 @@ import {
   IconoCubiertos,
   IconoEscudo,
   IconoEstrella,
-  IconoFlecha,
   IconoFlechaAtras,
   IconoEnlaceExterno,
   IconoGlobo,
@@ -38,36 +39,6 @@ import {
 } from "./iconos";
 
 export const dynamic = "force-dynamic";
-
-// El QR tiene que apuntar a un dominio, no a `/jcsmokehouse/menu`: quien lo
-// escanea lo hace desde otro aparato y una ruta relativa ahí no significa nada.
-// El host de la petición es el que sirve la página, así que funciona igual en
-// producción, en una vista previa y en local.
-async function urlAbsoluta(ruta) {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") || h.get("host");
-  if (!host) return ruta;
-  const protocolo = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
-  return `${protocolo}://${host}${ruta}`;
-}
-
-function Qr({ texto, titulo }) {
-  const { d, lado, margen } = qrRuta(texto);
-  return (
-    <svg
-      className="qr"
-      viewBox={`0 0 ${lado} ${lado}`}
-      role="img"
-      aria-label={titulo}
-      shapeRendering="crispEdges"
-    >
-      <rect width={lado} height={lado} fill="#ffffff" />
-      <g transform={`translate(${margen} ${margen})`} fill="var(--ink)">
-        <path d={d} />
-      </g>
-    </svg>
-  );
-}
 
 export async function metadataFicha(slug) {
   try {
@@ -120,11 +91,36 @@ export default async function Ficha({ slug }) {
   const misResenas = esDueno ? 0 : await resenasEscritas(usuario?.id ?? null);
 
   const direccion = direccionDe(r);
-  const rutaMenu = rutaDeMenu(slug);
-  // El QR apunta al menú con su marca de origen: es la única manera de saber
-  // después cuántos de los que miraron el menú venían de la mesa.
-  const urlMenu = await urlAbsoluta(`${rutaMenu}?src=qr`);
   const hayMenu = menus.length > 0;
+
+  // Cada carta llega a la lista con lo suyo: su icono, su línea, su página y
+  // su QR. El QR se dibuja aquí, en el servidor, y viaja pintado: son cuatro
+  // códigos que no cambian mientras la página está abierta, así que no hay por
+  // qué bajarle al navegador la librería que los genera.
+  //
+  // La marca de origen va en el enlace del código y no en el botón: es la
+  // única manera de saber después cuántos de los que abrieron esa carta la
+  // escanearon desde la mesa.
+  const archivoBase = `qr-${slug.replace(/\//g, "-")}`;
+  const cartas = await Promise.all(
+    menus.map(async (m) => {
+      const ruta = rutaMenuCarta(slug, m.id);
+      return {
+        id: m.id,
+        nombre: m.name,
+        descripcion: descripcionDeMenu(m),
+        href: ruta,
+        nombreArchivo: `${archivoBase}-${m.name ? aSegmento(m.name) || m.id : m.id}`,
+        icono: <IconoDeMenu nombre={m.name} ancho={24} />,
+        qr: (
+          <Qr
+            texto={await urlAbsoluta(`${ruta}?src=qr`)}
+            titulo={`Código QR de ${m.name} — ${r.name}`}
+          />
+        ),
+      };
+    }),
+  );
 
   // Una foto grande y el resto en tiras chicas. Antes las seis salían del mismo
   // tamaño y empujaban el menú fuera de la primera pantalla.
@@ -237,9 +233,9 @@ export default async function Ficha({ slug }) {
             ) : null}
           </section>
 
-          {/* El menú ya no se despliega entero aquí: se entra a él por el botón
-              y, si la persona está frente a la mesa con el celular en la mano,
-              por el QR. La ficha vuelve a caber en una pantalla. */}
+          {/* Las cartas no se despliegan aquí: cada una se abre en su página, y
+              quien está sentado en la mesa entra por su QR. La ficha vuelve a
+              caber en una pantalla aunque el restaurante tenga cuatro. */}
           {hayMenu ? (
             <section className="ficha-menu-cta">
               <div className="ficha-menu-texto">
@@ -247,52 +243,29 @@ export default async function Ficha({ slug }) {
                   <IconoCubiertos ancho={26} />
                 </span>
                 <div>
-                  <h2>Consulta nuestro menú completo</h2>
+                  <h2>{menus.length > 1 ? "Consulta nuestros menús" : "Consulta nuestro menú"}</h2>
                   <p>
                     {r.summary
                       ? r.summary
-                      : `Descubre los platillos y precios de ${r.name}.`}
+                      : `Escanea el código QR o descarga el menú que prefieras.`}
                   </p>
-                  <Link className="btn ficha-menu-boton" href={rutaMenu}>
-                    Ver menú
-                    <IconoFlecha ancho={19} />
-                  </Link>
                 </div>
               </div>
 
-              <div className="ficha-menu-qr">
-                {/* Al dueño el QR no le sirve para escanearlo: le sirve para
-                    bajarlo y mandarlo a imprimir. Al comensal, al revés. Cada
-                    uno ve el suyo. */}
-                {esDueno ? (
-                  <QrDescarga nombreArchivo={`qr-menu-${slug.replace(/\//g, "-")}`}>
-                    <div className="ficha-menu-qr-caja">
-                      <Qr texto={urlMenu} titulo={`Código QR del menú de ${r.name}`} />
-                    </div>
-                  </QrDescarga>
-                ) : (
-                  <div className="ficha-menu-qr-caja">
-                    <Qr texto={urlMenu} titulo={`Código QR del menú de ${r.name}`} />
-                  </div>
-                )}
-                <div>
-                  {esDueno ? (
-                    <>
-                      <h3>Este es el QR de tu menú</h3>
-                      <p>
-                        Descárgalo e imprímelo para la mesa, la entrada y la cuenta. Apunta
-                        siempre a {rutaDeMenu(slug)}, así que no tienes que reimprimirlo cuando
-                        cambies platillos o precios.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h3>Escanea el QR para ver el menú en tu celular</h3>
-                      <p>Abre la cámara de tu celular y apunta al código.</p>
-                    </>
-                  )}
-                </div>
-              </div>
+              <MenusAcordeon cartas={cartas} />
+
+              {/* El QR de todas las cartas juntas ya no se enseña: cada una
+                  tiene el suyo arriba. La página que abría —/<slug>/menu—
+                  sigue existiendo, así que los códigos ya impresos con esa
+                  dirección siguen funcionando. */}
+              {esDueno && menus.length > 1 ? (
+                <p className="ficha-menu-nota">
+                  Cada carta tiene su propio QR: el de bebidas para la barra, el de comida
+                  para la mesa. Todos apuntan a una dirección fija, así que no hay que
+                  reimprimirlos al cambiar platillos o precios. También los encuentras en{" "}
+                  <Link href={`/panel/${r.id}/menus`}>tus menús</Link>.
+                </p>
+              ) : null}
             </section>
           ) : (
             <section className="ficha-menu-cta ficha-menu-cta-vacia">

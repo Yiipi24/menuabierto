@@ -40,7 +40,7 @@ async function sesionYRestaurante(id) {
 async function menuDelDueno(supabase, restauranteId, menuId) {
   const { data } = await supabase
     .from("menus")
-    .select("id, restaurant_id, name, kind, template, style, file_path, is_visible")
+    .select("id, restaurant_id, name, description, kind, template, style, file_path, is_visible")
     .eq("id", menuId)
     .eq("restaurant_id", restauranteId)
     .maybeSingle();
@@ -160,12 +160,20 @@ export async function guardarMenu(_prevState, formData) {
     return { status: "error", message: "Usa un nombre más corto." };
   }
 
+  // Vacía se guarda como nula, no como cadena vacía: nulo es lo que la ficha
+  // lee como "ármala tú con las secciones".
+  const descripcion = String(formData.get("descripcion") ?? "").trim();
+  if (descripcion.length > 140) {
+    return { status: "error", message: "La descripción es muy larga. Deja una línea." };
+  }
+
   const tipo = String(formData.get("kind") ?? menu.kind);
   const template = plantillaValida(String(formData.get("template") ?? menu.template));
   const { error } = await supabase
     .from("menus")
     .update({
       name: nombre,
+      description: descripcion || null,
       kind: TIPOS_MENU.includes(tipo) ? tipo : menu.kind,
       template,
       style: estiloDelFormulario(formData, template),

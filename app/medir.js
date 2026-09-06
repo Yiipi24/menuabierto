@@ -42,13 +42,18 @@ function fuenteActual() {
   return fuente;
 }
 
-export function medir(slug, evento) {
+/**
+ * Manda un evento. `menu` es la carta en la que pasó, y solo la tiene la
+ * página de una sola: es lo que deja saber después cuál de los QR impresos
+ * —el de la barra o el de la mesa— es el que trae gente.
+ */
+export function medir(slug, evento, menu = null) {
   if (!slug || typeof window === "undefined") return;
   try {
     fetch("/api/eventos", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ slug, evento, fuente: fuenteActual() }),
+      body: JSON.stringify({ slug, evento, menu, fuente: fuenteActual() }),
       // keepalive para que el evento salga aunque el clic se lleve la página
       // por delante (un tel: o un enlace a Instagram).
       keepalive: true,
@@ -62,8 +67,11 @@ export function medir(slug, evento) {
  * Registra la visita a una ficha. `eventos` son los tipos que corresponden a
  * esta página: la ficha manda `restaurant_view`, el menú manda además
  * `menu_view`, y cualquiera de las dos suma `qr_scan` si se llegó por el QR.
+ *
+ * `menuId` viene de la página de una sola carta y viaja con los tres: así el
+ * tablero puede decir qué carta se vio y cuál de los QR se escaneó.
  */
-export function MedirVista({ slug, eventos = ["restaurant_view"] }) {
+export function MedirVista({ slug, eventos = ["restaurant_view"], menuId = null }) {
   const yaFue = useRef(false);
 
   useEffect(() => {
@@ -74,9 +82,9 @@ export function MedirVista({ slug, eventos = ["restaurant_view"] }) {
 
     const lista = [...eventos];
     if (fuenteActual() === "qr") lista.push("qr_scan");
-    for (const evento of lista) medir(slug, evento);
+    for (const evento of lista) medir(slug, evento, menuId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [slug, menuId]);
 
   return null;
 }

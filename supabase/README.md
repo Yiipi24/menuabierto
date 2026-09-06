@@ -22,7 +22,13 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   `perfil_destacados_redes_fotos` (20260903204500 → 20260903204955) y
   `zona_horaria_del_restaurante` (20260903221500 → 20260903224920). La lista
   de referencia es `supabase_migrations.schema_migrations`, no el reloj de
-  quien escribe la migración.
+  quien escribe la migración. Los dos que faltaban se renombraron después:
+  `favoritos_del_comensal` (20260905120500 → 20260905092700) y
+  `busqueda_con_servicios_y_coordenadas` (20260905120000 → 20260905092729),
+  que además iban en el orden equivocado entre ellos: la fecha inventada
+  ponía la búsqueda antes que los favoritos y en la base fue al revés. Hoy
+  cada archivo del directorio coincide con una versión registrada, y no
+  sobra ninguna.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
@@ -53,6 +59,15 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   fichas publicadas; leer, solo el dueño, y el tablero entra por
   `restaurant_metrics`, que calcula el periodo en la zona horaria del local
   porque "hoy" no significa lo mismo en Tijuana que en Cancún.
+- **Un evento puede tener carta.** `menu_id` la guarda cuando pasó en la
+  página de una sola (`/<slug>/menu/<id>`), que es la que abre el QR de esa
+  carta. Es nulo en todo lo demás —la ficha, el teléfono, la página con todas
+  las cartas— porque ahí no hay un menú en particular y forzarle uno sería
+  inventar el dato. El índice que evita los duplicados lo incluye con un
+  `coalesce`: en un índice único Postgres considera distintos a dos NULL, y sin
+  el `coalesce` los eventos sin carta —casi todos— dejarían de deduplicarse.
+  Que la carta sea de esa ficha y esté visible lo comprueba la política de
+  `INSERT` con `menu_es_de_la_ficha`, no solo la ruta que recibe los eventos.
 
 - **`location` es `geography(point, 4326)`**, no dos columnas de latitud y
   longitud. Con el índice GiST, `ST_DWithin` resuelve "cerca de mí" contra un
@@ -104,6 +119,14 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   los platillos se muestran al final, sin agrupar. Por eso la coherencia entre
   platillo y sección la comprueba un trigger y no una llave compuesta: al
   borrar, esa llave pondría en nulo también `menu_id`, que es obligatorio.
+- **La descripción del menú se escribe o se arma sola.** `description` es la
+  línea que la ficha enseña bajo el nombre de cada carta. Nula no significa
+  vacía: significa "ármala con lo que la carta ya tiene" —sus secciones, o sus
+  primeros platillos cuando solo tiene una—, y por eso el panel la guarda como
+  nula cuando el dueño borra el campo en vez de como cadena vacía. Una casilla
+  más que se queda sin llenar no puede dejar la ficha sin la línea. El tope de
+  140 vive en los tres lados: el `maxLength` del formulario, la acción que
+  guarda y el CHECK de la columna.
 - **Un menú puede ser un archivo.** `kind = 'archivo'` con el PDF o la foto en
   el bucket `menus`, para quien ya tiene su carta hecha y no quiere
   capturarla. Bucket aparte del de fotos porque este acepta PDF y aquel no.
@@ -126,6 +149,11 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   rompería las referencias existentes a cambio de nada.
 - `cuisines_created_by_fkey` sin índice: la columna se escribe al proponer una
   categoría y no se consulta por ella; el catálogo son decenas de filas.
+- `menu_es_de_la_ficha` ejecutable por `anon` como `security definer`: dentro
+  de una política, la función tiene que poder correrla quien escribe el evento,
+  que es cualquiera que abra una carta. Responde sí o no a "este menú visible
+  es de esta ficha", que es justo lo que ya se ve en la página. Es el mismo
+  caso —y el mismo aviso— que `restaurant_is_public`.
 
 # Correos de autenticación
 

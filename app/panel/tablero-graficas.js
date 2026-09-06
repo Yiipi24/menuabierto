@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { planoDeMapa } from "../../lib/mapa";
 
@@ -339,6 +340,54 @@ export function FuentesDeTrafico({ fuentes, total }) {
         </ul>
       </div>
       )}
+    </section>
+  );
+}
+
+/**
+ * Qué carta se está viendo y cuál QR se está escaneando.
+ *
+ * Solo aparece cuando el restaurante tiene más de una carta: con una sola, sus
+ * números son los de la ficha y la tarjeta repetiría lo de arriba. Las que van
+ * en cero se quedan en la lista a propósito —son las que hay que mover— y
+ * cada una lleva el enlace a su QR, que es lo que el dueño va a querer hacer
+ * en cuanto vea el cero.
+ */
+export function Cartas({ cartas, restauranteId }) {
+  if (!cartas.length) return null;
+
+  return (
+    <section className="panel-tarjeta">
+      <div className="tarjeta-cabeza">
+        <h2>Tus cartas</h2>
+      </div>
+      <ul className="cartas-lista">
+        {cartas.map((c) => (
+          <li key={c.id}>
+            <div className="carta-fila">
+              <span className="carta-nombre">{c.nombre}</span>
+              <Link className="btn-texto" href={`/panel/${restauranteId}/menus/${c.id}#qr`}>
+                Ver su QR
+              </Link>
+            </div>
+            <div className="lugar-barra">
+              <span style={{ width: `${c.porcentaje}%` }} />
+            </div>
+            <p className="carta-meta">
+              {NUMERO.format(c.vistas)} {c.vistas === 1 ? "vista" : "vistas"} ·{" "}
+              {c.escaneos === 0
+                ? "sin escaneos de su QR"
+                : `${NUMERO.format(c.escaneos)} ${
+                    c.escaneos === 1 ? "escaneo" : "escaneos"
+                  } de su QR`}
+            </p>
+          </li>
+        ))}
+      </ul>
+      <p className="tarjeta-nota">
+        Se cuenta lo que pasó en la página de cada carta. Quien abre el menú
+        completo desde la ficha cuenta arriba, no aquí.
+      </p>
     </section>
   );
 }
