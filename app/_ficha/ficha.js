@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
-import { urlAbsoluta } from "../../lib/url";
-import { aSegmento, rutaMenuCarta } from "../../lib/slug";
+import { rutaMenuCarta } from "../../lib/slug";
 import { descripcionDeMenu } from "../../lib/menus";
 import Nav from "../nav";
 import Resenas from "./resenas";
 import ComoLlegar from "./como-llegar";
-import Qr from "./qr";
 import MenusAcordeon from "./menus-acordeon";
 import { IconoDeMenu } from "./iconos-menu";
 import { MedirVista, EnlaceMedido, BotonGuardar } from "../medir";
@@ -93,34 +91,17 @@ export default async function Ficha({ slug }) {
   const direccion = direccionDe(r);
   const hayMenu = menus.length > 0;
 
-  // Cada carta llega a la lista con lo suyo: su icono, su línea, su página y
-  // su QR. El QR se dibuja aquí, en el servidor, y viaja pintado: son cuatro
-  // códigos que no cambian mientras la página está abierta, así que no hay por
-  // qué bajarle al navegador la librería que los genera.
-  //
-  // La marca de origen va en el enlace del código y no en el botón: es la
-  // única manera de saber después cuántos de los que abrieron esa carta la
-  // escanearon desde la mesa.
-  const archivoBase = `qr-${slug.replace(/\//g, "-")}`;
-  const cartas = await Promise.all(
-    menus.map(async (m) => {
-      const ruta = rutaMenuCarta(slug, m.id);
-      return {
-        id: m.id,
-        nombre: m.name,
-        descripcion: descripcionDeMenu(m),
-        href: ruta,
-        nombreArchivo: `${archivoBase}-${m.name ? aSegmento(m.name) || m.id : m.id}`,
-        icono: <IconoDeMenu nombre={m.name} ancho={24} />,
-        qr: (
-          <Qr
-            texto={await urlAbsoluta(`${ruta}?src=qr`)}
-            titulo={`Código QR de ${m.name} — ${r.name}`}
-          />
-        ),
-      };
-    }),
-  );
+  // Cada carta llega a la lista con lo suyo: su icono, su línea y su página.
+  // Ya no lleva QR: el código impreso es uno solo por restaurante y abre esta
+  // misma ficha, así que enseñar cuatro códigos aquí sería ofrecer cuatro
+  // vinilos que nadie va a pegar.
+  const cartas = menus.map((m) => ({
+    id: m.id,
+    nombre: m.name,
+    descripcion: descripcionDeMenu(m),
+    href: rutaMenuCarta(slug, m.id),
+    icono: <IconoDeMenu nombre={m.name} ancho={24} />,
+  }));
 
   // Una foto grande y el resto en tiras chicas. Antes las seis salían del mismo
   // tamaño y empujaban el menú fuera de la primera pantalla.
@@ -247,23 +228,22 @@ export default async function Ficha({ slug }) {
                   <p>
                     {r.summary
                       ? r.summary
-                      : `Escanea el código QR o descarga el menú que prefieras.`}
+                      : "Ábrelo aquí mismo: precios al día, sin descargar nada."}
                   </p>
                 </div>
               </div>
 
               <MenusAcordeon cartas={cartas} />
 
-              {/* El QR de todas las cartas juntas ya no se enseña: cada una
-                  tiene el suyo arriba. La página que abría —/<slug>/menu—
-                  sigue existiendo, así que los códigos ya impresos con esa
-                  dirección siguen funcionando. */}
-              {esDueno && menus.length > 1 ? (
+              {/* El QR no se pinta en la ficha pública: quien la está viendo
+                  ya llegó, y el que tiene que imprimirlo es el dueño. Vive en
+                  su panel, donde puede bajarlo en PNG y en SVG. */}
+              {esDueno ? (
                 <p className="ficha-menu-nota">
-                  Cada carta tiene su propio QR: el de bebidas para la barra, el de comida
-                  para la mesa. Todos apuntan a una dirección fija, así que no hay que
-                  reimprimirlos al cambiar platillos o precios. También los encuentras en{" "}
-                  <Link href={`/panel/${r.id}/menus`}>tus menús</Link>.
+                  Tu restaurante tiene un solo código QR y esta es la página que abre.
+                  No cambia nunca, así que se imprime una vez y sigue sirviendo aunque
+                  cambies de menús o de precios. Lo descargas en{" "}
+                  <Link href={`/panel/${r.id}/qr`}>tu QR</Link>.
                 </p>
               ) : null}
             </section>

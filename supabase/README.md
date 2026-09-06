@@ -47,10 +47,24 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   proposito: para saber si "tacoselgordo" esta libre hay que ver todas las
   fichas y la RLS solo deja ver las publicadas.
 - **El slug no cambia cuando el restaurante cambia de nombre.** Es la
-  direccion que esta impresa en el QR de la mesa, y el dueno no puede
-  reimprimir los viniles porque le corrigio una falta de ortografia al
-  letrero. `legacy_slug` guarda el slug anterior a la estandarizacion para que
+  direccion que la gente dicta por telefono y pega en Instagram, y el dueno no
+  puede avisarle a todos porque le corrigio una falta de ortografia al letrero.
+  Lo impreso ya no depende de el —para eso esta `qr_code`—, pero lo compartido
+  si. `legacy_slug` guarda el slug anterior a la estandarizacion para que
   `/r/<slug viejo>` siga redirigiendo a la ficha en vez de dar un 404.
+- **Un restaurante tiene un solo QR, y es para siempre.** `qr_code` es un
+  código corto y sin significado que la base reparte al dar de alta la ficha;
+  la ruta impresa es `/q/<codigo>` y de ahí redirige a la ficha. No apunta al
+  slug a propósito: el slug es texto derivado del nombre y de la colonia, y lo
+  que está pegado en una mesa no puede depender de una decisión de producto.
+  Un trigger (`qr_code_permanente`) lo pone al insertar y revienta si alguien
+  intenta cambiarlo, que es justo la garantía que hace que el vinil se imprima
+  una sola vez. El alfabeto no tiene o/0 ni i/l/1, para que el código se pueda
+  dictar. La traducción de código a dirección va por `restaurante_por_qr`, que
+  es `security definer` porque quien escanea no tiene sesión y el dueño tiene
+  que poder probar el suyo antes de publicar. Antes había un QR por carta: se
+  quitó porque cada carta nueva obligaba a reimprimir, y quien se sienta en la
+  mesa quiere el restaurante, no una carta en particular.
 - **Los eventos del panel son anónimos y se cuentan una vez por hora.**
   `restaurant_events` no guarda IP ni cuenta: `visitor` es un id aleatorio de
   una cookie httpOnly, y el índice `restaurant_events_sin_repetir` hace que
@@ -60,9 +74,10 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   `restaurant_metrics`, que calcula el periodo en la zona horaria del local
   porque "hoy" no significa lo mismo en Tijuana que en Cancún.
 - **Un evento puede tener carta.** `menu_id` la guarda cuando pasó en la
-  página de una sola (`/<slug>/menu/<id>`), que es la que abre el QR de esa
-  carta. Es nulo en todo lo demás —la ficha, el teléfono, la página con todas
-  las cartas— porque ahí no hay un menú en particular y forzarle uno sería
+  página de una sola (`/<slug>/menu/<id>`). Ya no hay un QR por carta, así que
+  `qr_scan` cae siempre en la ficha y el desglose por carta es de vistas. Es
+  nulo en todo lo demás —la ficha, el teléfono, la página con todas las
+  cartas— porque ahí no hay un menú en particular y forzarle uno sería
   inventar el dato. El índice que evita los duplicados lo incluye con un
   `coalesce`: en un índice único Postgres considera distintos a dos NULL, y sin
   el `coalesce` los eventos sin carta —casi todos— dejarían de deduplicarse.
@@ -149,6 +164,12 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   rompería las referencias existentes a cambio de nada.
 - `cuisines_created_by_fkey` sin índice: la columna se escribe al proponer una
   categoría y no se consulta por ella; el catálogo son decenas de filas.
+- `restaurante_por_qr` ejecutable por `anon` como `security definer`: quien
+  escanea el vinil no tiene sesión y el código puede ser de una ficha en
+  borrador —el dueño prueba el suyo antes de publicar—, así que la traducción
+  de código a dirección no puede pasar por la RLS. Responde con la dirección y
+  el estado de una ficha a quien ya tiene su código de siete caracteres en la
+  mano; que esa ficha se pueda ver o no lo sigue decidiendo la RLS de después.
 - `menu_es_de_la_ficha` ejecutable por `anon` como `security definer`: dentro
   de una política, la función tiene que poder correrla quien escribe el evento,
   que es cualquiera que abra una carta. Responde sí o no a "este menú visible

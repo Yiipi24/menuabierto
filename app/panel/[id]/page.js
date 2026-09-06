@@ -164,6 +164,23 @@ export default async function Editar({ params }) {
             </Link>
           </section>
 
+          {/* El QR va junto a los menús y no en una pantalla escondida: es lo
+              que el dueño imprime, y hasta que no lo imprime la ficha no llega
+              a la mesa. Aquí solo el atajo; el código grande, sus descargas y
+              los consejos de impresión viven en su propia pantalla. */}
+          <section className="bloque-qr">
+            <div className="bloque-qr-texto">
+              <h2 className="sub">Tu código QR</h2>
+              <p className="ayuda">
+                Uno solo para todo el restaurante, y siempre el mismo. Pégalo en
+                la mesa: quien lo escanea abre tu página con todos tus menús.
+              </p>
+            </div>
+            <Link className="btn" href={`/panel/${restaurante.id}/qr`}>
+              Ver y descargar el QR
+            </Link>
+          </section>
+
           <Fotos
             id={restaurante.id}
             fotos={conUrl}
