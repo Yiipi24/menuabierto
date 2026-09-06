@@ -2,21 +2,25 @@
 
 import { useState } from "react";
 
+import { CAMPO_TRAMPA, PROPS_TRAMPA } from "../lib/trampa";
+
 export default function Waitlist() {
   const [role, setRole] = useState("comensal");
   const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
   const [state, setState] = useState({ status: "idle", message: "" });
 
   async function onSubmit(event) {
     event.preventDefault();
+    // La trampa se lee del propio formulario y no de un estado de React: asi
+    // sigue cazando al bot que escribe el valor por JS.
+    const trampa = new FormData(event.currentTarget).get(CAMPO_TRAMPA) ?? "";
     setState({ status: "sending", message: "" });
 
     try {
       const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role, company }),
+        body: JSON.stringify({ email, role, [CAMPO_TRAMPA]: trampa }),
       });
       const body = await response.json();
 
@@ -62,16 +66,7 @@ export default function Waitlist() {
       </div>
 
       {/* Trampa para bots: invisible y fuera del recorrido de teclado. */}
-      <input
-        type="text"
-        name="company"
-        value={company}
-        onChange={(event) => setCompany(event.target.value)}
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
-        className="trap"
-      />
+      <input {...PROPS_TRAMPA} />
 
       <div className="form">
         <input

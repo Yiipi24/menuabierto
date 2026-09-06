@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { registrar } from "./actions";
+import { PROPS_TRAMPA } from "../../lib/trampa";
 
 const inicial = { status: "idle", message: "" };
 
@@ -94,14 +95,7 @@ export default function RegistroForm({ next = "/" }) {
       </label>
 
       {/* Trampa para bots: invisible y fuera del recorrido de teclado. */}
-      <input
-        type="text"
-        name="company"
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
-        className="trap"
-      />
+      <input {...PROPS_TRAMPA} />
 
       <button className="btn btn-block" type="submit" disabled={pending}>
         {pending ? "Creando cuenta…" : "Crear cuenta"}

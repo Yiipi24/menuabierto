@@ -2,17 +2,19 @@
 
 import { headers } from "next/headers";
 import { supabaseSession } from "../../lib/supabase";
+import { CAMPO_TRAMPA, trampaActivada } from "../../lib/trampa";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function pedirRecuperacion(_prevState, formData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const trap = String(formData.get("company") ?? "").trim();
+  const trap = formData.get(CAMPO_TRAMPA);
 
   if (!EMAIL.test(email) || email.length > 254) {
     return { status: "error", message: "Ese correo no se ve bien." };
   }
-  if (trap) {
+  if (trampaActivada(trap)) {
+    console.warn("recuperar: trampa de bots activada");
     return { status: "sent", message: "" };
   }
 

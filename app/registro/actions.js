@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { rutaInterna } from "../../lib/rutas";
 import { supabaseSession } from "../../lib/supabase";
+import { CAMPO_TRAMPA, trampaActivada } from "../../lib/trampa";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const INTENCIONES = new Set(["comensal", "restaurante"]);
@@ -15,7 +16,7 @@ export async function registrar(_prevState, formData) {
   const password = String(formData.get("password") ?? "");
   const intent = String(formData.get("intent") ?? "");
   const next = rutaInterna(formData.get("next"), "/");
-  const trap = String(formData.get("company") ?? "").trim();
+  const trap = formData.get(CAMPO_TRAMPA);
 
   if (nombre.length < 2) {
     return { status: "error", message: "Dinos cómo te llamas." };
@@ -34,7 +35,11 @@ export async function registrar(_prevState, formData) {
   if (!INTENCIONES.has(intent)) {
     return { status: "error", message: "Elige una de las dos opciones." };
   }
-  if (trap) {
+  if (trampaActivada(trap)) {
+    // Al bot le damos la misma pantalla que a una persona para que no aprenda
+    // a esquivar la trampa, pero lo dejamos escrito: si esto se dispara con
+    // gente de verdad, el alta desaparece sin rastro y hay que enterarse.
+    console.warn("registro: trampa de bots activada");
     return { status: "sent", message: "" };
   }
 
