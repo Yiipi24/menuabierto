@@ -119,6 +119,14 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   los platillos se muestran al final, sin agrupar. Por eso la coherencia entre
   platillo y sección la comprueba un trigger y no una llave compuesta: al
   borrar, esa llave pondría en nulo también `menu_id`, que es obligatorio.
+- **La descripción del menú se escribe o se arma sola.** `description` es la
+  línea que la ficha enseña bajo el nombre de cada carta. Nula no significa
+  vacía: significa "ármala con lo que la carta ya tiene" —sus secciones, o sus
+  primeros platillos cuando solo tiene una—, y por eso el panel la guarda como
+  nula cuando el dueño borra el campo en vez de como cadena vacía. Una casilla
+  más que se queda sin llenar no puede dejar la ficha sin la línea. El tope de
+  140 vive en los tres lados: el `maxLength` del formulario, la acción que
+  guarda y el CHECK de la columna.
 - **Un menú puede ser un archivo.** `kind = 'archivo'` con el PDF o la foto en
   el bucket `menus`, para quien ya tiene su carta hecha y no quiere
   capturarla. Bucket aparte del de fotos porque este acepta PDF y aquel no.

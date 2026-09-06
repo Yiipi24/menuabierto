@@ -34,7 +34,7 @@ export default async function EditarMenu({ params }) {
 
   const { data: menu } = await supabase
     .from("menus")
-    .select("id, name, kind, template, style, file_path, file_mime, is_visible")
+    .select("id, name, description, kind, template, style, file_path, file_mime, is_visible")
     .eq("id", menuId)
     .eq("restaurant_id", id)
     .maybeSingle();

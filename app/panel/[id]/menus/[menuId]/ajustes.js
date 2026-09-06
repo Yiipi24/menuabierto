@@ -12,7 +12,7 @@ import {
   PLANTILLAS,
   TIPOGRAFIAS,
 } from "../../../../../lib/plantillas";
-import { agruparPlatillos } from "../../../../../lib/menus";
+import { agruparPlatillos, descripcionDeMenu } from "../../../../../lib/menus";
 import { destacadosDe } from "../../../../destacados";
 import MenuPintado from "../../../../menu-render";
 import { guardarMenu } from "../actions";
@@ -60,7 +60,7 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
   // guardar, React repinta el formulario con el valor con el que se montó, así
   // que la plantilla recién elegida se veía volver a la anterior y no había
   // manera de saber cuál había quedado guardada.
-  const firma = `${menu.name}|${menu.kind}|${menu.template}|${menu.is_visible}|${JSON.stringify(menu.style ?? null)}`;
+  const firma = `${menu.name}|${menu.description ?? ""}|${menu.kind}|${menu.template}|${menu.is_visible}|${JSON.stringify(menu.style ?? null)}`;
   const [ultimaFirma, setUltimaFirma] = useState(firma);
   const [campos, setCampos] = useState(() => camposDe(menu));
 
@@ -69,7 +69,7 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
     setCampos(camposDe(menu));
   }
 
-  const { nombre, tipo, visible, template, estilo } = campos;
+  const { nombre, descripcion, tipo, visible, template, estilo } = campos;
   const cambiar = (parche) => setCampos((c) => ({ ...c, ...parche }));
   const cambiarEstilo = (parche) =>
     setCampos((c) => ({ ...c, estilo: { ...c.estilo, ...parche } }));
@@ -81,6 +81,15 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
     setCampos((c) => ({ ...c, template: slug, estilo: estiloDeMenu(slug, null) }));
 
   const grupos = agruparPlatillos(secciones, platillos);
+  // La misma línea que pondría la ficha si el campo se queda vacío. Se calcula
+  // sin la escrita a propósito: es lo que el dueño va a ver si la borra.
+  // `fileMime` va explícito: la base lo llama `file_mime` y sin él una carta
+  // en PDF se anunciaría como imagen.
+  const automatica = descripcionDeMenu({
+    kind: menu.kind,
+    fileMime: menu.file_mime,
+    grupos,
+  });
   const destacados = destacadosDe(restaurante.highlights);
   const sinCambios = firma === firmaDeCampos(campos);
 
@@ -105,6 +114,29 @@ export default function Ajustes({ id, menu, restaurante, secciones, platillos })
             required
             maxLength={60}
           />
+        </label>
+
+        {/* La línea que se ve bajo el nombre en la ficha. Vacía no deja hueco:
+            se arma con las secciones de la carta, y eso es lo que dice el
+            marcador de posición para que el dueño sepa qué va a salir si no
+            escribe nada. */}
+        <label className="campo">
+          <span>Descripción</span>
+          <input
+            type="text"
+            name="descripcion"
+            value={descripcion}
+            onChange={(e) => cambiar({ descripcion: e.target.value })}
+            maxLength={140}
+            placeholder={automatica || "Brisket, pulled pork y acompañamientos"}
+          />
+          <em className="campo-nota">
+            {descripcion.trim()
+              ? "Se ve bajo el nombre del menú en tu ficha."
+              : automatica
+                ? `Si la dejas vacía se pone: “${automatica}”.`
+                : "Se ve bajo el nombre del menú en tu ficha."}
+          </em>
         </label>
 
         <label className="campo">
@@ -369,6 +401,7 @@ function Guardar({ pending, sinCambios, state, alDeshacer }) {
 function camposDe(menu) {
   return {
     nombre: menu.name,
+    descripcion: menu.description ?? "",
     tipo: menu.kind,
     visible: menu.is_visible,
     template: menu.template,
@@ -379,7 +412,7 @@ function camposDe(menu) {
 // La misma firma que la del menú guardado, para saber si queda algo por
 // guardar sin comparar campo por campo.
 function firmaDeCampos(c) {
-  return `${c.nombre}|${c.tipo}|${c.template}|${c.visible}|${JSON.stringify(c.estilo)}`;
+  return `${c.nombre}|${c.descripcion}|${c.tipo}|${c.template}|${c.visible}|${JSON.stringify(c.estilo)}`;
 }
 
 // La muestra de cada plantilla es la carta de verdad en miniatura, no un

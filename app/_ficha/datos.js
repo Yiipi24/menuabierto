@@ -82,6 +82,7 @@ function armarMenus(supabase, menus, secciones, platillos) {
       return {
         id: m.id,
         name: m.name,
+        description: m.description,
         kind: m.kind,
         template: plantillaValida(m.template),
         // El estilo se pasa tal cual: quien lo pinta lo sanea con
@@ -141,7 +142,7 @@ export async function cargar(slug) {
     // la del día. Las ocultas son las que el dueño está preparando.
     supabase
       .from("menus")
-      .select("id, name, kind, template, style, file_path, file_mime, position")
+      .select("id, name, description, kind, template, style, file_path, file_mime, position")
       .eq("restaurant_id", r.id)
       .eq("is_visible", true)
       .order("position")
