@@ -1,4 +1,5 @@
 import { supabaseServer } from "../../../lib/supabase";
+import { CAMPO_TRAMPA, trampaActivada } from "../../../lib/trampa";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const ROLES = new Set(["comensal", "restaurante"]);
@@ -15,7 +16,7 @@ export async function POST(request) {
   const email = String(payload?.email ?? "").trim().toLowerCase();
   const role = String(payload?.role ?? "comensal");
   // Trampa para bots: el formulario deja este campo vacío y oculto.
-  const trap = String(payload?.company ?? "").trim();
+  const trap = payload?.[CAMPO_TRAMPA];
 
   if (!EMAIL.test(email) || email.length > 254) {
     return Response.json({ error: "Ese correo no se ve bien." }, { status: 400 });
@@ -25,7 +26,8 @@ export async function POST(request) {
   }
   // Un bot que llenó la trampa recibe el mismo "listo" que una persona, para
   // que no aprenda a evitarla. Simplemente no guardamos nada.
-  if (trap) {
+  if (trampaActivada(trap)) {
+    console.warn("waitlist: trampa de bots activada");
     return Response.json({ ok: true });
   }
 

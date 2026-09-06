@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { pedirRecuperacion } from "./actions";
+import { PROPS_TRAMPA } from "../../lib/trampa";
 
 const inicial = { status: "idle", message: "" };
 
@@ -37,14 +38,7 @@ export default function RecuperarForm() {
       </label>
 
       {/* Trampa para bots: invisible y fuera del recorrido de teclado. */}
-      <input
-        type="text"
-        name="company"
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
-        className="trap"
-      />
+      <input {...PROPS_TRAMPA} />
 
       <button className="btn btn-block" type="submit" disabled={pending}>
         {pending ? "Enviando…" : "Enviarme el enlace"}
