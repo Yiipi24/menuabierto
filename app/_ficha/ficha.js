@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
-import { qrRuta } from "../../lib/qr";
+import { urlAbsoluta } from "../../lib/url";
 import { rutaMenu as rutaDeMenu } from "../../lib/slug";
 import Nav from "../nav";
 import Resenas from "./resenas";
 import ComoLlegar from "./como-llegar";
+import Qr from "./qr";
 import QrDescarga from "./qr-descarga";
 import { MedirVista, EnlaceMedido, BotonGuardar } from "../medir";
 import {
@@ -38,36 +38,6 @@ import {
 } from "./iconos";
 
 export const dynamic = "force-dynamic";
-
-// El QR tiene que apuntar a un dominio, no a `/jcsmokehouse/menu`: quien lo
-// escanea lo hace desde otro aparato y una ruta relativa ahí no significa nada.
-// El host de la petición es el que sirve la página, así que funciona igual en
-// producción, en una vista previa y en local.
-async function urlAbsoluta(ruta) {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") || h.get("host");
-  if (!host) return ruta;
-  const protocolo = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
-  return `${protocolo}://${host}${ruta}`;
-}
-
-function Qr({ texto, titulo }) {
-  const { d, lado, margen } = qrRuta(texto);
-  return (
-    <svg
-      className="qr"
-      viewBox={`0 0 ${lado} ${lado}`}
-      role="img"
-      aria-label={titulo}
-      shapeRendering="crispEdges"
-    >
-      <rect width={lado} height={lado} fill="#ffffff" />
-      <g transform={`translate(${margen} ${margen})`} fill="var(--ink)">
-        <path d={d} />
-      </g>
-    </svg>
-  );
-}
 
 export async function metadataFicha(slug) {
   try {
@@ -278,12 +248,21 @@ export default async function Ficha({ slug }) {
                 <div>
                   {esDueno ? (
                     <>
-                      <h3>Este es el QR de tu menú</h3>
+                      <h3>Este es el QR de todas tus cartas</h3>
                       <p>
                         Descárgalo e imprímelo para la mesa, la entrada y la cuenta. Apunta
                         siempre a {rutaDeMenu(slug)}, así que no tienes que reimprimirlo cuando
                         cambies platillos o precios.
                       </p>
+                      {/* Con una sola carta este QR ya es el de esa carta; el
+                          aviso solo estorbaría. */}
+                      {menus.length > 1 ? (
+                        <p>
+                          Cada carta tiene además el suyo, para pegar el de bebidas en la
+                          barra y el de comida en la mesa. Están en{" "}
+                          <Link href={`/panel/${r.id}/menus`}>tus menús</Link>.
+                        </p>
+                      ) : null}
                     </>
                   ) : (
                     <>

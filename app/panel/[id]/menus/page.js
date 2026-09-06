@@ -64,7 +64,8 @@ export default async function Menus({ params }) {
 
         <p className="panel-lead">
           Cada menú es una carta aparte: la de comida, la de bebidas, la del
-          día. Puedes capturarla platillo por platillo o subir la tuya en PDF.
+          día. Puedes capturarla platillo por platillo o subir la tuya en PDF, y
+          cada una tiene su propio QR para imprimir donde toca.
           Tu plan {nombreDelPlan(restaurante)} incluye {cupo} menús para{" "}
           {restaurante.name}.
         </p>
@@ -126,6 +127,12 @@ export default async function Menus({ params }) {
                   <div className="fila-botones">
                     <Link className="btn-texto" href={`/panel/${id}/menus/${m.id}`}>
                       Editar
+                    </Link>
+                    {/* Cada carta tiene su QR y vive en su pantalla; el atajo
+                        está aquí porque el dueño llega a imprimir, no a
+                        editar. */}
+                    <Link className="btn-texto" href={`/panel/${id}/menus/${m.id}#qr`}>
+                      QR
                     </Link>
                     <form action={cambiarVisibilidadMenu}>
                       <input type="hidden" name="id" value={id} />

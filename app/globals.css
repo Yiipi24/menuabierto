@@ -2104,6 +2104,13 @@ section { scroll-margin-top: 84px; }
 
 .ficha-volver:hover { text-decoration: underline; }
 
+/* Las salidas de una carta suelta: volver a la ficha y, si el restaurante
+   tiene más de una, ver todas. El margen de abajo lo pone la fila para que dos
+   enlaces no dejen el doble de hueco que uno. */
+.carta-salidas { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 22px; }
+
+.carta-salidas .ficha-volver { margin-bottom: 0; }
+
 .ficha-encabezado h1 { font-size: 34px; }
 
 .ficha-tipo { color: var(--ink-soft); margin-top: 6px; }
@@ -4833,4 +4840,41 @@ img.menu-archivo-vista { min-height: 0; }
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
   html { scroll-behavior: auto; }
   .tarjeta:hover, .categoria:hover, .favorito:hover { transform: none; }
+}
+
+/* El QR de una carta, en su panel. Mismo bloque que el de la ficha pero en el
+   panel: el código a la izquierda con sus dos descargas y, al lado, para qué
+   sirve y qué le falta para poder imprimirse. */
+.panel-qr {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 26px 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--sombra);
+}
+
+.panel-qr-caja {
+  flex: none;
+  padding: 10px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.panel-qr-texto h2 { font-size: 18px; }
+
+.panel-qr-texto p { color: var(--ink-soft); font-size: 14px; margin-top: 8px; }
+
+/* El aviso de que el QR todavía da 404 no es una nota al pie: es la razón por
+   la que no hay que mandarlo a la imprenta hoy. */
+.panel-qr-aviso { color: var(--accent-hondo); font-weight: 600; }
+
+.panel-qr .qr-descarga-nota { max-width: 190px; text-align: center; font-size: 12px; }
+
+@media (max-width: 720px) {
+  .panel-qr { flex-direction: column; align-items: flex-start; }
 }
