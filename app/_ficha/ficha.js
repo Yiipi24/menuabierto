@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
-import { rutaMenuCarta } from "../../lib/slug";
+import { rutaFicha, rutaMenuCarta } from "../../lib/slug";
 import { descripcionDeMenu } from "../../lib/menus";
 import Nav from "../nav";
 import Resenas from "./resenas";
+import Seguir from "../_social/seguir";
+import Historias from "../_social/historias";
+import Publicaciones from "../_social/publicaciones";
+import { cargarSocial, recogerHistoriasViejas } from "../_social/datos";
 import ComoLlegar from "./como-llegar";
 import MenusAcordeon from "./menus-acordeon";
 import { IconoDeMenu } from "./iconos-menu";
@@ -24,6 +28,7 @@ import { IconoRed } from "../redes-iconos";
 import { IconoPago } from "../pagos-iconos";
 import { IconoServicio } from "../servicios-iconos";
 import {
+  IconoChevron,
   IconoCubiertos,
   IconoEscudo,
   IconoEstrella,
@@ -88,6 +93,30 @@ export default async function Ficha({ slug }) {
   // en una meta ("te falta una para Catador") en vez de un cuadro de texto.
   const misResenas = esDueno ? 0 : await resenasEscritas(usuario?.id ?? null);
 
+  // Historias, publicaciones y mi relación con la ficha. Va aparte de `cargar`
+  // porque `cargar` corre con el cliente anónimo —la ficha es igual para
+  // todos— y esto depende de quién mira. Un fallo aquí no tumba la página: los
+  // horarios y el menú son lo que la persona vino a ver.
+  let social = {
+    historias: [],
+    publicaciones: [],
+    hayMasPublicaciones: false,
+    sigo: false,
+    alerta: false,
+  };
+  try {
+    social = await cargarSocial(r.id, usuario?.id ?? null);
+  } catch (error) {
+    console.error("social de la ficha", error);
+  }
+
+  // La barredora de historias caducadas viaja de aventón con las visitas: es
+  // donde hay tráfico, y así no hace falta un cron para borrar filas que las
+  // lecturas ya esconden.
+  recogerHistoriasViejas(usuario?.id ?? null);
+
+  const volverAqui = rutaFicha(slug);
+
   const direccion = direccionDe(r);
   const hayMenu = menus.length > 0;
 
@@ -150,22 +179,49 @@ export default async function Ficha({ slug }) {
                 {cocinas.length ? cocinas.join(" · ") : r.summary || "Restaurante"}
                 {r.price_level ? ` · ${PRECIO[r.price_level]}` : ""}
               </p>
+              {/* La calificación y el botón que baja a las reseñas van en su
+                  propio renglón, arriba de los seguidores: son dos preguntas
+                  distintas —"¿está bueno?" y "¿lo sigo?"— y mezcladas en una
+                  sola fila ninguna de las dos se leía. El scroll suave hasta
+                  #resenas lo hace el `scroll-behavior` del documento, así que
+                  esto sigue siendo un ancla y funciona sin JavaScript. */}
+              <p className="ficha-meta ficha-meta-calificacion">
+                {r.rating_count > 0 && r.rating_avg ? (
+                  <>
+                    <a className="ficha-resenas-enlace" href="#resenas">
+                      <IconoEstrella ancho={17} />
+                      <strong>{r.rating_avg}</strong> · {r.rating_count}{" "}
+                      {r.rating_count === 1 ? "reseña" : "reseñas"}
+                    </a>
+                    <a className="ficha-ver-resenas" href="#resenas">
+                      Ver reseñas
+                      <IconoChevron ancho={16} />
+                    </a>
+                  </>
+                ) : (
+                  <a className="ficha-sinresenas" href="#resenas">
+                    Aún sin reseñas · escribe la primera
+                  </a>
+                )}
+              </p>
+
+              <p className="ficha-meta ficha-meta-social">
+                <Seguir
+                  restauranteId={r.id}
+                  nombre={r.name}
+                  seguidores={r.followers_count ?? 0}
+                  sigo={social.sigo}
+                  alerta={social.alerta}
+                  volverA={volverAqui}
+                />
+              </p>
+
               <p className="ficha-meta">
                 {abierto ? (
                   <span className="ficha-abierto">Abierto ahora</span>
                 ) : horarios.length ? (
                   <span className="ficha-cerrado">Cerrado ahora</span>
                 ) : null}
-                {r.rating_count > 0 && r.rating_avg ? (
-                  <a className="ficha-resenas-enlace" href="#resenas">
-                    ★ {r.rating_avg} · {r.rating_count}{" "}
-                    {r.rating_count === 1 ? "reseña" : "reseñas"}
-                  </a>
-                ) : (
-                  <a className="ficha-sinresenas" href="#resenas">
-                    Aún sin reseñas · escribe la primera
-                  </a>
-                )}
                 <BotonGuardar slug={slug} nombre={r.name} />
               </p>
 
@@ -196,6 +252,12 @@ export default async function Ficha({ slug }) {
             </div>
           ) : null}
 
+          {/* Las historias van entre la galería y la dirección: son el "qué hay
+              hoy" y se miran de pasada, antes de decidir si vale la pena leer
+              la dirección. Si no hay ninguna, el componente no pinta nada y la
+              ficha queda como estaba. */}
+          <Historias historias={social.historias} nombre={r.name} volverA={volverAqui} />
+
           {/* La dirección va una sola vez y de lado a lado: es lo primero que
               se busca después del nombre, y antes salía repetida en la misma
               banda. */}
@@ -219,33 +281,28 @@ export default async function Ficha({ slug }) {
               caber en una pantalla aunque el restaurante tenga cuatro. */}
           {hayMenu ? (
             <section className="ficha-menu-cta">
-              <div className="ficha-menu-texto">
-                <span className="ficha-menu-icono">
-                  <IconoCubiertos ancho={26} />
-                </span>
-                <div>
-                  <h2>{menus.length > 1 ? "Consulta nuestros menús" : "Consulta nuestro menú"}</h2>
-                  <p>
-                    {r.summary
-                      ? r.summary
-                      : "Ábrelo aquí mismo: precios al día, sin descargar nada."}
-                  </p>
-                </div>
-              </div>
-
-              <MenusAcordeon cartas={cartas} />
-
-              {/* El QR no se pinta en la ficha pública: quien la está viendo
-                  ya llegó, y el que tiene que imprimirlo es el dueño. Vive en
-                  su panel, donde puede bajarlo en PNG y en SVG. */}
-              {esDueno ? (
-                <p className="ficha-menu-nota">
-                  Tu restaurante tiene un solo código QR y esta es la página que abre.
-                  No cambia nunca, así que se imprime una vez y sigue sirviendo aunque
-                  cambies de menús o de precios. Lo descargas en{" "}
-                  <Link href={`/panel/${r.id}/qr`}>tu QR</Link>.
-                </p>
-              ) : null}
+              <MenusAcordeon
+                cartas={cartas}
+                titulo={menus.length > 1 ? "Consulta nuestros menús" : "Consulta nuestro menú"}
+                pista={
+                  r.summary ? r.summary : "Ábrelo aquí mismo: precios al día, sin descargar nada."
+                }
+                icono={<IconoCubiertos ancho={26} />}
+                nota={
+                  /* El QR no se pinta en la ficha pública: quien la está
+                     viendo ya llegó, y el que tiene que imprimirlo es el
+                     dueño. Vive en su panel, donde puede bajarlo en PNG y en
+                     SVG. */
+                  esDueno ? (
+                    <p className="ficha-menu-nota">
+                      Tu restaurante tiene un solo código QR y esta es la página que abre.
+                      No cambia nunca, así que se imprime una vez y sigue sirviendo aunque
+                      cambies de menús o de precios. Lo descargas en{" "}
+                      <Link href={`/panel/${r.id}/qr`}>tu QR</Link>.
+                    </p>
+                  ) : null
+                }
+              />
             </section>
           ) : (
             <section className="ficha-menu-cta ficha-menu-cta-vacia">
@@ -260,6 +317,23 @@ export default async function Ficha({ slug }) {
               </div>
             </section>
           )}
+
+          {/* Las novedades van justo después del menú: quien ya sabe qué se
+              come aquí es el que quiere ver lo de esta semana. Si el
+              restaurante todavía no publica nada, la sección no existe en vez
+              de salir vacía. */}
+          {social.publicaciones.length ? (
+            <section className="novedades" id="novedades">
+              <h2 className="novedades-titulo">Novedades de {r.name}</h2>
+              <Publicaciones
+                publicaciones={social.publicaciones}
+                restauranteId={r.id}
+                nombre={r.name}
+                volverA={volverAqui}
+                hayMas={social.hayMasPublicaciones}
+              />
+            </section>
+          ) : null}
 
           {descripcion ? <p className="ficha-desc">{descripcion}</p> : null}
 
