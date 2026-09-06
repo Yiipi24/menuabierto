@@ -3641,40 +3641,6 @@ img.menu-archivo-vista { min-height: 0; }
   gap: 10px;
 }
 
-/* El QR con sus descargas: el código a la izquierda y, a su derecha, los dos
-   formatos con la nota debajo. `QrDescarga` pinta los tres hermanos en fila
-   —código, botones, nota— y la rejilla los acomoda sin tocar su marcado. */
-.menu-acordeon-panel .qr-descarga {
-  margin-left: auto;
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-template-areas:
-    "codigo botones"
-    "codigo nota";
-  align-items: center;
-  gap: 6px 18px;
-}
-
-.menu-acordeon-qr {
-  grid-area: codigo;
-  padding: 8px;
-  border-radius: 12px;
-  background: #fff;
-  border: 1px solid var(--line);
-}
-
-.menu-acordeon-panel .qr-descarga-botones { grid-area: botones; }
-
-.menu-acordeon-panel .qr-descarga-nota {
-  grid-area: nota;
-  max-width: 200px;
-  margin: 0;
-  text-align: left;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--ink-soft);
-}
-
 .ficha-menu-nota {
   color: var(--ink-soft);
   font-size: 13.5px;
@@ -3689,21 +3655,6 @@ img.menu-archivo-vista { min-height: 0; }
   }
 
   .menu-acordeon-boton { justify-content: center; }
-
-  /* En un teléfono el código se pone en medio con sus botones debajo: en fila
-     no caben sin encoger el QR por debajo de lo que una cámara lee. */
-  .menu-acordeon-panel .qr-descarga {
-    margin-left: 0;
-    justify-items: center;
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "codigo"
-      "botones"
-      "nota";
-    gap: 12px;
-  }
-
-  .menu-acordeon-panel .qr-descarga-nota { text-align: center; max-width: none; }
 }
 
 /* En puntos por pulgada el QR es una rejilla, no un dibujo: sin el tamaño fijo
@@ -4973,41 +4924,165 @@ img.menu-archivo-vista { min-height: 0; }
   .tarjeta:hover, .categoria:hover, .favorito:hover { transform: none; }
 }
 
-/* El QR de una carta, en su panel. Mismo bloque que el de la ficha pero en el
-   panel: el código a la izquierda con sus dos descargas y, al lado, para qué
-   sirve y qué le falta para poder imprimirse. */
-.panel-qr {
+/* La pantalla del QR del restaurante. Se diseña para el teléfono primero: el
+   dueño la abre casi siempre desde la barra, con el celular en una mano, para
+   mandarle el archivo a quien le hace las lonas.
+
+   El código va en una hoja blanca centrada y con aire alrededor, como se va a
+   ver impreso: el marco en blanco es parte del código y una tarjeta que lo
+   apriete invita a recortarlo. */
+.qr-hoja {
+  display: grid;
+  place-items: center;
+  margin: 22px 0 26px;
+  padding: 26px 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--sombra);
+}
+
+.qr-hoja .qr-descarga { gap: 18px; }
+
+.qr-hoja-caja {
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff;
+}
+
+/* Grande de verdad: es el que el dueño va a apuntar con su propio celular
+   para comprobar que lleva a donde debe. El tope en `vw` lo mantiene entero
+   en una pantalla de 320 px sin obligar a nadie a hacer scroll horizontal. */
+.qr-hoja .qr { width: min(280px, 70vw); height: min(280px, 70vw); }
+
+.qr-hoja .qr-descarga-botones { gap: 12px; }
+
+.qr-hoja .qr-descarga-botones .btn-linea {
+  padding: 11px 20px;
+  font-size: 14.5px;
+}
+
+.qr-hoja .qr-descarga-nota {
+  max-width: 260px;
+  margin: 0;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.qr-bloque { padding: 20px; margin-bottom: 16px; }
+
+.qr-bloque h2 { font-size: 17px; }
+
+.qr-parrafo { color: var(--ink-soft); font-size: 14px; line-height: 1.6; margin-top: 10px; }
+
+/* La dirección y su botón de copiar. En el teléfono se apilan: un código de
+   una línea y un botón al lado no caben sin partir la dirección a la mitad. */
+.qr-enlace {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-warm);
+}
+
+.qr-enlace code {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 14px;
+  word-break: break-all;
+  color: var(--ink);
+}
+
+.qr-enlace .btn-linea { flex: none; padding: 8px 14px; font-size: 13px; }
+
+.qr-consejos {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.qr-consejos strong { color: var(--ink); }
+
+/* Lo que impide imprimirlo hoy no es una nota al pie: es la razón por la que
+   no hay que mandar nada a la imprenta todavía. */
+.qr-aviso { border-color: var(--accent); }
+
+.qr-aviso ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* La dirección de una carta suelta, en el panel de ese menú. Ya no lleva QR
+   —el código es uno solo y es del restaurante—, así que es una línea con su
+   enlace y el atajo a donde sí vive el código. */
+.panel-enlace-carta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
   margin: 26px 0;
-  padding: 22px;
+  padding: 20px 22px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fff;
   box-shadow: var(--sombra);
 }
 
-.panel-qr-caja {
-  flex: none;
-  padding: 10px;
-  border-radius: 12px;
-  background: #fff;
+.panel-enlace-carta h2 { font-size: 17px; }
+
+.panel-enlace-carta p { font-size: 14px; margin-top: 8px; word-break: break-all; }
+
+.panel-enlace-nota { color: var(--ink-soft); font-size: 13px; }
+
+.panel-enlace-carta .btn-linea { flex: none; }
+
+/* El atajo al QR desde la pantalla de edición: mismo trato que el bloque de
+   menús que tiene encima. */
+.bloque-qr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  padding: 20px 22px;
   border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper-warm);
 }
 
-.panel-qr-texto h2 { font-size: 18px; }
+.bloque-qr-texto { flex: 1 1 260px; }
 
-.panel-qr-texto p { color: var(--ink-soft); font-size: 14px; margin-top: 8px; }
+.bloque-qr .btn { flex: none; }
 
-/* El aviso de que el QR todavía da 404 no es una nota al pie: es la razón por
-   la que no hay que mandarlo a la imprenta hoy. */
-.panel-qr-aviso { color: var(--accent-hondo); font-weight: 600; }
+@media (max-width: 560px) {
+  .panel-enlace-carta,
+  .bloque-qr {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.panel-qr .qr-descarga-nota { max-width: 190px; text-align: center; font-size: 12px; }
+  /* En columna, el `flex-basis` del texto se lee como alto y dejaba un hueco
+     de 260 px entre la explicación y el botón. */
+  .bloque-qr-texto { flex: 0 1 auto; }
 
-@media (max-width: 720px) {
-  .panel-qr { flex-direction: column; align-items: flex-start; }
+  .panel-enlace-carta .btn-linea,
+  .bloque-qr .btn { text-align: center; justify-content: center; }
 }
 
 /* El desglose por carta: cuánto se vio cada una y cuánto se escaneó su QR.

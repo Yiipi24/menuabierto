@@ -3,19 +3,16 @@
 import Link from "next/link";
 import { useId, useState } from "react";
 import { IconoFlecha, IconoChevron } from "./iconos";
-import QrDescarga from "./qr-descarga";
 
-// La lista de cartas de la ficha. Antes había un solo bloque con un botón y un
-// QR para todo el restaurante; con varias cartas eso no alcanzaba, porque el
-// QR de la barra y el de la mesa no son el mismo código.
+// La lista de cartas de la ficha.
 //
 // Es un acordeón y no cuatro bloques abiertos porque un restaurante con cuatro
 // cartas empujaría los horarios y el contacto fuera de la pantalla. Abierta
 // queda la primera: es la principal y la que casi siempre se busca.
 //
-// El QR llega pintado desde el servidor —en `carta.qr`— para no bajar al
-// navegador la librería que lo dibuja: son cuatro códigos que no cambian nunca
-// mientras la página está abierta.
+// Aquí ya no hay códigos QR. El del restaurante es uno solo, abre esta misma
+// ficha y lo imprime el dueño desde su panel: enseñárselo a quien ya está en
+// la página no le sirve de nada.
 export default function MenusAcordeon({ cartas }) {
   const base = useId();
   const [abierta, setAbierta] = useState(cartas[0]?.id ?? null);
@@ -51,18 +48,13 @@ export default function MenusAcordeon({ cartas }) {
               </span>
             </button>
 
-            {/* `hidden` y no desmontar: el panel cerrado no se pinta, pero el
-                QR ya viene del servidor y volver a montarlo en cada clic haría
-                parpadear la imagen. */}
+            {/* `hidden` y no desmontar: el panel cerrado no se pinta, pero
+                conserva su estado y no vuelve a montarse en cada clic. */}
             <div className="menu-acordeon-panel" id={panel} hidden={!abierto}>
               <Link className="btn menu-acordeon-boton" href={carta.href}>
                 Ver menú
                 <IconoFlecha ancho={19} />
               </Link>
-
-              <QrDescarga nombreArchivo={carta.nombreArchivo}>
-                <div className="menu-acordeon-qr">{carta.qr}</div>
-              </QrDescarga>
             </div>
           </li>
         );

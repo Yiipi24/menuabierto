@@ -5,6 +5,7 @@ import BorrarRestaurante from "./borrar";
 import {
   IconoLapiz,
   IconoCarta,
+  IconoQr,
   IconoEstrella,
   IconoOjo,
   IconoOjoTachado,
@@ -30,6 +31,10 @@ export default function AccionesDelRestaurante({ restaurante }) {
         <Link className="btn-linea" href={`/panel/${restaurante.id}/menus`}>
           <IconoCarta ancho={17} />
           Menús
+        </Link>
+        <Link className="btn-linea" href={`/panel/${restaurante.id}/qr`}>
+          <IconoQr ancho={17} />
+          Su QR
         </Link>
         <Link className="btn-linea" href={`${rutaFicha(restaurante.slug)}#resenas`}>
           <IconoEstrella ancho={17} />

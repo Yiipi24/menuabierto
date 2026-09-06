@@ -2,10 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../../../lib/supabase";
 import { rutaMenuCarta } from "../../../../../lib/slug";
-import { urlAbsoluta } from "../../../../../lib/url";
 import Brand from "../../../../brand";
-import Qr from "../../../../_ficha/qr";
-import QrDescarga from "../../../../_ficha/qr-descarga";
 import Ajustes from "./ajustes";
 import Archivo from "./archivo";
 import Editor from "./editor";
@@ -60,16 +57,11 @@ export default async function EditarMenu({ params }) {
     ? supabase.storage.from(BUCKET_MENUS).getPublicUrl(menu.file_path).data.publicUrl
     : null;
 
-  // Cada carta tiene su propia dirección y, por lo tanto, su propio QR: el de
-  // bebidas se pega en la barra y el de comida en la mesa, y cada uno abre solo
-  // lo suyo. La marca de origen viaja en el enlace para que el escaneo se
-  // cuente como tal en el tablero.
+  // La carta tiene su propia dirección y se puede compartir tal cual, pero ya
+  // no tiene su propio QR: el código impreso es uno solo por restaurante y
+  // abre la ficha, que es de donde el comensal elige la carta que quiere.
   const rutaCarta = rutaMenuCarta(restaurante.slug, menu.id);
-  const urlCarta = await urlAbsoluta(`${rutaCarta}?src=qr`);
-  // El QR apunta a una carta visible de una ficha publicada. Mientras falte
-  // cualquiera de las dos cosas el código funciona, pero quien lo escanee se
-  // topa con un 404: vale más avisarlo antes de mandarlo a la imprenta.
-  const listoParaImprimir = menu.is_visible && restaurante.status === "publicado";
+  const visibleParaTodos = menu.is_visible && restaurante.status === "publicado";
 
   return (
     <div className="panel-wrap">
@@ -103,33 +95,29 @@ export default async function EditarMenu({ params }) {
           platillos={platillos ?? []}
         />
 
-        <section className="panel-qr" id="qr">
-          <QrDescarga nombreArchivo={`qr-${restaurante.slug.replace(/\//g, "-")}-${menu.id}`}>
-            <div className="panel-qr-caja">
-              <Qr texto={urlCarta} titulo={`Código QR de ${menu.name}`} />
-            </div>
-          </QrDescarga>
-
-          <div className="panel-qr-texto">
-            <h2>El QR de esta carta</h2>
+        <section className="panel-enlace-carta">
+          <div>
+            <h2>La dirección de esta carta</h2>
             <p>
-              Abre {menu.name} y nada más. Apunta siempre a {rutaCarta}, así que
-              no hay que reimprimirlo cuando cambies platillos o precios.
-            </p>
-            {listoParaImprimir ? (
-              <p>
+              {visibleParaTodos ? (
                 <a href={rutaCarta} target="_blank" rel="noopener noreferrer">
-                  Ver la carta como la ve quien lo escanea
+                  {rutaCarta}
                 </a>
-              </p>
-            ) : (
-              <p className="panel-qr-aviso">
-                {menu.is_visible
-                  ? "Tu ficha todavía no está publicada, así que este QR da 404. Publícala antes de imprimirlo."
-                  : "Este menú está oculto, así que el QR da 404. Muéstralo antes de imprimirlo."}
-              </p>
-            )}
+              ) : (
+                rutaCarta
+              )}
+            </p>
+            <p className="panel-enlace-nota">
+              {visibleParaTodos
+                ? "Sirve para compartirla suelta, por WhatsApp o en tus redes."
+                : menu.is_visible
+                  ? "Tu ficha todavía no está publicada, así que esta dirección da 404 para quien no seas tú."
+                  : "Este menú está oculto, así que su dirección da 404 hasta que lo muestres."}
+            </p>
           </div>
+          <Link className="btn-linea" href={`/panel/${id}/qr`}>
+            El QR del restaurante
+          </Link>
         </section>
 
         {menu.kind === "archivo" ? (

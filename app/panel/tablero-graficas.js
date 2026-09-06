@@ -345,13 +345,16 @@ export function FuentesDeTrafico({ fuentes, total }) {
 }
 
 /**
- * Qué carta se está viendo y cuál QR se está escaneando.
+ * Qué carta se está viendo.
  *
  * Solo aparece cuando el restaurante tiene más de una carta: con una sola, sus
  * números son los de la ficha y la tarjeta repetiría lo de arriba. Las que van
- * en cero se quedan en la lista a propósito —son las que hay que mover— y
- * cada una lleva el enlace a su QR, que es lo que el dueño va a querer hacer
- * en cuanto vea el cero.
+ * en cero se quedan en la lista a propósito: son las que hay que mover.
+ *
+ * Ya no se cuentan escaneos por carta. El QR es uno solo y abre la ficha, así
+ * que el escaneo pasa antes de que el comensal elija carta: sale arriba, en
+ * las fuentes de tráfico, y desglosarlo aquí sería repartir un dato que no
+ * existe.
  */
 export function Cartas({ cartas, restauranteId }) {
   if (!cartas.length) return null;
@@ -366,20 +369,17 @@ export function Cartas({ cartas, restauranteId }) {
           <li key={c.id}>
             <div className="carta-fila">
               <span className="carta-nombre">{c.nombre}</span>
-              <Link className="btn-texto" href={`/panel/${restauranteId}/menus/${c.id}#qr`}>
-                Ver su QR
+              <Link className="btn-texto" href={`/panel/${restauranteId}/menus/${c.id}`}>
+                Editarla
               </Link>
             </div>
             <div className="lugar-barra">
               <span style={{ width: `${c.porcentaje}%` }} />
             </div>
             <p className="carta-meta">
-              {NUMERO.format(c.vistas)} {c.vistas === 1 ? "vista" : "vistas"} ·{" "}
-              {c.escaneos === 0
-                ? "sin escaneos de su QR"
-                : `${NUMERO.format(c.escaneos)} ${
-                    c.escaneos === 1 ? "escaneo" : "escaneos"
-                  } de su QR`}
+              {c.vistas === 0
+                ? "Nadie la ha abierto en este periodo"
+                : `${NUMERO.format(c.vistas)} ${c.vistas === 1 ? "vista" : "vistas"}`}
             </p>
           </li>
         ))}
