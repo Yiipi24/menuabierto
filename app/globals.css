@@ -613,10 +613,6 @@ section { scroll-margin-top: 84px; }
 
 .panel-top-derecha { display: flex; align-items: center; gap: 18px; }
 
-.panel-correo { font-size: 14.5px; color: var(--ink-faint); }
-
-@media (max-width: 560px) { .panel-correo { display: none; } }
-
 .panel-main { padding: 40px 24px 80px; }
 
 .panel-angosto { max-width: 620px; }
@@ -3834,7 +3830,94 @@ img.menu-archivo-vista { min-height: 0; }
    1080px del resto del sitio no caben sin apretarse. */
 .panel-tablero { max-width: 1320px; }
 
-.panel-usuario { display: inline-flex; align-items: center; gap: 10px; }
+/* ---------- menú de la sesión ---------- */
+
+/* El avatar de la barra y lo que cuelga de él. Vive aquí, en la zona del
+   panel, porque de aquí salió; lo usan igual el menú público y la cabecera del
+   panel. */
+.menu-usuario { position: relative; display: inline-flex; }
+
+.menu-usuario-boton {
+  display: inline-flex;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--ink-soft);
+}
+
+.menu-usuario-boton:hover .panel-avatar,
+.menu-usuario:focus-within .panel-avatar {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* La capa es el área sensible: el hueco entre el avatar y la tarjeta va como
+   relleno suyo para que el puntero pueda cruzarlo sin que el menú se cierre. */
+.menu-usuario-capa {
+  position: absolute;
+  z-index: 60;
+  top: 100%;
+  right: 0;
+  padding-top: 10px;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+}
+
+/* Con el puntero encima o con el foco dentro: lo segundo es lo que deja
+   llegar con el teclado, tabulando desde el avatar. */
+.menu-usuario:hover .menu-usuario-capa,
+.menu-usuario:focus-within .menu-usuario-capa {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.menu-usuario-lista {
+  min-width: 208px;
+  padding: 6px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(31, 24, 16, 0.14);
+}
+
+/* El correo no es una opción: no se pulsa, solo contesta con qué cuenta estás
+   mirando. Se recorta si es largo en vez de estirar el menú. */
+.menu-usuario-correo {
+  padding: 8px 12px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+.menu-usuario .menu-usuario-lista a,
+.menu-usuario .menu-usuario-lista button {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu-usuario .menu-usuario-lista a:hover,
+.menu-usuario .menu-usuario-lista button:hover {
+  background: var(--paper-warm);
+  color: var(--ink);
+}
 
 .panel-avatar {
   display: grid;
@@ -3844,6 +3927,7 @@ img.menu-archivo-vista { min-height: 0; }
   border-radius: 999px;
   border: 1px solid var(--line);
   color: var(--ink-soft);
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
 /* La única definición: antes había otra más arriba, de cuando el panel era una
@@ -4602,6 +4686,7 @@ img.menu-archivo-vista { min-height: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .kpi:hover { transform: none; }
+  .menu-usuario-capa { transition: none; transform: none; }
   .fm-chevron { transition: none; }
 }
 
