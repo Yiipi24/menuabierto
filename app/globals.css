@@ -7186,3 +7186,95 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   .feed-encabezado h1 { font-size: 27px; }
 
 }
+
+/* ---------- páginas de comida y zona (/comida) ---------- */
+
+.listado { padding: 26px 0 60px; }
+
+/* Las migas no son adorno: en una página a la que se llega desde Google, son
+   lo único que dice dónde está uno parado y por dónde se sube. */
+.migas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  margin-bottom: 18px;
+}
+
+.migas a { color: var(--ink-soft); text-decoration: none; }
+
+.migas a:hover { color: var(--accent); text-decoration: underline; }
+
+.migas b { font-weight: 650; color: var(--ink); }
+
+.migas-sep { margin: 0 6px; color: var(--ink-faint); }
+
+.listado-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.listado-cabeza h1 {
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.listado-intro {
+  color: var(--ink-soft);
+  font-size: 16.5px;
+  max-width: 62ch;
+}
+
+/* La foto de la categoría, o su emoji: la misma marca que la loseta de la
+   portada, para que la página se reconozca como la que se acaba de pulsar. */
+.listado-marca {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--categoria-tono, #d9a86a);
+  font-size: 30px;
+}
+
+.listado-marca img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.listado-afinar { margin: 26px 0 8px; font-size: 15px; }
+
+.listado-afinar a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+.listado-afinar a:hover { text-decoration: underline; }
+
+/* "Tacos en otras zonas" y "Otras cocinas en Coyoacán". Son los enlaces que
+   dejan recorrer el directorio sin volver a la portada, y por los que un
+   rastreador encuentra una zona nueva sin esperar al sitemap. */
+.vecinas { margin-top: 34px; }
+
+.vecinas h2 { font-size: 19px; font-weight: 800; margin-bottom: 14px; }
+
+.vecinas-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.vecinas-cuenta {
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip:hover .vecinas-cuenta { color: inherit; }
+
+@media (max-width: 560px) {
+  .listado-cabeza { gap: 12px; }
+
+  .listado-marca { width: 56px; height: 56px; border-radius: 12px; font-size: 22px; }
+
+  .listado-intro { font-size: 15.5px; }
+}

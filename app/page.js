@@ -1,30 +1,51 @@
 import Link from "next/link";
 import { fotoCocina, fotoEncabezado } from "../lib/fotos";
-import { rutaFicha, rutaMenu } from "../lib/slug";
-import { currentUser, supabaseServer, supabaseSession } from "../lib/supabase";
+import { supabaseServer } from "../lib/supabase";
+import { conFotos, guardadosDe } from "../lib/busqueda";
+import { catalogoComida, rutaCocina } from "../lib/zonas";
 import Nav from "./nav";
 import Buscador from "./buscador";
 import Orden from "./orden";
 import Waitlist from "./waitlist";
-import Favorito from "./favorito";
 import Filtros, { hrefCon, listaDe } from "./filtros";
 import MapaResultados from "./mapa-resultados";
+import Pie from "./pie";
+import Tarjeta, { PRECIO } from "./tarjeta";
 import { iconoCocina, tonoCocina } from "./cocinas";
 
 // La portada es la búsqueda: quien llega quiere ver dónde comer, no leer
 // sobre el producto. El texto de venta queda debajo, para quien baje.
-export const metadata = {
-  title: "Menú Abierto — encuentra dónde comer, y haz que te encuentren",
-  description:
-    "Busca restaurantes por colonia, zona, municipio o estado, o encuentra los más cercanos a ti, con su menú y sus precios de verdad.",
-};
+const TITULO = "Menú Abierto — encuentra dónde comer, y haz que te encuentren";
+const DESCRIPCION =
+  "Busca restaurantes por colonia, zona, municipio o estado, o encuentra los más cercanos a ti, con su menú y sus precios de verdad.";
+
+// La portada filtrada no se indexa, y no es un descuido: `/?cocina=tacos&
+// lugar=Coyoacán` enseña lo mismo que /comida/tacos/coyoacan, y las dos
+// compitiendo por la misma búsqueda es el sitio partiéndose la fuerza en dos.
+// La página de zona es la que tiene título, texto y enlaces; esta es la
+// herramienta, con su mapa, su orden y sus siete filtros combinables, y sus
+// combinaciones no son miles de páginas que un buscador deba recorrer.
+//
+// `follow` va puesto: no se indexa la búsqueda filtrada, pero sí se siguen sus
+// enlaces, que llevan a las fichas.
+export async function generateMetadata({ searchParams }) {
+  const sp = await searchParams;
+  const filtrada = Object.entries(sp ?? {}).some(
+    ([clave, valor]) => clave !== "vista" && typeof valor === "string" && valor !== "",
+  );
+
+  return {
+    title: TITULO,
+    description: DESCRIPCION,
+    alternates: { canonical: "/" },
+    robots: filtrada ? { index: false, follow: true } : undefined,
+  };
+}
 
 // Se resuelve en cada visita, y no hace falta decirlo: la búsqueda depende de
 // lo que traiga la URL y el menú de arriba de quién esté firmado, así que Next
 // ya la trata como dinámica sin la directiva.
 
-const BUCKET_FOTOS = "restaurantes";
-const PRECIO = ["", "$", "$$", "$$$", "$$$$"];
 const RADIO_M = 15000;
 
 // Seis losetas llenan una fila sin que la sección se coma la página.
@@ -75,25 +96,6 @@ const STEPS = [
     body: "Actualizas cuando cambien tus precios. Quien te busca ve siempre lo correcto.",
   },
 ];
-
-function distancia(metros) {
-  if (metros == null) return null;
-  return metros < 950
-    ? `${Math.round(metros / 10) * 10} m`
-    : `${(metros / 1000).toFixed(1)} km`;
-}
-
-function lugarDe(r) {
-  return [r.neighborhood, r.city].filter(Boolean).join(" · ");
-}
-
-// Las estrellas dibujadas, que es como se lee una calificación de un vistazo.
-// El número va al lado igual: redondear a estrellas enteras es una
-// aproximación, y quien compara dos restaurantes quiere el 4.7 exacto.
-function estrellas(promedio) {
-  const llenas = Math.round(Number(promedio));
-  return "★★★★★".slice(0, llenas) + "☆☆☆☆☆".slice(0, 5 - llenas);
-}
 
 export default async function Home({ searchParams }) {
   const sp = await searchParams;
@@ -174,57 +176,18 @@ export default async function Home({ searchParams }) {
     fallo = true;
   }
 
-  // Los guardados son de quien entró, así que van por el cliente con sesión y
-  // no por el público. Sin sesión no se pregunta nada: la RLS devolvería una
-  // lista vacía de todos modos.
-  const usuario = await currentUser().catch(() => null);
-  if (usuario && resultados.length) {
-    try {
-      const conSesion = await supabaseSession();
-      const { data } = await conSesion
-        .from("favorites")
-        .select("restaurant_id")
-        .in(
-          "restaurant_id",
-          resultados.map((r) => r.id),
-        );
-      guardados = new Set((data ?? []).map((f) => f.restaurant_id));
-    } catch {
-      // Un fallo aquí solo significa corazones vacíos, no una portada rota.
-    }
-  }
+  guardados = await guardadosDe(resultados);
 
-  // Una sola consulta para las fotos de todos los resultados, y no una por
-  // tarjeta: con veinte restaurantes serían veinte viajes a la base.
-  if (resultados.length && !fallo) {
-    try {
-      const supabase = supabaseServer();
-      const { data: fotos } = await supabase
-        .from("restaurant_media")
-        .select("restaurant_id, storage_path, position")
-        .in(
-          "restaurant_id",
-          resultados.map((r) => r.id),
-        )
-        .order("position");
+  // Las fotos van después de la búsqueda y no dentro: son una consulta para
+  // todos los resultados, y la comparte con las páginas de /comida.
+  if (!fallo) resultados = await conFotos(resultados);
 
-      const primera = new Map();
-      for (const f of fotos ?? []) {
-        if (!primera.has(f.restaurant_id)) primera.set(f.restaurant_id, f.storage_path);
-      }
-      resultados = resultados.map((r) => {
-        const ruta = primera.get(r.id);
-        return {
-          ...r,
-          foto: ruta
-            ? supabase.storage.from(BUCKET_FOTOS).getPublicUrl(ruta).data.publicUrl
-            : null,
-        };
-      });
-    } catch {
-      // Sin fotos, las tarjetas se dibujan con el degradado de su categoría.
-    }
-  }
+  // Qué categorías tienen página propia en /comida. La portada ofrece el
+  // catálogo entero —incluidas las que todavía no tiene nadie—, y esas no
+  // tienen página: enlazarlas sería mandar a un 404 a quien pulse la loseta, y
+  // a un buscador a rastrear direcciones que no existen.
+  const catalogoComidas = await catalogoComida();
+  const conPagina = new Set(catalogoComidas.cocinas.map((c) => c.slug));
 
   const hayFiltros = Boolean(
     q || lugar || cocina || abierto || precio || calificacion || servicios.length || conUbicacion,
@@ -372,7 +335,17 @@ export default async function Home({ searchParams }) {
                 <Link
                   className="categoria"
                   key={c.slug}
-                  href={hrefCon(params, { cocina: c.slug })}
+                  // Sin nada más puesto, la loseta lleva a la página de la
+                  // categoría —/comida/tacos— y no a la portada con un filtro:
+                  // es la que un buscador puede seguir, guardar y enseñar. Con
+                  // filtros encima manda la búsqueda, que es lo que la persona
+                  // está armando, y una categoría sin restaurantes no tiene
+                  // página a la que llevar.
+                  href={
+                    !hayFiltros && conPagina.has(c.slug)
+                      ? rutaCocina(c.slug)
+                      : hrefCon(params, { cocina: c.slug })
+                  }
                   style={{ "--categoria-tono": tonoCocina(c.slug) }}
                 >
                   <span className="categoria-foto">
@@ -427,93 +400,14 @@ export default async function Home({ searchParams }) {
               <MapaResultados resultados={resultados} />
             ) : (
               <div className="tarjetas">
-                {resultados.map((r) => {
-                  const slugCocina = slugPorNombre.get(r.cuisines?.[0]);
-                  const icono = iconoCocina(slugCocina);
-                  const lejos = distancia(r.distance_m);
-                  return (
-                    <article
-                      className="tarjeta"
-                      key={r.id}
-                      style={{ "--categoria-tono": tonoCocina(slugCocina) }}
-                    >
-                      <div className="tarjeta-foto">
-                        {r.foto ? (
-                          <img src={r.foto} alt="" loading="lazy" />
-                        ) : (
-                          <span className="tarjeta-sinfoto" aria-hidden="true">
-                            {icono}
-                          </span>
-                        )}
-                        {r.is_open_now ? (
-                          <span className="insignia-abierto">Abierto ahora</span>
-                        ) : null}
-                        {lejos ? <span className="insignia-lejos">{lejos}</span> : null}
-                      </div>
-
-                      <Favorito
-                        restauranteId={r.id}
-                        nombre={r.name}
-                        guardado={guardados.has(r.id)}
-                      />
-
-                      <div className="tarjeta-cuerpo">
-                        <div className="tarjeta-titulo">
-                          <h3>
-                            <Link className="tarjeta-enlace" href={rutaFicha(r.slug)}>
-                              {r.name}
-                            </Link>
-                          </h3>
-                          {r.price_level ? (
-                            <span className="tarjeta-precio">{PRECIO[r.price_level]}</span>
-                          ) : null}
-                        </div>
-
-                        {r.rating_count > 0 && r.rating_avg ? (
-                          <p className="tarjeta-estrellas">
-                            <span className="tarjeta-estrellas-marca" aria-hidden="true">
-                              {estrellas(r.rating_avg)}
-                            </span>
-                            <b>{r.rating_avg}</b>
-                            <span>
-                              ({r.rating_count}{" "}
-                              {r.rating_count === 1 ? "reseña" : "reseñas"})
-                            </span>
-                          </p>
-                        ) : (
-                          <p className="tarjeta-estrellas">Todavía sin reseñas</p>
-                        )}
-
-                        <p className="tarjeta-linea">
-                          <span>
-                            <span aria-hidden="true">{icono}</span>
-                            <span>
-                              {r.cuisines?.length
-                                ? r.cuisines.join(" · ")
-                                : r.summary || "Restaurante"}
-                            </span>
-                          </span>
-                        </p>
-
-                        <p className="tarjeta-linea">
-                          <span>
-                            <span aria-hidden="true">◎</span>
-                            <span>{lugarDe(r) || "México"}</span>
-                          </span>
-                        </p>
-
-                        <div className="tarjeta-acciones">
-                          <Link className="btn" href={rutaMenu(r.slug)}>
-                            Ver menú
-                          </Link>
-                          <Link className="btn-linea" href={rutaFicha(r.slug)}>
-                            Ver detalles
-                          </Link>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
+                {resultados.map((r) => (
+                  <Tarjeta
+                    key={r.id}
+                    r={r}
+                    slugCocina={slugPorNombre.get(r.cuisines?.[0])}
+                    guardado={guardados.has(r.id)}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -627,12 +521,7 @@ export default async function Home({ searchParams }) {
         </div>
       </section>
 
-      <footer className="footer">
-        <div className="wrap wrap-ancho footer-inner">
-          <span>© {new Date().getFullYear()} Menú Abierto</span>
-          <a href="mailto:hola@menuabierto.com">hola@menuabierto.com</a>
-        </div>
-      </footer>
+      <Pie />
     </>
   );
 }
