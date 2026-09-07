@@ -329,6 +329,7 @@ export default async function Ficha({ slug }) {
                 publicaciones={social.publicaciones}
                 restauranteId={r.id}
                 nombre={r.name}
+                slug={slug}
                 volverA={volverAqui}
                 hayMas={social.hayMasPublicaciones}
               />

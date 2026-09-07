@@ -19,6 +19,8 @@ import {
   POR_PAGINA,
 } from "../../lib/social";
 import { IconoBote, IconoComentario, IconoCorazon } from "./iconos";
+import { rutaFicha } from "../../lib/slug";
+import Compartir from "./compartir";
 
 // Las publicaciones: la lista de la ficha ("Novedades de …") y, con otra
 // cabecera, las del feed del comensal. Es el mismo componente porque es la
@@ -30,6 +32,7 @@ export default function Publicaciones({
   publicaciones,
   restauranteId = null,
   nombre,
+  slug = null,
   volverA,
   hayMas = false,
   encabezadoDeCadaUna = false,
@@ -76,6 +79,9 @@ export default function Publicaciones({
           publicacion={p}
           nombre={encabezadoDeCadaUna ? p.restaurant_name : nombre}
           slug={encabezadoDeCadaUna ? p.restaurant_slug : null}
+          // Compartir lleva a la ficha, así que necesita el slug también en la
+          // ficha, donde el nombre no es un enlace porque ya se está ahí.
+          slugCompartir={encabezadoDeCadaUna ? p.restaurant_slug : slug}
           volverA={volverA}
         />
       ))}
@@ -102,7 +108,14 @@ export default function Publicaciones({
   );
 }
 
-export function Publicacion({ publicacion, nombre, slug, volverA, alBorrar = null }) {
+export function Publicacion({
+  publicacion,
+  nombre,
+  slug,
+  slugCompartir = null,
+  volverA,
+  alBorrar = null,
+}) {
   const [meGusta, setMeGusta] = useState(Boolean(publicacion.me_gusta));
   const [likes, setLikes] = useState(publicacion.likes_count ?? 0);
   const [comentarios, setComentarios] = useState(null);
@@ -246,7 +259,20 @@ export function Publicacion({ publicacion, nombre, slug, volverA, alBorrar = nul
           // `controls` porque un video en un feed no puede empezar solo con
           // sonido, y `preload="metadata"` para que diez publicaciones no bajen
           // cien megas antes de que nadie toque nada.
-          <video src={publicacion.url} controls playsInline preload="metadata" />
+          //
+          // Del menú de los tres puntos se quitan descargar, la velocidad y la
+          // ventana flotante: el video es de quien lo publicó, y ofrecer
+          // "Download" en su propia ficha invita a llevárselo. Quedan
+          // reproducir, la barra y el volumen, que es lo que hace falta para
+          // verlo.
+          <video
+            src={publicacion.url}
+            controls
+            controlsList="nodownload noplaybackrate noremoteplayback"
+            disablePictureInPicture
+            playsInline
+            preload="metadata"
+          />
         ) : (
           <img
             src={publicacion.url}
@@ -280,6 +306,17 @@ export function Publicacion({ publicacion, nombre, slug, volverA, alBorrar = nul
           {conteo(cuantosComentarios)}{" "}
           {plural(cuantosComentarios, "comentario", "comentarios")}
         </button>
+
+        {/* Compartir no necesita sesión: quien pasa por aquí sin cuenta también
+            puede mandarle el lugar a alguien, y pedirle que entre para eso
+            sería perder justo la recomendación que iba a hacer. */}
+        {slugCompartir ? (
+          <Compartir
+            ruta={rutaFicha(slugCompartir)}
+            titulo={nombre}
+            texto={publicacion.body ?? ""}
+          />
+        ) : null}
       </div>
 
       {abierto ? (

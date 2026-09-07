@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { esRestaurantero } from "../../../lib/destino";
 import CuentaForm from "./form";
+import RedesDeCuenta from "./redes";
 import FotoDeCuenta from "./foto";
 import CabeceraPanel from "../cabecera";
 import { conteoDe, insigniaActual } from "../../../lib/insignias";
 import { fotoDeCuenta } from "../../../lib/avatar";
 import { IconoInsignia } from "../../insignias-iconos";
+import { redesDeLaCuenta } from "./actions";
 
 export const metadata = { title: "Tu cuenta — Menú Abierto" };
 
@@ -30,6 +32,7 @@ export default async function Cuenta() {
   const atras = restaurantero ? "/panel" : "/";
 
   const foto = await fotoDeCuenta(auth.user.id);
+  const identidades = await redesDeLaCuenta();
   const resenas = conteoDe(perfil?.reviews_count);
   const insignia = insigniaActual(resenas);
 
@@ -82,6 +85,14 @@ export default async function Cuenta() {
             </Link>
           </>
         )}
+
+        <h2 className="sub">Tus redes sociales</h2>
+        <p className="panel-lead">
+          Vincula una red para entrar con ella, sin escribir contraseña ni esperar
+          el correo. No publicamos nada en tu nombre ni leemos tus cuentas.
+        </p>
+
+        <RedesDeCuenta identidades={identidades} />
 
         <h2 className="sub">Contraseña</h2>
         <p className="panel-lead">
