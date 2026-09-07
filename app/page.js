@@ -2,7 +2,7 @@ import Link from "next/link";
 import { fotoCocina, fotoEncabezado } from "../lib/fotos";
 import { supabaseServer } from "../lib/supabase";
 import { conFotos, guardadosDe } from "../lib/busqueda";
-import { rutaCocina } from "../lib/zonas";
+import { catalogoComida, rutaCocina } from "../lib/zonas";
 import Nav from "./nav";
 import Buscador from "./buscador";
 import Orden from "./orden";
@@ -182,6 +182,13 @@ export default async function Home({ searchParams }) {
   // todos los resultados, y la comparte con las páginas de /comida.
   if (!fallo) resultados = await conFotos(resultados);
 
+  // Qué categorías tienen página propia en /comida. La portada ofrece el
+  // catálogo entero —incluidas las que todavía no tiene nadie—, y esas no
+  // tienen página: enlazarlas sería mandar a un 404 a quien pulse la loseta, y
+  // a un buscador a rastrear direcciones que no existen.
+  const catalogoComidas = await catalogoComida();
+  const conPagina = new Set(catalogoComidas.cocinas.map((c) => c.slug));
+
   const hayFiltros = Boolean(
     q || lugar || cocina || abierto || precio || calificacion || servicios.length || conUbicacion,
   );
@@ -332,8 +339,13 @@ export default async function Home({ searchParams }) {
                   // categoría —/comida/tacos— y no a la portada con un filtro:
                   // es la que un buscador puede seguir, guardar y enseñar. Con
                   // filtros encima manda la búsqueda, que es lo que la persona
-                  // está armando.
-                  href={hayFiltros ? hrefCon(params, { cocina: c.slug }) : rutaCocina(c.slug)}
+                  // está armando, y una categoría sin restaurantes no tiene
+                  // página a la que llevar.
+                  href={
+                    !hayFiltros && conPagina.has(c.slug)
+                      ? rutaCocina(c.slug)
+                      : hrefCon(params, { cocina: c.slug })
+                  }
                   style={{ "--categoria-tono": tonoCocina(c.slug) }}
                 >
                   <span className="categoria-foto">
