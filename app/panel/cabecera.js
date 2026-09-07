@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { currentUser } from "../../lib/supabase";
+import { fotoDeCuenta } from "../../lib/avatar";
 import Brand from "../brand";
 import SesionUsuario from "../sesion-usuario";
 
@@ -19,8 +20,11 @@ export default async function CabeceraPanel({
   atrasTexto = "Volver",
   marca,
   correo,
+  usuarioId,
 }) {
-  const email = correo ?? (await currentUser())?.email;
+  const usuario = correo && usuarioId ? null : await currentUser();
+  const email = correo ?? usuario?.email;
+  const foto = await fotoDeCuenta(usuarioId ?? usuario?.id);
 
   return (
     <header className="panel-top">
@@ -31,7 +35,7 @@ export default async function CabeceraPanel({
             {atrasTexto}
           </Link>
         ) : null}
-        <SesionUsuario correo={email} href="/panel/cuenta" />
+        <SesionUsuario correo={email} foto={foto} href="/panel/cuenta" />
       </div>
     </header>
   );

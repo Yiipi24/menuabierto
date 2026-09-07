@@ -65,7 +65,7 @@ export default async function EditarMenu({ params }) {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} marca="/panel" atras={`/panel/${id}/menus`} atrasTexto="Volver a los menús" />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} marca="/panel" atras={`/panel/${id}/menus`} atrasTexto="Volver a los menús" />
 
       <main className="wrap panel-main panel-taller">
         <div className="panel-encabezado">

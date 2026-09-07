@@ -47,7 +47,7 @@ export default async function Menus({ params }) {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} marca="/panel" atras={`/panel/${id}`} atrasTexto="Volver a la ficha" />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} marca="/panel" atras={`/panel/${id}`} atrasTexto="Volver a la ficha" />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">

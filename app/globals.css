@@ -3830,6 +3830,43 @@ img.menu-archivo-vista { min-height: 0; }
    1080px del resto del sitio no caben sin apretarse. */
 .panel-tablero { max-width: 1320px; }
 
+/* ---------- foto de la cuenta ---------- */
+
+.foto-cuenta {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.foto-cuenta-muestra {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  overflow: hidden;
+  flex: none;
+}
+
+.foto-cuenta-muestra img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.foto-cuenta-vacia {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.foto-cuenta-lado { flex: 1 1 260px; min-width: 0; display: grid; gap: 12px; }
+
+.foto-cuenta-form { display: grid; gap: 12px; }
+
+.foto-cuenta-botones { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
 /* ---------- menú de la sesión ---------- */
 
 /* El avatar de la barra y lo que cuelga de él. Vive aquí, en la zona del
@@ -3927,7 +3964,17 @@ img.menu-archivo-vista { min-height: 0; }
   border-radius: 999px;
   border: 1px solid var(--line);
   color: var(--ink-soft);
+  overflow: hidden;
   transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Con foto, el círculo lo llena ella: el recorte va aquí y no al subirla, así
+   se guarda la imagen tal cual la mandó su dueño. */
+.panel-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* La única definición: antes había otra más arriba, de cuando el panel era una
