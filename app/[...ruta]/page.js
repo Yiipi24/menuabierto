@@ -3,8 +3,13 @@ import { menuIdValido, slugValido } from "../../lib/slug";
 import Ficha, { metadataFicha } from "../_ficha/ficha";
 import CartaPagina, { metadataCarta } from "../_ficha/carta-pagina";
 
-export const dynamic = "force-dynamic";
-
+// Esta ruta ya no se declara `force-dynamic`. Sigue resolviéndose en cada
+// visita —lee la sesión para saber si quien mira es el dueño, y eso son
+// cookies—, pero lo caro ya no viaja con ella: la ficha y la carta salen de lo
+// que `_ficha/datos` tiene guardado, con su etiqueta para tirarlo en cuanto el
+// dueño guarda algo. Antes la directiva decía "no guardes nada de aquí" y se
+// llevaba por delante también las consultas.
+//
 // Las fichas cuelgan de la raíz: menuabierto.com/jcsmokehouse. No hay un
 // prefijo que las separe del resto del sitio, así que esta ruta atrapa todo lo
 // que no coincidió antes con /panel, /entrar o /api — en Next las rutas fijas

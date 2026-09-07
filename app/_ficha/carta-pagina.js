@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Nav from "../nav";
 import Carta from "./carta";
 import { MedirVista } from "../medir";
-import { cargar, PRECIO } from "./datos";
+import { cargarPublico, PRECIO } from "./datos";
 import { rutaFicha, rutaMenu, rutaMenuCarta } from "../../lib/slug";
 import { imagenesDeCompartir, metaCompartir } from "../../lib/compartir";
 import { jsonLdCarta } from "../../lib/jsonld";
@@ -18,11 +18,9 @@ function cartaDe(menus, menuId) {
   return uno ? [uno] : null;
 }
 
-export const dynamic = "force-dynamic";
-
 export async function metadataCarta(slug, menuId = null) {
   try {
-    const datos = await cargar(slug);
+    const datos = await cargarPublico(slug);
     if (!datos) return { title: "Restaurante no encontrado — Menú Abierto" };
     const { r, menus, fotos } = datos;
     const solo = menuId ? menus.find((m) => m.id === menuId) : null;
@@ -51,7 +49,7 @@ export async function metadataCarta(slug, menuId = null) {
 export default async function CartaPagina({ slug, menuId = null }) {
   let datos = null;
   try {
-    datos = await cargar(slug);
+    datos = await cargarPublico(slug);
   } catch {
     datos = null;
   }

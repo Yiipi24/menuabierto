@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { supabaseServer } from "../../../lib/supabase";
+import { TAG_RUTAS, VIGENCIA_RUTAS } from "../../../lib/cache";
 import { rutaFicha, rutaMenu } from "../../../lib/slug";
 
 /**
@@ -10,6 +12,11 @@ import { rutaFicha, rutaMenu } from "../../../lib/slug";
  *
  * Devuelve null si no hay ficha publicada con ese slug, y quien llama contesta
  * un 404: igual que antes, la redirección no revela borradores ajenos.
+ *
+ * La traducción se guarda: es una tabla de equivalencias que solo cambia
+ * cuando una ficha cambia de dirección o deja de publicarse, y el panel la
+ * tira con `invalidarRutas` cuando eso pasa. Sin esto, cada escaneo de un QR
+ * viejo pagaba una consulta para averiguar lo mismo de siempre.
  */
 export async function destinoViejo(slug) {
   const buscado = String(slug ?? "");
@@ -18,15 +25,22 @@ export async function destinoViejo(slug) {
   // metería dentro de la gramática del filtro `or` de PostgREST.
   if (!/^[a-z0-9-]{1,80}$/.test(buscado)) return null;
 
-  const supabase = supabaseServer();
-  const { data } = await supabase
-    .from("restaurants")
-    .select("slug")
-    .or(`legacy_slug.eq.${buscado},slug.eq.${buscado}`)
-    .maybeSingle();
+  const actual = await unstable_cache(
+    async () => {
+      const supabase = supabaseServer();
+      const { data } = await supabase
+        .from("restaurants")
+        .select("slug")
+        .or(`legacy_slug.eq.${buscado},slug.eq.${buscado}`)
+        .maybeSingle();
+      return data?.slug ?? null;
+    },
+    ["slug-viejo", buscado],
+    { tags: [TAG_RUTAS], revalidate: VIGENCIA_RUTAS },
+  )();
 
-  if (!data?.slug) return null;
-  return { ficha: rutaFicha(data.slug), menu: rutaMenu(data.slug) };
+  if (!actual) return null;
+  return { ficha: rutaFicha(actual), menu: rutaMenu(actual) };
 }
 
 /**

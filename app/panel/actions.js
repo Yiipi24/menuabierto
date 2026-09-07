@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { invalidarFicha, invalidarRutas } from "../../lib/cache";
 import { supabaseSession } from "../../lib/supabase";
 
 const BUCKET_FOTOS = "restaurantes";
@@ -125,16 +126,28 @@ export async function cambiarEstado(formData) {
   if (!ESTADOS.includes(estado)) return;
 
   // La RLS ya exige ser el dueño; el filtro explícito evita mandar un update
-  // que no toca ninguna fila y deja clara la intención.
-  const { error } = await supabase
+  // que no toca ninguna fila y deja clara la intención. El slug vuelve con el
+  // update para no pedirlo en una segunda consulta: publicar u ocultar cambia
+  // lo que ve todo el mundo y hay que tirar lo guardado.
+  const { data: cambiado, error } = await supabase
     .from("restaurants")
     .update({ status: estado })
     .eq("id", id)
-    .eq("owner_id", auth.user.id);
+    .eq("owner_id", auth.user.id)
+    .select("slug")
+    .maybeSingle();
 
   if (error) console.error("cambiar estado", error.message);
 
   revalidatePath("/panel");
+
+  // Publicar es lo más urgente que hace un dueño: la ficha tiene que existir
+  // ya, y el sitemap tiene que anunciarla hoy y no dentro de una hora. Ocultar
+  // corre la misma prisa en el otro sentido.
+  if (cambiado?.slug) {
+    invalidarFicha(cambiado.slug);
+    invalidarRutas();
+  }
 }
 
 export async function borrarRestaurante(formData) {
@@ -143,6 +156,15 @@ export async function borrarRestaurante(formData) {
   if (!auth?.user) redirect("/entrar");
 
   const id = String(formData.get("id") ?? "");
+
+  // El slug se lee antes del borrado: después ya no hay fila de donde sacarlo,
+  // y sin él lo guardado de esa ficha se quedaría en pie hasta que caducara.
+  const { data: victima } = await supabase
+    .from("restaurants")
+    .select("slug")
+    .eq("id", id)
+    .eq("owner_id", auth.user.id)
+    .maybeSingle();
 
   // Las fotos viven en Storage y no se van solas con la fila: hay que
   // borrarlas antes de perder la lista de rutas.
@@ -166,5 +188,9 @@ export async function borrarRestaurante(formData) {
   if (error) console.error("borrar restaurante", error.message);
 
   revalidatePath("/panel");
+  if (victima?.slug) {
+    invalidarFicha(victima.slug);
+    invalidarRutas();
+  }
   redirect("/panel");
 }

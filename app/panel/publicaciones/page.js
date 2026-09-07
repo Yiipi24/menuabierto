@@ -7,7 +7,6 @@ import Lista from "./lista";
 import { conexionesDeRedes, misPublicaciones, misRestaurantes } from "./actions";
 
 export const metadata = { title: "Historias y publicaciones — Menú Abierto" };
-export const dynamic = "force-dynamic";
 
 // La pantalla del dueño. Una sola para todos sus restaurantes y no una dentro
 // de cada ficha: quien tiene cuatro sucursales publica lo mismo en las cuatro,

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { invalidarFicha } from "../../../../lib/cache";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../../lib/supabase";
 import { menusIncluidos } from "../../../../lib/planes";
@@ -29,7 +30,7 @@ async function sesionYRestaurante(id) {
 
   const { data: restaurante } = await supabase
     .from("restaurants")
-    .select("id, plan, premium_until")
+    .select("id, slug, plan, premium_until")
     .eq("id", id)
     .eq("owner_id", auth.user.id)
     .maybeSingle();
@@ -73,10 +74,16 @@ function esLimiteDeMenus(error) {
   return String(error?.message ?? "").includes("limite_de_menus");
 }
 
-function refrescar(id, menuId) {
+// Toda escritura de una carta pasa por aquí, y por eso aquí es donde se tira
+// la ficha pública: cambiar un precio en el panel y que la carta del QR siga
+// enseñando el viejo sería peor que no tener caché. Recibe el restaurante
+// entero y no su id porque hace falta el slug, que es como se guarda.
+function refrescar(restaurante, menuId) {
+  const id = restaurante.id;
   revalidatePath(`/panel/${id}`);
   revalidatePath(`/panel/${id}/menus`);
   if (menuId) revalidatePath(`/panel/${id}/menus/${menuId}`);
+  invalidarFicha(restaurante.slug);
 }
 
 /* ---------- menús ---------- */
@@ -139,7 +146,7 @@ export async function crearMenu(_prevState, formData) {
     return { status: "error", message: "No pudimos crear el menú." };
   }
 
-  refrescar(id, creado.id);
+  refrescar(restaurante, creado.id);
   return { status: "ok", message: `"${nombre}" creado.`, menuId: creado.id };
 }
 
@@ -187,7 +194,7 @@ export async function guardarMenu(_prevState, formData) {
     return { status: "error", message: "No pudimos guardar el menú." };
   }
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
   // El mensaje nombra la plantilla que quedó guardada. Antes decía "Menú
   // guardado" a secas y, como el formulario se repinta, no había manera de
   // saber si el cambio de plantilla se había ido o no.
@@ -213,7 +220,7 @@ export async function cambiarVisibilidadMenu(formData) {
     .eq("id", menuId)
     .eq("restaurant_id", id);
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
 
 export async function borrarMenu(formData) {
@@ -242,7 +249,7 @@ export async function borrarMenu(formData) {
     await supabase.storage.from(BUCKET_MENUS).remove([menu.file_path]);
   }
 
-  refrescar(id);
+  refrescar(restaurante);
   redirect(`/panel/${id}/menus`);
 }
 
@@ -263,7 +270,7 @@ export async function moverMenu(formData) {
     .order("created_at");
 
   await intercambiar(supabase, "menus", menus ?? [], menuId, direccion);
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
 
 // Las posiciones nacieron de un contador y pueden venir repetidas o con
@@ -342,7 +349,7 @@ export async function subirArchivoMenu(_prevState, formData) {
     await supabase.storage.from(BUCKET_MENUS).remove([anterior]);
   }
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
   return { status: "ok", message: "Menú subido." };
 }
 
@@ -367,7 +374,7 @@ export async function quitarArchivoMenu(formData) {
   }
 
   await supabase.storage.from(BUCKET_MENUS).remove([menu.file_path]);
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
 
 /* ---------- secciones ---------- */
@@ -404,7 +411,7 @@ export async function crearSeccion(_prevState, formData) {
     return { status: "error", message: "No pudimos crear la sección." };
   }
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
   return { status: "ok", message: `"${nombre}" agregada.` };
 }
 
@@ -432,7 +439,7 @@ export async function renombrarSeccion(_prevState, formData) {
     return { status: "error", message: "No pudimos renombrar la sección." };
   }
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
   return { status: "ok", message: "Sección renombrada." };
 }
 
@@ -453,7 +460,7 @@ export async function borrarSeccion(formData) {
     .eq("menu_id", menuId)
     .eq("restaurant_id", id);
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
 
 export async function moverSeccion(formData) {
@@ -473,7 +480,7 @@ export async function moverSeccion(formData) {
     .order("created_at");
 
   await intercambiar(supabase, "menu_sections", secciones ?? [], seccionId, direccion);
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
 
 /* ---------- platillos ---------- */
@@ -544,7 +551,7 @@ export async function guardarPlatillo(_prevState, formData) {
       return { status: "error", message: "No pudimos guardar el platillo." };
     }
 
-    refrescar(id, menuId);
+    refrescar(restaurante, menuId);
     return { status: "ok", message: "Platillo guardado." };
   }
 
@@ -570,7 +577,7 @@ export async function guardarPlatillo(_prevState, formData) {
     return { status: "error", message: "No pudimos agregar el platillo." };
   }
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
   return { status: "ok", message: `"${nombre}" agregado.` };
 }
 
@@ -588,7 +595,7 @@ export async function borrarPlatillo(formData) {
     .eq("menu_id", menuId)
     .eq("restaurant_id", id);
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
 
 export async function moverPlatillo(formData) {
@@ -613,7 +620,7 @@ export async function moverPlatillo(formData) {
     : consulta.is("section_id", null));
 
   await intercambiar(supabase, "menu_items", platillos ?? [], platilloId, direccion);
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
 
 export async function cambiarDisponibilidad(formData) {
@@ -640,5 +647,5 @@ export async function cambiarDisponibilidad(formData) {
     .eq("menu_id", menuId)
     .eq("restaurant_id", id);
 
-  refrescar(id, menuId);
+  refrescar(restaurante, menuId);
 }
