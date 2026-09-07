@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { currentUser } from "../../lib/supabase";
 import Brand from "../brand";
-import { cerrarSesion } from "./actions";
-import { IconoUsuario } from "./tablero-iconos";
+import SesionUsuario from "../sesion-usuario";
 
 /**
  * La barra de arriba del panel.
@@ -32,19 +31,7 @@ export default async function CabeceraPanel({
             {atrasTexto}
           </Link>
         ) : null}
-        {email ? (
-          <Link className="btn-texto panel-usuario" href="/panel/cuenta" title={email}>
-            <span className="panel-correo">{email}</span>
-            <span className="panel-avatar" aria-hidden="true">
-              <IconoUsuario ancho={18} />
-            </span>
-          </Link>
-        ) : null}
-        <form action={cerrarSesion}>
-          <button className="btn-texto" type="submit">
-            Salir
-          </button>
-        </form>
+        <SesionUsuario correo={email} href="/panel/cuenta" />
       </div>
     </header>
   );
