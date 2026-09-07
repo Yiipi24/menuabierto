@@ -1,17 +1,18 @@
 import "./globals.css";
+import { SITIO } from "../lib/sitio";
 
 const title = "Menú Abierto — encuentra dónde comer, y haz que te encuentren";
 const description =
   "Busca restaurantes por ubicación, tipo de comida, precio y calificación. Si tienes un restaurante, publica tu menú, tus fotos y tus precios, y mantenlos siempre al día.";
 
 export const metadata = {
-  metadataBase: new URL("https://menuabierto.com"),
+  metadataBase: new URL(SITIO),
   title,
   description,
   openGraph: {
     title,
     description,
-    url: "https://menuabierto.com",
+    url: SITIO,
     siteName: "Menú Abierto",
     locale: "es_MX",
     type: "website",
