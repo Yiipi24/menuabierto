@@ -45,6 +45,10 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   de rutas reservadas vive en `lib/slug.js` y las dos tienen que decir lo
   mismo; cada ruta fija nueva tiene que entrar en las dos, y `novedades` y
   `avisos` —el feed del comensal y su bandeja— se agregaron con las historias.
+  `comida` entro con las paginas por cocina y por zona (`/comida/tacos`,
+  `/comida/tacos/coyoacan`), y en esa misma migracion se pusieron al dia
+  `novedades` y `avisos`, que llevaban prohibidos solo en el codigo: la copia
+  que manda es esta, porque es la que la base puede hacer cumplir.
   El slug lo elige `slug_disponible`, que es `security definer` a
   proposito: para saber si "tacoselgordo" esta libre hay que ver todas las
   fichas y la RLS solo deja ver las publicadas.

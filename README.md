@@ -22,8 +22,41 @@ sustituir ese punto por la escritura real.
 ## Indexación
 
 `/robots.txt` y `/sitemap.xml` se generan desde la app (`app/robots.js` y
-`app/sitemap.js`). El sitemap se arma con las fichas publicadas y sus cartas
-visibles, y se recalcula cada hora.
+`app/sitemap.js`). El sitemap se arma con las fichas publicadas, sus cartas
+visibles y las páginas por tipo de comida y por zona, y se recalcula cada
+hora.
+
+### Páginas por tipo de comida y por zona
+
+Nadie busca "Menú Abierto": busca "tacos en Coyoacán". Esa búsqueda ya existía
+—`/?cocina=tacos&lugar=Coyoacán`— pero vivía en la query, y una dirección con
+query no es una página que un buscador indexe ni que alguien comparta. Ahora
+tiene la suya:
+
+- `/comida` — el índice: los tipos de comida que tienen restaurante y las zonas
+  con más.
+- `/comida/[cocina]` — `/comida/tacos`.
+- `/comida/[cocina]/[zona]` — `/comida/tacos/coyoacan`.
+
+Cada una reusa `search_restaurants`, tiene su `<h1>`, su texto, su metadata, su
+JSON-LD de `ItemList` con migas, y enlaces cruzados a las zonas vecinas y a las
+otras cocinas de la zona, que es por donde un rastreador recorre el directorio
+sin depender del sitemap.
+
+**Solo existen las que tienen contenido.** El catálogo (`lib/zonas.js`) se arma
+con los restaurantes publicados: una combinación con menos de
+`MINIMO_POR_PAGINA` restaurantes ni se genera —devuelve 404— ni entra en el
+sitemap. Publicar todas las combinaciones posibles de cocina por colonia son
+miles de páginas vacías, y eso tiene nombre (*doorway pages*) y castigo.
+
+La zona se escribe con guiones (`gral-escobedo`), al revés que el slug de una
+ficha, que va pegado porque el dueño lo dicta por teléfono. `comida` es desde
+ahora un segmento reservado, en `lib/slug.js` y en la base.
+
+La portada filtrada, en cambio, lleva `noindex, follow`: enseña lo mismo que la
+página de zona, y las dos compitiendo por la misma búsqueda es el sitio
+partiéndose la fuerza en dos. La portada sin filtros se indexa igual, y los
+enlaces de la búsqueda se siguen.
 
 Solo el despliegue de producción se deja rastrear: en una vista previa de
 Vercel el `robots.txt` cierra el sitio entero para que no compita con
@@ -52,6 +85,14 @@ Dos cosas se quedan fuera a propósito:
   depende de quién esté mirando y por eso no se guarda. El número de seguidores
   que enseña la ficha sí viaja en lo guardado, así que puede ir hasta una hora
   por detrás: es el único dato de la página al que se le permite ese retraso.
+
+Las páginas de `/comida` van por el mismo camino: el catálogo de cocinas y
+zonas se guarda un día y la lista de cada página una hora, las dos bajo la
+etiqueta `rutas`, así que un rastreador recorriendo doscientas zonas no cuesta
+doscientas búsquedas. Ahí las tarjetas no enseñan "Abierto ahora": es lo único
+que cambia sin que nadie lo toque, y guardado una hora mandaría a alguien a un
+local cerrado. La búsqueda de la portada, que se resuelve en cada visita, lo
+sigue enseñando.
 
 Las traducciones de dirección —el código del QR y los slugs viejos de `/r/`—
 se guardan un día bajo la etiqueta `rutas`, junto con el sitemap. Publicar,

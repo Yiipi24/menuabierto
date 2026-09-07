@@ -1,6 +1,7 @@
-import { supabaseServer } from "../lib/supabase";
+import { supabaseServer, todasLasFilas } from "../lib/supabase";
 import { rutaFicha, rutaMenu, rutaMenuCarta } from "../lib/slug";
 import { sitioIndexable, urlDelSitio } from "../lib/sitio";
+import { catalogoComida, rutaCocina, rutaZona } from "../lib/zonas";
 
 // El sitemap se arma con la base, no a mano: las fichas son casi todo el sitio
 // y aparecen y se publican solas. Se recalcula cada hora en vez de en cada
@@ -8,24 +9,11 @@ import { sitioIndexable, urlDelSitio } from "../lib/sitio";
 // completo de la tabla, y una ficha nueva puede esperar ese rato.
 export const revalidate = 3600;
 
-// Supabase devuelve 1000 filas como máximo por consulta, así que se pide por
-// páginas. El tope está muy por debajo de las 50 000 URLs que admite un
-// sitemap: cuando el directorio se acerque habrá que partirlo en un índice de
-// varios archivos, y es mejor quedarse corto que servir uno inválido.
-const PAGINA = 1000;
-const TOPE = 40000;
-
-async function todasLasFilas(consulta) {
-  const filas = [];
-  for (let desde = 0; desde < TOPE; desde += PAGINA) {
-    const { data, error } = await consulta(desde, desde + PAGINA - 1);
-    if (error) throw error;
-    if (!data?.length) break;
-    filas.push(...data);
-    if (data.length < PAGINA) break;
-  }
-  return filas;
-}
+// El recorrido por páginas vive en lib/supabase: lo comparten el sitemap y el
+// catálogo de /comida. El tope de ahí está muy por debajo de las 50 000 URLs
+// que admite un sitemap; cuando el directorio se acerque habrá que partirlo en
+// un índice de varios archivos, y es mejor quedarse corto que servir uno
+// inválido.
 
 function fecha(...valores) {
   const tiempos = valores
@@ -89,7 +77,41 @@ export default async function sitemap() {
     else porRestaurante.set(m.restaurant_id, [m]);
   }
 
-  const urls = [portada];
+  // Las páginas de /comida son el otro contenido del sitio: una por tipo de
+  // comida y una por cada cruce de comida y zona con restaurantes dentro. No
+  // se anuncian todas las combinaciones posibles porque solo existen las que
+  // tienen algo que enseñar; el catálogo ya viene con esa lista hecha.
+  const catalogo = await catalogoComida();
+
+  const urls = [
+    portada,
+    {
+      url: urlDelSitio("/comida"),
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+  ];
+
+  for (const c of catalogo.cocinas) {
+    urls.push({
+      url: urlDelSitio(rutaCocina(c.slug)),
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.6,
+    });
+  }
+
+  // Debajo de las fichas y de las cartas: una página de zona vale por los
+  // restaurantes que enseña, y son ellos los que hay que rastrear primero.
+  for (const c of catalogo.combos) {
+    urls.push({
+      url: urlDelSitio(rutaZona(c.cocina, c.zona)),
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.5,
+    });
+  }
 
   for (const r of restaurantes) {
     const suyos = porRestaurante.get(r.id) ?? [];
