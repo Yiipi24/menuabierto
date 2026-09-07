@@ -8,10 +8,18 @@ const BUCKET_FOTOS = "restaurantes";
 
 const ESTADOS = ["borrador", "publicado", "oculto"];
 
-export async function cerrarSesion() {
+// A dónde se vuelve al salir. Es una lista y no lo que traiga el formulario
+// porque un destino libre convierte el botón de salir en una redirección
+// abierta: cualquiera podría mandar a un usuario a otro sitio con un enlace.
+const SALIDAS = ["/entrar", "/"];
+
+export async function cerrarSesion(formData) {
   const supabase = await supabaseSession();
   await supabase.auth.signOut();
-  redirect("/entrar");
+  // Del panel se sale a la puerta; del sitio público, a la portada, que es lo
+  // que el comensal estaba mirando.
+  const destino = String(formData?.get?.("destino") ?? "");
+  redirect(SALIDAS.includes(destino) ? destino : "/entrar");
 }
 
 export async function crearRestaurante(_prevState, formData) {

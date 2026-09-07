@@ -3,12 +3,15 @@ import { currentUser } from "../lib/supabase";
 import { avisosSinLeer } from "./_social/datos";
 import { IconoCampana } from "./_social/iconos";
 import Brand from "./brand";
+import SesionUsuario from "./sesion-usuario";
 
 // El menú de arriba es el mismo en todas las páginas públicas, pero cambia en
 // dos ejes: el primer enlace lleva a lo que no estás viendo (la portada ya es
 // la búsqueda, así que ahí ofrece la parte de restaurantes), y el segundo
-// depende de si hay sesión: quien ya entró no necesita "Iniciar sesión", sino
-// la puerta a su panel.
+// depende de si hay sesión: quien ya entró no necesita "Iniciar sesión" ni
+// "Crea tu cuenta" —ya la tiene—, sino ver con qué cuenta está y por dónde
+// sale. Vale igual para el comensal y para el dueño: el chip lleva a /panel,
+// que manda a cada uno a lo suyo.
 export default async function Nav({ landing = false }) {
   let usuario = null;
   try {
@@ -62,12 +65,18 @@ export default async function Nav({ landing = false }) {
               ) : null}
             </Link>
           ) : null}
-          <Link className="hide-sm" href={usuario ? "/panel" : "/entrar"}>
-            {usuario ? "Mi cuenta" : "Iniciar sesión"}
-          </Link>
-          <Link className="btn btn-sm" href="/registro">
-            Crea tu cuenta
-          </Link>
+          {usuario ? (
+            <SesionUsuario correo={usuario.email} href="/panel" destino="/" />
+          ) : (
+            <>
+              <Link className="hide-sm" href="/entrar">
+                Iniciar sesión
+              </Link>
+              <Link className="btn btn-sm" href="/registro">
+                Crea tu cuenta
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
