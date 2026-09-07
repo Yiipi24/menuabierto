@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../../lib/supabase";
 import { rutaFicha, rutaQr } from "../../../../lib/slug";
 import { urlAbsoluta } from "../../../../lib/url";
-import Brand from "../../../brand";
+import CabeceraPanel from "../../cabecera";
 import Qr from "../../../_ficha/qr";
 import QrDescarga from "../../../_ficha/qr-descarga";
 import CopiarEnlace from "./copiar";
@@ -50,12 +50,7 @@ export default async function QrDelRestaurante({ params }) {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href={`/panel/${id}`}>
-          Volver
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} marca="/panel" atras={`/panel/${id}`} />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">

@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import NuevoForm from "./form";
-import Brand from "../../brand";
+import CabeceraPanel from "../cabecera";
 import { esRestaurantero } from "../../../lib/destino";
 
 export const metadata = { title: "Agregar restaurante — Menú Abierto" };
@@ -23,12 +22,7 @@ export default async function Nuevo() {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href={atras} />
-        <Link className="btn-texto" href={atras}>
-          Volver
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} atras={atras} />
 
       <main className="wrap panel-main panel-angosto">
         <h1>Agregar restaurante</h1>

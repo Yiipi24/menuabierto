@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../../../lib/supabase";
 import { rutaMenuCarta } from "../../../../../lib/slug";
-import Brand from "../../../../brand";
+import CabeceraPanel from "../../../cabecera";
 import Ajustes from "./ajustes";
 import Archivo from "./archivo";
 import Editor from "./editor";
@@ -65,12 +65,7 @@ export default async function EditarMenu({ params }) {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href={`/panel/${id}/menus`}>
-          Volver a los menús
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} marca="/panel" atras={`/panel/${id}/menus`} atrasTexto="Volver a los menús" />
 
       <main className="wrap panel-main panel-taller">
         <div className="panel-encabezado">

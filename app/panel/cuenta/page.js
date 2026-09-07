@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { esRestaurantero } from "../../../lib/destino";
 import CuentaForm from "./form";
-import Brand from "../../brand";
+import CabeceraPanel from "../cabecera";
 import { conteoDe, insigniaActual } from "../../../lib/insignias";
 import { IconoInsignia } from "../../insignias-iconos";
 
@@ -38,12 +38,7 @@ export default async function Cuenta() {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href={atras} />
-        <Link className="btn-texto" href={atras}>
-          Volver
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} atras={atras} />
 
       <main className="wrap panel-main panel-angosto">
         <h1>Tu cuenta</h1>

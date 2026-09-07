@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { PLANES, menusIncluidos, nombreDelPlan, planVigente } from "../../../lib/planes";
-import Brand from "../../brand";
+import CabeceraPanel from "../cabecera";
 
 export const metadata = { title: "Planes — Menú Abierto" };
 
@@ -33,12 +33,7 @@ export default async function Planes() {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href="/panel">
-          Volver
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} atras="/panel" />
 
       <main className="wrap panel-main">
         <h1>Planes</h1>

@@ -3897,27 +3897,66 @@ img.menu-archivo-vista { min-height: 0; }
 
 .tarjeta-cabeza h2 { font-size: 16.5px; font-weight: 650; }
 
-/* ---------- selector de restaurante ---------- */
+/* ---------- filas de restaurante ---------- */
 
-.sel {
+/* Cada restaurante es una fila con lo suyo al lado: la foto, el nombre, dónde
+   está, si se ve o no, y los botones que le corresponden. Antes el restaurante
+   estaba arriba y sus acciones abajo del todo, en una tarjeta suelta, y con
+   dos locales había que acordarse de cuál estaba elegido. */
+
+.rest-lista { display: grid; gap: 14px; margin-bottom: 18px; }
+
+.rest-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 16px;
-  margin-bottom: 18px;
+  padding: 16px 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.sel > summary {
+.rest-fila:hover { border-color: #e7ddd0; box-shadow: 0 2px 12px rgba(31, 24, 16, 0.05); }
+
+.rest-identidad {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 18px 22px;
-  cursor: pointer;
-  list-style: none;
+  min-width: 0;
+  flex: 1 1 320px;
 }
 
-.sel > summary::-webkit-details-marker { display: none; }
+.rest-datos { display: grid; gap: 4px; min-width: 0; }
 
-.sel > summary.sel-fija { cursor: default; }
+.rest-datos h2 {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.rest-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rest-acciones .btn-linea { padding: 9px 14px; font-size: 14px; }
+
+/* "Ver" es la que más se usa y la única que sale del panel: va en naranja
+   para que se encuentre sin leer la fila entera. */
+.rest-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  font-size: 14px;
+}
 
 .sel-logo {
   width: 56px;
@@ -3939,7 +3978,15 @@ img.menu-archivo-vista { min-height: 0; }
 
 .sel-datos strong { font-size: 19px; font-weight: 700; }
 
-.sel-lugar { font-size: 14.5px; color: var(--ink-faint); }
+.sel-lugar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14.5px;
+  color: var(--ink-faint);
+}
+
+.sel-lugar .icono { color: var(--accent); flex: none; }
 
 .estado-punto {
   display: inline-block;
@@ -3951,33 +3998,185 @@ img.menu-archivo-vista { min-height: 0; }
   vertical-align: middle;
 }
 
-.sel-chevron { color: var(--ink-faint); display: flex; transition: transform 0.15s ease; }
+/* ---------- filtro de métricas ---------- */
 
-.sel[open] .sel-chevron { transform: rotate(180deg); }
-
-.sel-lista { list-style: none; margin: 0; padding: 6px; border-top: 1px solid var(--line); }
-
-.sel-lista button {
+.filtro-metricas {
   display: flex;
   align-items: center;
   gap: 14px;
-  width: 100%;
-  padding: 12px 16px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
+  flex-wrap: wrap;
+  padding: 14px 20px;
 }
 
-.sel-lista button:hover { background: var(--paper-warm); }
+.fm-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16.5px;
+  font-weight: 650;
+  margin-right: 4px;
+}
 
-.sel-lista button.activo { background: var(--accent-soft); }
+.fm-titulo-icono {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
 
-.sel-lista .sel-logo { width: 40px; height: 40px; border-radius: 10px; }
+/* Los tres modos, pegados en una sola pastilla: se leen como una elección y
+   no como tres botones sueltos que hacen tres cosas distintas. */
+.fm-modos {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-warm);
+}
 
-.sel-lista .sel-datos strong { font-size: 16px; }
+.fm-modos button {
+  padding: 8px 18px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fm-modos button:hover { color: var(--ink); }
+
+.fm-modos button.activo {
+  background: var(--paper);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fm-detalle { flex: 1 1 240px; min-width: 0; display: flex; }
+
+.fm-nota { font-size: 13.5px; color: var(--ink-faint); }
+
+.fm-uno { position: relative; display: inline-flex; align-items: center; width: 100%; }
+
+.fm-uno select {
+  appearance: none;
+  width: 100%;
+  padding: 9px 34px 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fm-uno .icono { position: absolute; right: 11px; color: var(--ink-faint); pointer-events: none; }
+
+.fm-uno select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Varios: los elegidos se ven como chips que se quitan con su ×, y la lista
+   con casillas se abre debajo. */
+.fm-varios { position: relative; width: 100%; }
+
+.fm-varios > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  cursor: pointer;
+  list-style: none;
+  min-height: 42px;
+}
+
+.fm-varios > summary::-webkit-details-marker { display: none; }
+
+.fm-varios[open] > summary { border-color: var(--accent); }
+
+.fm-chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; }
+
+.fm-vacio { font-size: 13.5px; color: var(--ink-faint); padding-left: 4px; }
+
+.fm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px 5px 12px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fm-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.fm-chip button:hover { background: var(--accent-soft); color: var(--accent); }
+
+.fm-chip button:disabled { opacity: 0.35; cursor: default; }
+
+.fm-chevron { color: var(--ink-faint); display: flex; transition: transform 0.15s ease; }
+
+.fm-varios[open] .fm-chevron { transform: rotate(180deg); }
+
+.fm-opciones {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(31, 24, 16, 0.12);
+}
+
+.fm-opciones label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.fm-opciones label:hover { background: var(--paper-warm); }
+
+.fm-opciones input { accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+
+.fm-opciones .sel-logo { width: 34px; height: 34px; border-radius: 9px; }
+
+.fm-opcion-datos { display: grid; gap: 2px; min-width: 0; }
+
+.fm-opcion-datos strong { font-size: 14.5px; font-weight: 650; }
+
+.fm-opcion-datos .sel-lugar { font-size: 13px; }
 
 /* ---------- filtro de periodo ---------- */
 
@@ -3998,12 +4197,22 @@ img.menu-archivo-vista { min-height: 0; }
 
 .filtro-periodo select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.filtro-periodo .icono {
+.filtro-periodo > .icono {
   position: absolute;
   right: 11px;
   color: var(--ink-faint);
   pointer-events: none;
 }
+
+.filtro-periodo-icono {
+  position: absolute;
+  left: 13px;
+  display: flex;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.filtro-periodo.con-calendario select { padding-left: 38px; }
 
 /* ---------- KPIs ---------- */
 
@@ -4067,7 +4276,9 @@ img.menu-archivo-vista { min-height: 0; }
 
 .hueso-linea.ancha { height: 26px; width: 85%; }
 
-.hueso-selector { height: 92px; margin-bottom: 18px; }
+.hueso-fila-rest { height: 90px; margin-bottom: 14px; }
+
+.hueso-filtro { height: 66px; margin-bottom: 18px; }
 
 .hueso-caja { min-height: 300px; background: var(--paper); }
 
@@ -4334,22 +4545,6 @@ img.menu-archivo-vista { min-height: 0; }
 .idea-info { background: #eff6ff; border-color: #dbeafe; }
 .idea-info .idea-icono { background: #dbeafe; color: #1d4ed8; }
 
-/* ---------- gestion ---------- */
-
-.gestion {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-.gestion-texto h2 { font-size: 16.5px; font-weight: 650; margin-bottom: 4px; }
-
-.gestion-texto p { font-size: 13.5px; color: var(--ink-faint); }
-
-.gestion-botones { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
 /* ---------- sin datos ---------- */
 
 .sin-datos-cabeza {
@@ -4385,13 +4580,20 @@ img.menu-archivo-vista { min-height: 0; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .analitica { grid-template-columns: 1fr; }
   .analitica > .panel-tarjeta:first-child { grid-column: auto; }
-  .sel > summary { flex-wrap: wrap; padding: 16px; gap: 12px; }
-  .sel-datos { flex-basis: calc(100% - 72px); }
+  .rest-fila { padding: 16px; }
+  .rest-identidad { flex: 1 1 100%; }
+  .rest-acciones { width: 100%; justify-content: flex-start; }
+  .rest-acciones > * { flex: 1 1 auto; }
+  .rest-acciones .btn-linea,
+  .rest-acciones .rest-ver { width: 100%; justify-content: center; }
+  .filtro-metricas { align-items: stretch; }
+  .fm-modos { width: 100%; }
+  .fm-modos button { flex: 1; padding: 9px 8px; font-size: 12.5px; }
+  .fm-detalle { flex-basis: 100%; }
+  .filtro-metricas .filtro-periodo,
+  .filtro-metricas .filtro-periodo select { width: 100%; }
   .fuentes { grid-template-columns: 1fr; }
   .dona { max-width: 190px; margin: 0 auto; }
-  .gestion-botones { width: 100%; }
-  .gestion-botones > * { flex: 1 1 auto; }
-  .gestion-botones .btn-linea { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 420px) {
@@ -4400,7 +4602,7 @@ img.menu-archivo-vista { min-height: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .kpi:hover { transform: none; }
-  .sel-chevron { transition: none; }
+  .fm-chevron { transition: none; }
 }
 
 .tarjeta-vacia {

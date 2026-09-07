@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../../lib/supabase";
 import { menusIncluidos, nombreDelPlan } from "../../../../lib/planes";
 import { nombreDePlantilla } from "../../../../lib/plantillas";
-import Brand from "../../../brand";
+import CabeceraPanel from "../../cabecera";
 import NuevoMenu from "./nuevo";
 import { cambiarVisibilidadMenu, moverMenu } from "./actions";
 
@@ -47,12 +47,7 @@ export default async function Menus({ params }) {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href={`/panel/${id}`}>
-          Volver a la ficha
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} marca="/panel" atras={`/panel/${id}`} atrasTexto="Volver a la ficha" />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">

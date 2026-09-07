@@ -2,12 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../lib/supabase";
 import { vinoAPublicar } from "../../lib/destino";
-import { cerrarSesion } from "./actions";
-import Brand from "../brand";
+import CabeceraPanel from "./cabecera";
 import Tablero from "./tablero";
-import { metricasDe } from "./metricas-actions";
+import ListaDeRestaurantes from "./tablero-acciones";
+import { metricasDeSeleccion } from "./metricas-actions";
 import { PERIODO_POR_DEFECTO } from "../../lib/metricas";
-import { IconoCorona, IconoMas, IconoUsuario } from "./tablero-iconos";
+import { IconoCorona, IconoMas } from "./tablero-iconos";
 
 export const metadata = { title: "Tu panel — Menú Abierto" };
 
@@ -75,31 +75,19 @@ export default async function Panel() {
     };
   });
 
-  // Las métricas del primero se piden aquí para que la página llegue pintada;
-  // a partir de ahí las pide el tablero conforme el dueño cambia de periodo.
-  const primero = conFotos[0];
-  const inicial = primero
-    ? await metricasDe(primero.id, PERIODO_POR_DEFECTO)
+  // Las métricas llegan ya pintadas y con todos los restaurantes sumados, que
+  // es como abre el filtro; a partir de ahí las pide el tablero conforme el
+  // dueño cambia de selección o de periodo.
+  const inicial = conFotos.length
+    ? await metricasDeSeleccion(
+        conFotos.map((r) => r.id),
+        PERIODO_POR_DEFECTO,
+      )
     : null;
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href="/" />
-        <div className="panel-top-derecha">
-          <Link className="btn-texto panel-usuario" href="/panel/cuenta">
-            <span className="panel-correo">{auth.user.email}</span>
-            <span className="panel-avatar" aria-hidden="true">
-              <IconoUsuario ancho={18} />
-            </span>
-          </Link>
-          <form action={cerrarSesion}>
-            <button className="btn-texto" type="submit">
-              Salir
-            </button>
-          </form>
-        </div>
-      </header>
+      <CabeceraPanel correo={auth.user.email} />
 
       <main className="wrap panel-main panel-tablero">
         <div className="panel-encabezado">
@@ -143,6 +131,8 @@ export default async function Panel() {
             </Link>
           </div>
         ) : null}
+
+        {conFotos.length ? <ListaDeRestaurantes restaurantes={conFotos} /> : null}
 
         {conFotos.length ? (
           <Tablero
