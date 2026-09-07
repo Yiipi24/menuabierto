@@ -6,7 +6,6 @@ import ListaAvisos from "./lista";
 import { misAvisos } from "../_social/datos";
 
 export const metadata = { title: "Tus avisos — Menú Abierto" };
-export const dynamic = "force-dynamic";
 
 // La bandeja de avisos. Hoy solo trae historias de restaurantes que sigues con
 // la campana encendida; la tabla admite más tipos para cuando los haya.

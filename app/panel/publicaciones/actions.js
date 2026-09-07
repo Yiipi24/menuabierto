@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { invalidarFicha } from "../../../lib/cache";
 import { supabaseSession } from "../../../lib/supabase";
-import { rutaFicha } from "../../../lib/slug";
 import {
   BUCKET_SOCIAL,
   MAX_TEXTO_POST,
@@ -259,12 +259,14 @@ export async function borrar(_prevState, formData) {
   return { status: "ok", message: "Borrado." };
 }
 
-// La ficha es `force-dynamic`, pero revalidarla igual mantiene coherente
-// cualquier caché de datos por delante y no cuesta nada: son los slugs de los
-// restaurantes que acaban de cambiar, no la lista entera.
+// Historias y publicaciones no viajan en lo que la ficha tiene guardado —salen
+// de `_social/datos`, que se lee en cada visita porque depende de quién mire—,
+// pero tirar igual lo guardado de esas fichas no cuesta nada y evita tener que
+// recordar cuál de las dos cargas trae qué. Son los slugs de los restaurantes
+// que acaban de cambiar, no la lista entera.
 async function revalidarFichas(supabase, ids) {
   if (!ids?.length) return;
   const { data } = await supabase.from("restaurants").select("slug").in("id", ids);
-  for (const r of data ?? []) revalidatePath(rutaFicha(r.slug));
+  for (const r of data ?? []) invalidarFicha(r.slug);
   revalidatePath("/novedades");
 }

@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+import { VIGENCIA_FICHA, tagFicha } from "../../lib/cache";
 import { supabaseServer, supabaseSession } from "../../lib/supabase";
 import { plantillaValida } from "../../lib/plantillas";
 import { destacadosDe } from "../destacados";
@@ -100,7 +102,9 @@ function armarMenus(supabase, menus, secciones, platillos) {
     .filter((m) => (m.kind === "archivo" ? Boolean(m.fileUrl) : m.grupos.length > 0));
 }
 
-export async function cargar(slug) {
+// El viaje completo a la base. No lo llama nadie directamente: entra siempre
+// por `cargarPublico`, que es el que lo guarda.
+async function traerFicha(slug) {
   const supabase = supabaseServer();
 
   // La RLS solo deja ver fichas publicadas, así que un borrador ajeno da 404
@@ -122,7 +126,6 @@ export async function cargar(slug) {
     menus,
     secciones,
     platillos,
-    abierto,
     resenas,
     catalogoServicios,
     catalogoPagos,
@@ -159,7 +162,6 @@ export async function cargar(slug) {
       .eq("restaurant_id", r.id)
       .order("position")
       .order("created_at"),
-    supabase.rpc("restaurant_abierto", { rid: r.id }),
     // Por RPC y no por join: profiles es privado, y esta funcion devuelve el
     // nombre de quien firma sin abrir el resto del perfil.
     supabase.rpc("resenas_restaurante", { rid: r.id }),
@@ -212,9 +214,55 @@ export async function cargar(slug) {
       secciones.data ?? [],
       platillos.data ?? [],
     ),
-    abierto: abierto.data === true,
     resenas: resenas.data ?? [],
   };
+}
+
+/**
+ * La ficha tal como la ve cualquiera, guardada.
+ *
+ * Es lo que solo cambia cuando el dueño lo cambia: el nombre, la dirección,
+ * los horarios, las fotos, las cartas y las reseñas. Se guarda por slug y con
+ * su etiqueta, así que el panel puede tirarla en cuanto alguien guarda algo
+ * (ver `lib/cache.js`) y la hora de vigencia solo es el techo.
+ *
+ * Corre con el cliente anónimo, y eso es lo que la hace compartible: la RLS
+ * solo deja ver fichas publicadas, así que lo que se guarda es lo mismo para
+ * todo el mundo y nadie recibe en la caché lo que otro tenía permiso de ver.
+ *
+ * La usan las dos páginas públicas y también sus `generateMetadata`: antes,
+ * pintar una ficha eran veinte consultas —diez para el `<title>` y diez para
+ * el cuerpo—, y ahora las dos leen la misma entrada.
+ */
+export function cargarPublico(slug) {
+  return unstable_cache(() => traerFicha(slug), ["ficha", slug], {
+    tags: [tagFicha(slug)],
+    revalidate: VIGENCIA_FICHA,
+  })();
+}
+
+// "Abierto ahora" es lo único de la ficha que cambia sin que nadie lo toque:
+// a las once de la noche deja de ser cierto solo. Por eso se pregunta en cada
+// visita y se queda fuera de lo guardado; guardarlo una hora sería mandar a
+// alguien a un local cerrado, que es el error que la ficha existe para evitar.
+async function abiertoAhora(rid) {
+  try {
+    const { data } = await supabaseServer().rpc("restaurant_abierto", { rid });
+    return data === true;
+  } catch (error) {
+    // Sin respuesta no se afirma que esté abierto: la ficha enseña los
+    // horarios igual y quien lee decide.
+    console.error("restaurante abierto", error);
+    return false;
+  }
+}
+
+// La ficha completa: lo guardado más la única pregunta que no se puede
+// guardar. La carta no la necesita y por eso llama a `cargarPublico` a secas.
+export async function cargar(slug) {
+  const datos = await cargarPublico(slug);
+  if (!datos) return null;
+  return { ...datos, abierto: await abiertoAhora(datos.r.id) };
 }
 
 // Cuántas reseñas lleva escritas quien está firmado. Va aparte de `cargar`

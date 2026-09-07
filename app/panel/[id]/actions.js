@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { invalidarFicha } from "../../../lib/cache";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { geocodificar, mismaDireccion } from "../../../lib/geocodificar";
@@ -35,7 +36,7 @@ async function sesionYRestaurante(id) {
   const { data: restaurante } = await supabase
     .from("restaurants")
     .select(
-      "id, street, neighborhood, city, state, postal_code, location, plan, premium_until",
+      "id, slug, street, neighborhood, city, state, postal_code, location, plan, premium_until",
     )
     .eq("id", id)
     .eq("owner_id", auth.user.id)
@@ -182,6 +183,9 @@ export async function guardarRestaurante(_prevState, formData) {
 
   revalidatePath("/panel");
   revalidatePath(`/panel/${id}`);
+  // Y la ficha pública, que es lo que el dueño va a ir a mirar en cuanto
+  // cierre el formulario.
+  invalidarFicha(restaurante.slug);
   return { status: "ok", message: "Cambios guardados." };
 }
 
@@ -504,6 +508,7 @@ export async function subirFotos(_prevState, formData) {
 
   revalidatePath(`/panel/${id}`);
   revalidatePath("/panel");
+  invalidarFicha(restaurante.slug);
   return {
     status: "ok",
     message: archivos.length === 1 ? "Foto subida." : "Fotos subidas.",
@@ -529,4 +534,5 @@ export async function borrarFoto(formData) {
   await supabase.from("restaurant_media").delete().eq("id", fotoId);
 
   revalidatePath(`/panel/${id}`);
+  invalidarFicha(restaurante.slug);
 }

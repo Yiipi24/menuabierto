@@ -18,6 +18,7 @@ import { IconoDeMenu } from "./iconos-menu";
 import { MedirVista, EnlaceMedido, BotonGuardar } from "../medir";
 import {
   cargar,
+  cargarPublico,
   diaLocal,
   direccionDe,
   hora,
@@ -44,11 +45,11 @@ import {
   IconoTelefono,
 } from "./iconos";
 
-export const dynamic = "force-dynamic";
-
 export async function metadataFicha(slug) {
   try {
-    const datos = await cargar(slug);
+    // El `<title>` y la foto que se comparte salen de lo guardado: es la misma
+    // entrada que va a leer el cuerpo de la página un momento después.
+    const datos = await cargarPublico(slug);
     if (!datos) return { title: "Restaurante no encontrado — Menú Abierto" };
     const { r, fotos } = datos;
     const lugar = [r.neighborhood, r.city].filter(Boolean).join(", ");

@@ -6,7 +6,6 @@ import Feed from "./feed";
 import { cargarFeed, misSeguidos } from "../_social/datos";
 
 export const metadata = { title: "Novedades — Menú Abierto" };
-export const dynamic = "force-dynamic";
 
 // El portal del comensal: lo que publicaron los restaurantes que sigue, de lo
 // más nuevo a lo más viejo.

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { invalidarFicha } from "../../lib/cache";
 import { supabaseSession } from "../../lib/supabase";
 // El slug viaja en el formulario solo para saber a dónde volver y qué ruta
 // revalidar. Quién puede escribir lo decide la RLS con el restaurant_id.
@@ -79,7 +80,10 @@ export async function guardarResena(_prevState, formData) {
     };
   }
 
-  revalidatePath(rutaFicha(slug));
+  // La reseña mueve la calificación y la lista que la ficha enseña, y las dos
+  // salen de lo guardado: sin esto, quien acaba de escribirla recargaría y no
+  // la vería.
+  invalidarFicha(slug);
   revalidatePath("/panel/insignias");
 
   // El trigger de la base ya actualizó el conteo cuando llegamos aquí, así que
@@ -136,7 +140,10 @@ export async function borrarResena(_prevState, formData) {
     };
   }
 
-  revalidatePath(rutaFicha(slug));
+  // La reseña mueve la calificación y la lista que la ficha enseña, y las dos
+  // salen de lo guardado: sin esto, quien acaba de escribirla recargaría y no
+  // la vería.
+  invalidarFicha(slug);
   revalidatePath("/panel/insignias");
   return { status: "ok", message: "Borramos tu reseña." };
 }

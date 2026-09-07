@@ -19,8 +19,9 @@ export const metadata = {
     "Busca restaurantes por colonia, zona, municipio o estado, o encuentra los más cercanos a ti, con su menú y sus precios de verdad.",
 };
 
-// Depende de lo que traiga la URL, así que se resuelve en cada visita.
-export const dynamic = "force-dynamic";
+// Se resuelve en cada visita, y no hace falta decirlo: la búsqueda depende de
+// lo que traiga la URL y el menú de arriba de quién esté firmado, así que Next
+// ya la trata como dinámica sin la directiva.
 
 const BUCKET_FOTOS = "restaurantes";
 const PRECIO = ["", "$", "$$", "$$$", "$$$$"];
