@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { currentUser } from "../../lib/supabase";
 import { rutaFicha, rutaMenuCarta } from "../../lib/slug";
 import { descripcionDeMenu } from "../../lib/menus";
+import { imagenesDeCompartir, metaCompartir } from "../../lib/compartir";
+import { jsonLdFicha } from "../../lib/jsonld";
+import DatosEstructurados from "./datos-estructurados";
 import Nav from "../nav";
 import Resenas from "./resenas";
 import Seguir from "../_social/seguir";
@@ -47,13 +50,22 @@ export async function metadataFicha(slug) {
   try {
     const datos = await cargar(slug);
     if (!datos) return { title: "Restaurante no encontrado — Menú Abierto" };
-    const { r } = datos;
+    const { r, fotos } = datos;
     const lugar = [r.neighborhood, r.city].filter(Boolean).join(", ");
-    return {
-      title: `${r.name} — menú y precios | Menú Abierto`,
-      description:
-        r.summary || `Menú, precios y ubicación de ${r.name}${lugar ? ` en ${lugar}` : ""}.`,
-    };
+    const descripcion =
+      r.summary || `Menú, precios y ubicación de ${r.name}${lugar ? ` en ${lugar}` : ""}.`;
+
+    // La foto que se comparte es la primera de la ficha, y `cargar` ya puso la
+    // fachada ahí delante: es la que se reconoce al llegar al local, y por lo
+    // tanto la que hace que un enlace en un grupo de WhatsApp se entienda de
+    // un vistazo.
+    return metaCompartir({
+      titulo: `${r.name} — menú y precios | Menú Abierto`,
+      tituloCorto: lugar ? `${r.name} — ${lugar}` : r.name,
+      descripcion,
+      ruta: rutaFicha(slug),
+      imagenes: imagenesDeCompartir(fotos, `Fachada de ${r.name}`),
+    });
   } catch {
     return { title: "Menú Abierto" };
   }
@@ -165,6 +177,7 @@ export default async function Ficha({ slug }) {
       <Nav />
 
       <main className="ficha">
+        <DatosEstructurados datos={jsonLdFicha(datos, slug)} />
         <MedirVista slug={slug} />
         <div className="wrap">
           <Link className="ficha-volver" href="/">
