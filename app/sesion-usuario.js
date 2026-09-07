@@ -17,18 +17,18 @@ import { IconoUsuario } from "./panel/tablero-iconos";
  * es un enlace normal y lleva a `href`, que para el dueño son sus restaurantes
  * y para el comensal su cuenta.
  *
- * @param {{correo?: string, href?: string, destino?: string}} props
+ * @param {{correo?: string, foto?: string|null, href?: string, destino?: string}} props
  *   `href` es a dónde lleva el avatar y `destino` a dónde se sale: del panel, a
  *   la puerta; del sitio público, a la portada, que es donde estaba mirando.
  */
-export default function SesionUsuario({ correo, href = "/panel", destino }) {
+export default function SesionUsuario({ correo, foto, href = "/panel", destino }) {
   if (!correo) return null;
 
   return (
     <div className="menu-usuario">
       <Link className="menu-usuario-boton" href={href} aria-label="Tu cuenta">
         <span className="panel-avatar" aria-hidden="true">
-          <IconoUsuario ancho={18} />
+          {foto ? <img src={foto} alt="" width={32} height={32} /> : <IconoUsuario ancho={18} />}
         </span>
       </Link>
 

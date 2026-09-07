@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { esRestaurantero } from "../../../lib/destino";
 import CuentaForm from "./form";
+import FotoDeCuenta from "./foto";
 import CabeceraPanel from "../cabecera";
 import { conteoDe, insigniaActual } from "../../../lib/insignias";
+import { fotoDeCuenta } from "../../../lib/avatar";
 import { IconoInsignia } from "../../insignias-iconos";
 
 export const metadata = { title: "Tu cuenta — Menú Abierto" };
@@ -27,6 +29,7 @@ export default async function Cuenta() {
   const restaurantero = await esRestaurantero(auth.user);
   const atras = restaurantero ? "/panel" : "/";
 
+  const foto = await fotoDeCuenta(auth.user.id);
   const resenas = conteoDe(perfil?.reviews_count);
   const insignia = insigniaActual(resenas);
 
@@ -38,10 +41,13 @@ export default async function Cuenta() {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} atras={atras} />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} atras={atras} />
 
       <main className="wrap panel-main panel-angosto">
         <h1>Tu cuenta</h1>
+
+        <h2 className="sub">Tu foto</h2>
+        <FotoDeCuenta foto={foto} />
 
         <div className="dato">
           <span className="dato-etiqueta">Correo</span>

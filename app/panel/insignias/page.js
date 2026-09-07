@@ -53,7 +53,7 @@ export default async function Insignias() {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} atras={atras} />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} atras={atras} />
 
       <main className="wrap panel-main panel-angosto">
         <h1>Tus insignias</h1>

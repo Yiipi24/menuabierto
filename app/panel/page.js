@@ -87,7 +87,7 @@ export default async function Panel() {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} />
 
       <main className="wrap panel-main panel-tablero">
         <div className="panel-encabezado">

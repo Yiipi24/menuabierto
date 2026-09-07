@@ -82,7 +82,7 @@ export default async function Editar({ params }) {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} atras="/panel" />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} atras="/panel" />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">

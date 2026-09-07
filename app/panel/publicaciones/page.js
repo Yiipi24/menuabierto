@@ -24,7 +24,7 @@ export default async function Publicaciones() {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={usuario.email} atras="/panel" />
+      <CabeceraPanel correo={usuario.email} usuarioId={usuario.id} atras="/panel" />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">

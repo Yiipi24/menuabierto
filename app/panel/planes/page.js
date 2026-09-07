@@ -33,7 +33,7 @@ export default async function Planes() {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} atras="/panel" />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} atras="/panel" />
 
       <main className="wrap panel-main">
         <h1>Planes</h1>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { currentUser } from "../lib/supabase";
+import { fotoDeCuenta } from "../lib/avatar";
 import { avisosSinLeer } from "./_social/datos";
 import { IconoCampana } from "./_social/iconos";
 import Brand from "./brand";
@@ -24,9 +25,13 @@ export default async function Nav({ landing = false }) {
   // El punto de los avisos sin leer. Solo con sesión, y un fallo aquí no puede
   // dejar sin menú a toda la página: sale sin punto y ya.
   let sinLeer = 0;
+  let foto = null;
   if (usuario) {
     try {
-      sinLeer = await avisosSinLeer(usuario.id);
+      [sinLeer, foto] = await Promise.all([
+        avisosSinLeer(usuario.id),
+        fotoDeCuenta(usuario.id),
+      ]);
     } catch {
       sinLeer = 0;
     }
@@ -66,7 +71,12 @@ export default async function Nav({ landing = false }) {
             </Link>
           ) : null}
           {usuario ? (
-            <SesionUsuario correo={usuario.email} href="/panel" destino="/" />
+            <SesionUsuario
+              correo={usuario.email}
+              foto={foto}
+              href="/panel"
+              destino="/"
+            />
           ) : (
             <>
               <Link className="hide-sm" href="/entrar">

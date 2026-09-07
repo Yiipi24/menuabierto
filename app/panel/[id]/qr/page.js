@@ -50,7 +50,7 @@ export default async function QrDelRestaurante({ params }) {
 
   return (
     <div className="panel-wrap">
-      <CabeceraPanel correo={auth.user.email} marca="/panel" atras={`/panel/${id}`} />
+      <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} marca="/panel" atras={`/panel/${id}`} />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">
