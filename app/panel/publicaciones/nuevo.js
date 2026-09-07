@@ -2,7 +2,16 @@
 
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { publicar } from "./actions";
-import { MAX_TEXTO_POST, TIPOS, esVideo, revisarMedia } from "../../../lib/social";
+import {
+  MAX_DIAS_PROGRAMAR,
+  MAX_TEXTO_POST,
+  TIPOS,
+  esVideo,
+  paraInputLocal,
+  proximaHoraEnPunto,
+  revisarMedia,
+  revisarProgramacion,
+} from "../../../lib/social";
 import {
   ESTADO,
   avisoSinIntegracion,
@@ -23,6 +32,7 @@ import {
   IconoImagen,
   IconoNube,
   IconoPalomita,
+  IconoReloj,
   IconoVideo,
 } from "../../_social/iconos";
 
@@ -56,11 +66,24 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
   const [ayuda, setAyuda] = useState(false);
   const [vistaMovil, setVistaMovil] = useState(false);
   const [redes, setRedes] = useState(() => estadoInicialDeRedes(conexiones));
+  const [cuando, setCuando] = useState("ahora");
+  // La hora propuesta y el mínimo del calendario se rellenan al montar y no al
+  // pintar: el servidor corre en UTC y quien mira no, así que calcularlos en
+  // el primer render daría dos valores distintos y React marcaría el desajuste.
+  const [fecha, setFecha] = useState("");
+  const [minimo, setMinimo] = useState("");
   const [elegidos, setElegidos] = useState(() =>
     // Con un solo restaurante no hay nada que elegir: viene marcado y las
     // casillas ni se enseñan.
     restaurantes.length === 1 ? [restaurantes[0].id] : [],
   );
+
+  // La hora que se propone: la siguiente en punto. Así el programador se abre
+  // con una fecha válida y quien solo quería "más tarde" no teclea nada.
+  useEffect(() => {
+    setFecha((previa) => previa || paraInputLocal(proximaHoraEnPunto()));
+    setMinimo(paraInputLocal(new Date()));
+  }, []);
 
   // La vista previa se hace con una URL de objeto, que hay que soltar: sin
   // esto, elegir diez archivos seguidos deja diez en memoria.
@@ -78,6 +101,17 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
     if (aviso) return { status: "error", message: aviso };
     formData.set("media", archivo, archivo.name);
 
+    if (cuando === "programar") {
+      // Antes de gastar la subida: una fecha mala no mejora por haber
+      // esperado a que suban diez megas.
+      const avisoFecha = revisarProgramacion(fecha);
+      if (avisoFecha) return { status: "error", message: avisoFecha };
+    }
+
+    // La zona de quien llena el formulario, para que el mensaje de vuelta diga
+    // la hora que eligió y no la del servidor, que corre en UTC.
+    formData.set("zona", Intl.DateTimeFormat().resolvedOptions().timeZone ?? "");
+
     try {
       const resultado = await publicar(prev, formData);
       if (resultado.status === "ok") {
@@ -86,6 +120,9 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
         setArchivo(null);
         setVista(null);
         setTexto("");
+        setCuando("ahora");
+        setFecha(paraInputLocal(proximaHoraEnPunto()));
+        setMinimo(paraInputLocal(new Date()));
       }
       return resultado;
     } catch (error) {
@@ -169,7 +206,15 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
     );
   }
 
-  const listo = Boolean(archivo) && elegidos.length > 0;
+  // El aviso de la fecha se calcula al vuelo: es lo que decide si el botón de
+  // publicar está disponible y lo que se enseña debajo del campo.
+  const avisoFecha = cuando === "programar" && fecha ? revisarProgramacion(fecha) : null;
+
+  const listo =
+    Boolean(archivo) &&
+    elegidos.length > 0 &&
+    !avisoFecha &&
+    (cuando === "ahora" || Boolean(fecha));
   const nombreRestaurante =
     restaurantes.find((r) => r.id === elegidos[0])?.name ?? restaurantes[0]?.name ?? "Tu restaurante";
 
@@ -327,9 +372,85 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
           </span>
         </Paso>
 
-        {/* 4. Las redes de fuera */}
+        {/* 4. Cuándo sale */}
         <Paso
           numero={4}
+          titulo="¿Cuándo se publica?"
+          pista="Ahora mismo, o el día y la hora que elijas."
+        >
+          <fieldset className="post-cuando">
+            <legend className="sr-only">Momento de publicación</legend>
+
+            <label className={cuando === "ahora" ? "post-momento elegido" : "post-momento"}>
+              <input
+                type="radio"
+                name="cuando"
+                value="ahora"
+                checked={cuando === "ahora"}
+                onChange={() => setCuando("ahora")}
+              />
+              <span className="post-momento-icono" aria-hidden="true">
+                <IconoAvion ancho={19} />
+              </span>
+              <span className="post-momento-texto">
+                <strong>Publicar ahora</strong>
+                <span>Sale en cuanto lo mandes.</span>
+              </span>
+            </label>
+
+            <label className={cuando === "programar" ? "post-momento elegido" : "post-momento"}>
+              <input
+                type="radio"
+                name="cuando"
+                value="programar"
+                checked={cuando === "programar"}
+                onChange={() => setCuando("programar")}
+              />
+              <span className="post-momento-icono" aria-hidden="true">
+                <IconoReloj ancho={19} />
+              </span>
+              <span className="post-momento-texto">
+                <strong>Programar</strong>
+                <span>Se queda guardado y sale solo a la hora que digas.</span>
+              </span>
+            </label>
+          </fieldset>
+
+          {cuando === "programar" ? (
+            <div className="post-programar">
+              <label htmlFor="post-publish-at">Día y hora</label>
+              <input
+                id="post-publish-at"
+                className="post-fecha"
+                type="datetime-local"
+                name="publish_at"
+                value={fecha}
+                min={minimo}
+                onChange={(e) => setFecha(e.target.value)}
+              />
+              {/* El aviso se enseña mientras se escribe y no solo al mandar:
+                  una fecha de ayer tecleada por error se corrige antes de
+                  subir el archivo. */}
+              {avisoFecha ? (
+                <p className="form-msg err" role="status">
+                  {avisoFecha}
+                </p>
+              ) : (
+                <p className="ayuda">
+                  En la hora de tu ciudad. Puedes programar hasta con {MAX_DIAS_PROGRAMAR} días de
+                  anticipación, y cambiar la fecha o adelantarlo mientras no haya salido.
+                  {tipo === "historia"
+                    ? " Las 24 horas de la historia empiezan a contar cuando sale."
+                    : ""}
+                </p>
+              )}
+            </div>
+          ) : null}
+        </Paso>
+
+        {/* 5. Las redes de fuera */}
+        <Paso
+          numero={5}
           titulo="Publicar también en redes sociales"
           pista="Conecta tus cuentas para compartir automáticamente."
         >
@@ -384,9 +505,9 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
           </ul>
         </Paso>
 
-        {/* 5. Dónde. Con un solo restaurante no hay paso que dar. */}
+        {/* 6. Dónde. Con un solo restaurante no hay paso que dar. */}
         {restaurantes.length > 1 ? (
-          <Paso numero={5} titulo="¿Dónde se publica?">
+          <Paso numero={6} titulo="¿Dónde se publica?">
             <fieldset className="post-donde">
               <legend className="sr-only">Restaurantes</legend>
 
@@ -466,8 +587,18 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
             Cancelar
           </a>
           <button className="btn btn-grande" type="submit" disabled={pending || !listo}>
-            <IconoAvion ancho={18} />
-            {pending ? "Publicando…" : tipo === "historia" ? "Publicar historia" : "Publicar"}
+            {cuando === "programar" ? <IconoReloj ancho={18} /> : <IconoAvion ancho={18} />}
+            {pending
+              ? cuando === "programar"
+                ? "Programando…"
+                : "Publicando…"
+              : cuando === "programar"
+                ? tipo === "historia"
+                  ? "Programar historia"
+                  : "Programar publicación"
+                : tipo === "historia"
+                  ? "Publicar historia"
+                  : "Publicar"}
           </button>
         </div>
 
@@ -475,7 +606,9 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
           <p className="ayuda post-barra-ayuda">
             {!archivo
               ? "Agrega una foto o un video para poder publicar."
-              : "Elige al menos un restaurante."}
+              : avisoFecha
+                ? avisoFecha
+                : "Elige al menos un restaurante."}
           </p>
         ) : null}
       </form>
