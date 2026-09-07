@@ -6043,87 +6043,406 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
 /* ---------- el panel del dueño ---------- */
 
-.bloque-post { margin-top: 32px; }
+.post-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 348px;
+  gap: 26px;
+  align-items: start;
+  margin-top: 22px;
+}
 
-.post-form { display: grid; gap: 22px; margin-top: 14px; }
+.post-form { display: grid; gap: 18px; align-content: start; }
 
-.post-tipos { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
+/* Cada paso: el número en su círculo naranja y todo lo suyo alineado debajo del
+   título, para que la columna de la izquierda se lea como una lista de cosas
+   por hacer y no como un formulario largo. */
+.post-paso {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 14px;
+  padding: 4px 0;
+}
 
-.post-tipos legend { margin-bottom: 8px; }
+.post-paso-numero {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.post-paso-cuerpo { display: grid; gap: 12px; min-width: 0; }
+
+.post-paso-titulo { font-size: 19px; font-weight: 700; margin: 0; }
+
+.post-paso-pista { margin: -8px 0 0; color: var(--ink-soft); font-size: 14.5px; }
+
+/* ---------- 1. historia o publicación ---------- */
+
+.post-tipos {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
 
 .post-tipo {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
+  padding: 16px 18px;
+  border: 1.5px solid var(--line);
   border-radius: 14px;
   background: var(--paper);
   cursor: pointer;
-  transition: border-color 0.16s ease, background 0.16s ease;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
 }
 
 .post-tipo:hover { border-color: var(--accent); }
 
-.post-tipo.elegido { border-color: var(--accent); background: var(--accent-soft); }
+.post-tipo:focus-within { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+.post-tipo.elegido {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: var(--sombra);
+}
 
 .post-tipo input { margin-top: 4px; accent-color: var(--accent); }
 
 .post-tipo-icono { color: var(--accent); display: grid; place-items: center; margin-top: 2px; }
 
-.post-tipo-texto { display: grid; gap: 2px; }
+.post-tipo-texto { display: grid; gap: 3px; }
 
-.post-tipo-texto strong { font-size: 15px; }
+.post-tipo-texto strong { font-size: 15.5px; }
 
-.post-tipo-texto span { font-size: 13.5px; color: var(--ink-soft); }
+.post-tipo-texto span { font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
 
-.post-campo { display: grid; gap: 8px; position: relative; }
+/* ---------- 2. el contenido ---------- */
 
-.post-opcional { font-weight: 400; color: var(--ink-faint); }
-
-.post-contador { justify-self: end; font-size: 12.5px; color: var(--ink-faint); }
-
-/* La vista previa con el mismo recorte que va a tener: vertical si es historia,
-   como sale en la ficha si es publicación. */
-.post-vista {
+.post-fuentes {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.post-fuente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 16px;
-  border: 1px dashed var(--line);
+  border: 1.5px solid var(--line);
   border-radius: 14px;
+  background: var(--paper);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.post-fuente:hover { border-color: var(--accent); }
+
+.post-fuente:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+.post-fuente.elegida { border-color: var(--accent); background: var(--accent-soft); }
+
+.post-fuente-icono { color: var(--ink-soft); display: grid; place-items: center; flex: none; }
+
+.post-fuente.elegida .post-fuente-icono { color: var(--accent); }
+
+.post-fuente-texto { display: grid; gap: 2px; min-width: 0; }
+
+.post-fuente-texto strong { font-size: 15px; }
+
+.post-fuente-texto span { font-size: 13px; color: var(--ink-soft); }
+
+/* El área de arrastrar y soltar. */
+.post-soltadero {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 30px 20px;
+  border: 1.5px dashed var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  text-align: center;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.post-soltadero.es-compacto { padding: 22px 14px; }
+
+.post-soltadero.arrastrando { border-color: var(--accent); background: var(--accent-soft); }
+
+.post-soltadero-icono { color: var(--ink-faint); }
+
+.post-soltadero.arrastrando .post-soltadero-icono { color: var(--accent); }
+
+.post-soltadero p { font-size: 14.5px; color: var(--ink-soft); margin: 0; }
+
+.post-soltadero-o { font-size: 13px; color: var(--ink-faint); }
+
+/* El archivo ya elegido, con su miniatura y las dos salidas. */
+.post-archivo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.post-archivo-media {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
   background: var(--paper-warm);
 }
 
-.post-vista-etiqueta {
+.post-archivo-media img,
+.post-archivo-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.post-archivo-datos { display: grid; gap: 4px; min-width: 0; }
+
+.post-archivo-datos strong {
+  font-size: 14.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-archivo-datos > span { font-size: 13px; color: var(--ink-faint); }
+
+.post-archivo-acciones { display: flex; gap: 16px; margin-top: 6px; }
+
+/* La cámara del dispositivo, con el archivo de repuesto al lado. */
+.post-camara-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.post-camara-aparte { display: grid; gap: 8px; }
+
+.post-camara { display: grid; gap: 10px; }
+
+.post-camara-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-warm);
+  justify-self: start;
+}
+
+.post-tab {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 12.5px;
-  font-weight: 700;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--ink-soft);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  cursor: pointer;
 }
 
-.post-vista-media { margin: 0; border-radius: 12px; overflow: hidden; background: #000; }
+.post-tab.activa { background: var(--paper); border-color: var(--accent); color: var(--accent); }
 
-.post-vista-media img,
-.post-vista-media video {
+.post-tab:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.post-camara-lente {
+  position: relative;
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #14100e;
+  aspect-ratio: 4 / 3;
+}
+
+.post-camara-lente img,
+.post-camara-lente video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Las cuatro esquinas del encuadre: dicen dónde va a quedar el recorte sin
+   taparlo con una rejilla. */
+.post-camara-marco {
+  position: absolute;
+  inset: 14px;
+  border-radius: 8px;
+  background:
+    linear-gradient(#fff, #fff) left top / 22px 2px no-repeat,
+    linear-gradient(#fff, #fff) left top / 2px 22px no-repeat,
+    linear-gradient(#fff, #fff) right top / 22px 2px no-repeat,
+    linear-gradient(#fff, #fff) right top / 2px 22px no-repeat,
+    linear-gradient(#fff, #fff) left bottom / 22px 2px no-repeat,
+    linear-gradient(#fff, #fff) left bottom / 2px 22px no-repeat,
+    linear-gradient(#fff, #fff) right bottom / 22px 2px no-repeat,
+    linear-gradient(#fff, #fff) right bottom / 2px 22px no-repeat;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.post-camara-girar {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(20, 16, 14, 0.55);
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.post-camara-girar span { line-height: 1.2; }
+
+.post-camara-disparo {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 4px solid #fff;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.post-camara-disparo.grabando { border-radius: 14px; background: #b42318; }
+
+.post-camara-disparo:focus-visible,
+.post-camara-girar:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+.post-camara-pie { display: flex; gap: 12px; }
+
+/* ---------- 3. el texto ---------- */
+
+.post-texto {
   width: 100%;
-  max-height: 340px;
-  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font: inherit;
+  font-size: 15px;
+  background: var(--paper);
+  color: var(--ink);
+  resize: vertical;
+  min-height: 96px;
+}
+
+.post-texto:focus { outline: 2.5px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
+.post-opcional { font-weight: 400; color: var(--ink-faint); }
+
+.post-contador { justify-self: end; font-size: 12.5px; color: var(--ink-faint); margin-top: -6px; }
+
+/* ---------- 4. las redes de fuera ---------- */
+
+.post-redes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 14px;
+}
+
+.post-red {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.post-red-logo { display: grid; place-items: center; color: var(--ink-soft); }
+
+.post-red-logo.es-facebook { color: #1877f2; }
+.post-red-logo.es-instagram { color: #d62976; }
+.post-red-logo.es-x { color: #14100e; }
+.post-red-logo.es-tiktok { color: #14100e; }
+
+.post-red-texto { display: grid; gap: 2px; min-width: 0; }
+
+.post-red-texto strong { font-size: 14.5px; }
+
+.post-red-estado { font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; }
+
+/* Sin conexión el botón se pone en su propia línea y ancho completo: al lado
+   del nombre dejaba "Sin conectar" partido en dos renglones. */
+.post-red-conectar { grid-column: 1 / -1; width: 100%; justify-content: center; }
+
+.post-red-estado.es-viva { color: var(--verde); font-weight: 600; }
+
+.post-red-aviso {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  background: var(--paper-warm);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* El interruptor. Es un botón con role="switch": el estado lo dice el atributo
+   y no solo el color, que es lo que necesita quien no lo ve. */
+.switch {
+  flex: none;
+  width: 46px;
+  height: 26px;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line);
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+
+.switch-bolita {
   display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(42, 33, 28, 0.3);
+  transition: transform 0.16s ease;
 }
 
-.post-vista-media.es-historia {
-  max-width: 240px;
-  aspect-ratio: 9 / 16;
-}
+.switch.encendido { background: var(--accent); }
 
-.post-vista-media.es-historia img,
-.post-vista-media.es-historia video { height: 100%; object-fit: cover; }
+.switch.encendido .switch-bolita { transform: translateX(20px); }
 
-.post-vista-texto { font-size: 14px; color: var(--ink-soft); }
+.switch:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 5. dónde se publica ---------- */
 
 .post-donde { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
 
@@ -6139,7 +6458,14 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 .post-todos input,
 .post-restaurantes input { accent-color: var(--accent); }
 
-.post-restaurantes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.post-restaurantes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px;
+}
 
 .post-restaurantes label {
   display: flex;
@@ -6166,36 +6492,334 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
 .post-restaurante-lugar { font-size: 13px; color: var(--ink-faint); }
 
-/* La lista de lo publicado. */
-.post-lista { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 14px; }
+/* ---------- la barra de publicar ---------- */
 
-.post-fila {
+.post-barra {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  padding: 16px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.btn-grande {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 34px;
+  font-size: 16px;
+}
+
+.post-barra-ayuda { text-align: right; margin-top: -4px; }
+
+.post-vista-movil { display: none; }
+
+/* ---------- la columna de la derecha ---------- */
+
+.post-aparte { display: grid; gap: 18px; position: sticky; top: 88px; }
+
+.post-previa {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.post-previa-titulo { font-size: 17px; font-weight: 700; }
+
+.post-previa-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+}
+
+.post-previa-tab {
+  padding: 10px 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.post-previa-tab.activa { color: var(--accent); border-bottom-color: var(--accent); }
+
+.post-previa-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.post-previa-nota { font-size: 12px; color: var(--ink-faint); line-height: 1.45; }
+
+/* El teléfono de la vista previa. La historia se ve como se va a ver: vertical,
+   con la barra de arriba y el pie del visor. */
+.telefono {
+  justify-self: center;
+  width: 100%;
+  max-width: 258px;
+  border-radius: 34px;
+  padding: 10px;
+  background: #14100e;
+  box-shadow: var(--sombra-alta);
+}
+
+.telefono-pantalla {
+  position: relative;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #221a16;
+  aspect-ratio: 9 / 16;
+  display: grid;
+}
+
+.telefono-barra {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 3;
+}
+
+.telefono-barra i { display: block; width: 38%; height: 100%; border-radius: 999px; background: #fff; }
+
+.telefono-cabeza {
+  position: absolute;
+  top: 22px;
+  left: 12px;
+  right: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 12px;
+}
+
+.telefono-cabeza strong {
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.telefono-cabeza em { font-style: normal; opacity: 0.75; font-size: 11.5px; white-space: nowrap; }
+
+.telefono-cerrar { margin-left: auto; opacity: 0.9; display: grid; place-items: center; }
+
+.telefono-avatar {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}
+
+.telefono-media { grid-area: 1 / 1; overflow: hidden; }
+
+.telefono-media img,
+.telefono-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.telefono-vacio {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12.5px;
+}
+
+.telefono-texto {
+  grid-area: 1 / 1;
+  align-self: end;
+  z-index: 2;
+  margin: 0 14px 62px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  font-size: 12.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.telefono-pie {
+  grid-area: 1 / 1;
+  align-self: end;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  color: #fff;
+}
+
+.telefono-campo {
+  flex: 1;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* La publicación se previsualiza como la tarjeta de la ficha. */
+.previa-post {
   border: 1px solid var(--line);
   border-radius: 14px;
+  overflow: hidden;
   background: var(--paper);
 }
 
-.post-fila-ida { color: var(--ink-faint); font-size: 14px; }
+.previa-post header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
 
-.post-fila-media {
+.previa-post header span { display: grid; }
+
+.previa-post header strong { font-size: 13.5px; }
+
+.previa-post header em { font-style: normal; font-size: 12px; color: var(--ink-faint); }
+
+.previa-post .telefono-avatar { border-color: var(--line); }
+
+.previa-post-media { background: #221a16; aspect-ratio: 4 / 5; }
+
+.previa-post-media img,
+.previa-post-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.previa-post-texto { padding: 12px 14px 0; font-size: 13.5px; line-height: 1.45; overflow-wrap: anywhere; }
+
+.previa-post footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+/* Los consejos y la ayuda. */
+.post-tips {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  padding: 16px 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.post-tips h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--ink); }
+
+.post-tips h2 span { color: var(--oro); display: grid; place-items: center; }
+
+.post-tips ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+.post-tips li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.post-tips li .icono { flex: none; color: var(--verde); margin-top: 2px; }
+
+.post-ayuda {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 14px 16px;
+}
+
+.post-ayuda summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.post-ayuda p { margin-top: 10px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+
+/* ---------- lo que ya publicaste ---------- */
+
+.bloque-post { margin-top: 40px; }
+
+.post-lista-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.post-lista-cabeza .btn-texto { display: inline-flex; align-items: center; gap: 6px; }
+
+.post-lista {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.post-tarjeta {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: var(--sombra);
+}
+
+.post-tarjeta-ida { color: var(--ink-faint); font-size: 14px; align-items: center; }
+
+.post-tarjeta-media {
   flex: none;
-  width: 92px;
-  height: 92px;
+  width: 84px;
+  height: 84px;
   margin: 0;
   border-radius: 12px;
   overflow: hidden;
   background: var(--paper-warm);
 }
 
-.post-fila-media img,
-.post-fila-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.post-tarjeta-media img,
+.post-tarjeta-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.post-fila-cuerpo { flex: 1; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.post-tarjeta-cuerpo { flex: 1; min-width: 0; display: grid; gap: 6px; align-content: start; }
 
-.post-fila-cabeza { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.post-tarjeta-cabeza { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 .post-etiqueta {
   display: inline-flex;
@@ -6205,44 +6829,95 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   border-radius: 999px;
   background: var(--paper-warm);
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
 }
 
 .post-etiqueta.es-historia { background: var(--accent-soft); color: var(--accent); }
 
-.post-fila-fecha { font-size: 12.5px; color: var(--ink-faint); }
+.post-tarjeta-fecha { font-size: 12px; color: var(--ink-faint); }
 
-.post-fila-texto { font-size: 14.5px; line-height: 1.45; }
+.post-tarjeta-texto {
+  font-size: 14px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 .post-sin-texto { color: var(--ink-faint); font-size: 13.5px; }
 
-.post-fila-donde { font-size: 13px; color: var(--ink-faint); }
+.post-tarjeta-donde {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .post-numeros {
   list-style: none;
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-}
-
-.post-numeros li {
-  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 13.5px;
+  gap: 14px;
+  font-size: 13px;
   color: var(--ink-soft);
 }
 
+.post-numeros li { display: inline-flex; align-items: center; gap: 5px; }
+
 .post-numeros .icono { color: var(--ink-faint); }
 
-.post-numeros strong { color: var(--ink); }
+.post-tarjeta-menu { position: relative; margin-left: auto; }
 
-.post-fila-acciones { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 4px; }
+.post-tarjeta-puntos {
+  border: 0;
+  background: none;
+  padding: 4px;
+  border-radius: 8px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
 
-.post-fila-acciones .btn-texto { display: inline-flex; align-items: center; gap: 6px; }
+.post-tarjeta-puntos:hover { background: var(--paper-warm); color: var(--ink); }
+
+.post-tarjeta-puntos:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.post-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 5;
+  min-width: 176px;
+  display: grid;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: var(--sombra-alta);
+}
+
+.post-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.post-menu button:hover { background: var(--paper-warm); }
 
 .es-peligro { color: #b42318; }
 
@@ -6254,7 +6929,7 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   border-radius: 12px;
   padding: 10px 12px;
   font: inherit;
-  font-size: 14.5px;
+  font-size: 14px;
   resize: vertical;
 }
 
@@ -6264,9 +6939,45 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  font-size: 13.5px;
+  gap: 10px;
+  font-size: 13px;
   color: var(--ink-soft);
+}
+
+.hueso-previa { min-height: 520px; background: var(--paper); border-radius: var(--radius); }
+
+.panel-encabezado-post { align-items: flex-start; }
+
+.panel-encabezado-post .panel-lead { margin: 6px 0 0; max-width: 62ch; }
+
+@media (max-width: 1080px) {
+  .post-layout { grid-template-columns: minmax(0, 1fr); }
+
+  .post-aparte { display: none; }
+
+  .post-vista-movil { display: grid; gap: 16px; justify-items: start; }
+
+  .post-vista-movil .post-previa { width: 100%; }
+}
+
+@media (max-width: 720px) {
+  .post-paso { grid-template-columns: 26px minmax(0, 1fr); gap: 10px; }
+
+  .post-paso-numero { width: 26px; height: 26px; font-size: 13px; }
+
+  .post-paso-titulo { font-size: 17px; }
+
+  .post-camara-fila { grid-template-columns: minmax(0, 1fr); }
+
+  .post-barra { flex-direction: column-reverse; align-items: stretch; }
+
+  .post-barra .btn-grande { justify-content: center; }
+
+  .post-barra .btn-linea { text-align: center; }
+
+  .post-barra-ayuda { text-align: center; }
+
+  .post-lista { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---------- la sección del menú, plegable desde su encabezado ---------- */
@@ -6392,7 +7103,4 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
   .feed-encabezado h1 { font-size: 27px; }
 
-  .post-fila { flex-direction: column; }
-
-  .post-fila-media { width: 100%; height: 160px; }
 }

@@ -4,7 +4,7 @@ import { currentUser } from "../../../lib/supabase";
 import CabeceraPanel from "../cabecera";
 import Nuevo from "./nuevo";
 import Lista from "./lista";
-import { misPublicaciones, misRestaurantes } from "./actions";
+import { conexionesDeRedes, misPublicaciones, misRestaurantes } from "./actions";
 
 export const metadata = { title: "Historias y publicaciones — Menú Abierto" };
 export const dynamic = "force-dynamic";
@@ -17,33 +17,32 @@ export default async function Publicaciones() {
   const usuario = await currentUser();
   if (!usuario) redirect("/entrar?next=%2Fpanel%2Fpublicaciones");
 
-  const [restaurantes, publicaciones] = await Promise.all([
+  const [restaurantes, publicaciones, conexiones] = await Promise.all([
     misRestaurantes(),
     misPublicaciones(),
+    conexionesDeRedes(),
   ]);
 
   return (
     <div className="panel-wrap">
       <CabeceraPanel correo={usuario.email} usuarioId={usuario.id} atras="/panel" />
 
-      <main className="wrap panel-main panel-angosto">
-        <div className="panel-encabezado">
-          <h1>Historias y publicaciones</h1>
+      <main className="wrap wrap-ancho panel-main">
+        <div className="panel-encabezado panel-encabezado-post">
+          <div>
+            <h1>Historias y publicaciones</h1>
+            <p className="panel-lead">
+              Comparte lo mejor de tu restaurante. Tu contenido se muestra en tu ficha y llega a
+              todos tus seguidores.
+            </p>
+          </div>
         </div>
-
-        <p className="panel-lead">
-          Lo que cuentas hoy sale en tu ficha, encima de la dirección, y le llega
-          a quien te sigue.
-        </p>
 
         {restaurantes.length ? (
           <>
-            <section className="bloque-post">
-              <Nuevo restaurantes={restaurantes} />
-            </section>
+            <Nuevo restaurantes={restaurantes} conexiones={conexiones} />
 
             <section className="bloque-post">
-              <h2 className="sub">Lo que ya publicaste</h2>
               <Lista publicaciones={publicaciones} />
             </section>
           </>

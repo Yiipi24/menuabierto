@@ -199,3 +199,82 @@ export function IconoDestello(props) {
     </Svg>
   );
 }
+
+// Los dibujos que estrena el formulario de publicar: la foto que se sube, la
+// nube de arrastrar y soltar, el avión de enviar, el foco de los consejos.
+
+export function IconoImagen(props) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="4.5" width="18" height="15" rx="2.5" />
+      <circle cx="8.5" cy="9.5" r="1.6" />
+      <path d="M3.5 17.5l4.7-4.6a2 2 0 0 1 2.7-.1l3.4 3 1.7-1.6a2 2 0 0 1 2.7 0l1.8 1.7" />
+    </Svg>
+  );
+}
+
+export function IconoNube(props) {
+  return (
+    <Svg {...props}>
+      <path d="M7 18.5a4.2 4.2 0 0 1-.4-8.4 5.4 5.4 0 0 1 10.4-1.4A3.9 3.9 0 0 1 17.6 18.5" />
+      <path d="M12 20.5V11m0 0-2.7 2.7M12 11l2.7 2.7" />
+    </Svg>
+  );
+}
+
+export function IconoGirar(props) {
+  return (
+    <Svg {...props}>
+      <path d="M20 11a8 8 0 0 0-13.7-4.6L4 8.5" />
+      <path d="M4 4v4.5h4.5" />
+      <path d="M4 13a8 8 0 0 0 13.7 4.6L20 15.5" />
+      <path d="M20 20v-4.5h-4.5" />
+    </Svg>
+  );
+}
+
+export function IconoAvion(props) {
+  return (
+    <Svg {...props}>
+      <path d="M21 3 10.5 13.5" />
+      <path d="M21 3 14.4 21l-3.9-7.5L3 9.6z" />
+    </Svg>
+  );
+}
+
+export function IconoAyuda(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.8c0 1.7-2.4 2.1-2.4 3.6" />
+      <path d="M12 17.2h.01" />
+    </Svg>
+  );
+}
+
+export function IconoFoco(props) {
+  return (
+    <Svg {...props}>
+      <path d="M9.2 17.5a6 6 0 1 1 5.6 0" />
+      <path d="M9.5 17.5h5M10 20.5h4" />
+    </Svg>
+  );
+}
+
+export function IconoPalomita(props) {
+  return (
+    <Svg {...props}>
+      <path d="M5 12.8 9.6 17.4 19 8" />
+    </Svg>
+  );
+}
+
+export function IconoEnchufe(props) {
+  return (
+    <Svg {...props}>
+      <path d="M9 3v5M15 3v5" />
+      <path d="M6.5 8h11v3.5a5.5 5.5 0 0 1-11 0z" />
+      <path d="M12 17v4" />
+    </Svg>
+  );
+}

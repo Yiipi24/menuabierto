@@ -58,6 +58,20 @@ export async function misPublicaciones(antes = null) {
   }));
 }
 
+// Las cuentas de redes sociales conectadas para publicar fuera de Menú Abierto.
+//
+// Hoy devuelve la lista vacía siempre, y eso no es un pendiente escondido: no
+// existe el OAuth de Meta, TikTok ni X, así que ninguna cuenta puede estar
+// conectada y decir lo contrario sería inventar. Queda como acción de servidor
+// —y no como una constante en el cliente— porque es el sitio donde se leerá la
+// tabla de conexiones el día que las integraciones estén aprobadas, sin tocar
+// la pantalla.
+export async function conexionesDeRedes() {
+  const { user } = await sesion();
+  if (!user) return [];
+  return [];
+}
+
 function fallo(message) {
   return { status: "error", message };
 }
