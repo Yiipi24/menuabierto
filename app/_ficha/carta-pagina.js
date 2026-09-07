@@ -4,7 +4,10 @@ import Nav from "../nav";
 import Carta from "./carta";
 import { MedirVista } from "../medir";
 import { cargar, PRECIO } from "./datos";
-import { rutaFicha, rutaMenu } from "../../lib/slug";
+import { rutaFicha, rutaMenu, rutaMenuCarta } from "../../lib/slug";
+import { imagenesDeCompartir, metaCompartir } from "../../lib/compartir";
+import { jsonLdCarta } from "../../lib/jsonld";
+import DatosEstructurados from "./datos-estructurados";
 
 // Una carta suelta se busca dentro de las visibles: si el dueño la ocultó o la
 // borró, el QR que ya está pegado en la barra da 404 en vez de enseñar algo
@@ -21,16 +24,25 @@ export async function metadataCarta(slug, menuId = null) {
   try {
     const datos = await cargar(slug);
     if (!datos) return { title: "Restaurante no encontrado — Menú Abierto" };
-    const { r, menus } = datos;
+    const { r, menus, fotos } = datos;
     const solo = menuId ? menus.find((m) => m.id === menuId) : null;
     if (menuId && !solo) return { title: "Menú no encontrado — Menú Abierto" };
     const nombre = solo ? `${solo.name} de ${r.name}` : `Menú de ${r.name}`;
-    return {
-      title: `${nombre} | Menú Abierto`,
-      description: solo
+
+    // La carta se comparte con la foto del restaurante: es la misma que se ve
+    // en la ficha, y quien recibe el enlace está viendo el lugar antes que la
+    // lista de platillos. Una carta de archivo tiene su imagen o su PDF, pero
+    // no sirven de portada: el PDF no se puede dibujar y la foto de la carta
+    // llega ilegible en un recuadro de 1200 px.
+    return metaCompartir({
+      titulo: `${nombre} | Menú Abierto`,
+      tituloCorto: nombre,
+      descripcion: solo
         ? `${solo.name} de ${r.name}: platillos y precios.`
         : `Platillos y precios de ${r.name}.`,
-    };
+      ruta: solo ? rutaMenuCarta(slug, solo.id) : rutaMenu(slug),
+      imagenes: imagenesDeCompartir(fotos, `Fachada de ${r.name}`),
+    });
   } catch {
     return { title: "Menú Abierto" };
   }
@@ -73,6 +85,7 @@ export default async function CartaPagina({ slug, menuId = null }) {
       <Nav />
 
       <main className="wrap ficha ficha-menu-pagina">
+        <DatosEstructurados datos={jsonLdCarta(datos, slug, menuId)} />
         {/* El menú también es una visita a la ficha: quien llega por el QR
             nunca pasa por la portada, y sin esto su visita no existiría. */}
         <MedirVista
