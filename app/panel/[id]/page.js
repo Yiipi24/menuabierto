@@ -6,7 +6,7 @@ import { catalogoDeServicios } from "../../../lib/servicios";
 import { catalogoDePagos } from "../../../lib/pagos";
 import EditarForm from "./form";
 import Fotos from "./fotos";
-import Brand from "../../brand";
+import CabeceraPanel from "../cabecera";
 import { cambiarEstado } from "../actions";
 import BorrarRestaurante from "../borrar";
 
@@ -82,12 +82,7 @@ export default async function Editar({ params }) {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href="/panel">
-          Volver
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} atras="/panel" />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">

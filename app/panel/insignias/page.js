@@ -4,7 +4,7 @@ import { supabaseSession } from "../../../lib/supabase";
 import { rutaFicha } from "../../../lib/slug";
 import { INSIGNIAS, conteoDe, progresoDe } from "../../../lib/insignias";
 import { IconoInsignia } from "../../insignias-iconos";
-import Brand from "../../brand";
+import CabeceraPanel from "../cabecera";
 import { esRestaurantero } from "../../../lib/destino";
 
 export const metadata = { title: "Tus insignias — Menú Abierto" };
@@ -53,12 +53,7 @@ export default async function Insignias() {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href={atras} />
-        <Link className="btn-texto" href={atras}>
-          Volver
-        </Link>
-      </header>
+      <CabeceraPanel correo={auth.user.email} atras={atras} />
 
       <main className="wrap panel-main panel-angosto">
         <h1>Tus insignias</h1>

@@ -188,6 +188,41 @@ export function IconoUsuario(props) {
   );
 }
 
+export function IconoAbrir(props) {
+  return (
+    <Svg {...props}>
+      <path d="M13.5 4.5h6v6" />
+      <path d="M19.5 4.5L11 13" />
+      <path d="M18.5 14v4.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 6 5.5h4.5" />
+    </Svg>
+  );
+}
+
+export function IconoBarras(props) {
+  return (
+    <Svg {...props}>
+      <path d="M5.5 20V11M12 20V4.5M18.5 20v-6" />
+    </Svg>
+  );
+}
+
+export function IconoCalendario(props) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
+      <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+    </Svg>
+  );
+}
+
+export function IconoEquis(props) {
+  return (
+    <Svg {...props}>
+      <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+    </Svg>
+  );
+}
+
 // El mapa de las tarjetas de KPI: el icono va dentro de un círculo naranja
 // claro y se elige por nombre para que `KPIS` en lib/metricas.js no tenga que
 // importar componentes.

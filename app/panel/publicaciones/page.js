@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "../../../lib/supabase";
-import Brand from "../../brand";
+import CabeceraPanel from "../cabecera";
 import Nuevo from "./nuevo";
 import Lista from "./lista";
 import { misPublicaciones, misRestaurantes } from "./actions";
@@ -24,12 +24,7 @@ export default async function Publicaciones() {
 
   return (
     <div className="panel-wrap">
-      <header className="panel-top">
-        <Brand href="/panel" />
-        <Link className="btn-texto" href="/panel">
-          Volver
-        </Link>
-      </header>
+      <CabeceraPanel correo={usuario.email} atras="/panel" />
 
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">
