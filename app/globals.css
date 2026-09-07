@@ -5840,6 +5840,47 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
 .publicacion-accion:disabled { opacity: 0.6; cursor: default; }
 
+/* Compartir es la tercera acción de la fila y, al abrirse en escritorio, su
+   menú cuelga de ella: por eso la posición relativa vive aquí y no en la fila
+   entera. */
+.publicacion-compartir { position: relative; margin-left: auto; }
+
+.publicacion-compartir-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 6;
+  min-width: 190px;
+  display: grid;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: var(--sombra-alta);
+}
+
+.publicacion-compartir-menu a,
+.publicacion-compartir-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.publicacion-compartir-menu a:hover,
+.publicacion-compartir-menu button:hover { background: var(--paper-warm); }
+
+.publicacion-compartir-menu .icono { color: var(--ink-soft); }
+
 .publicacion-hilo { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 
 .publicacion-cargando { font-size: 13.5px; color: var(--ink-faint); padding: 4px 0 8px; }
@@ -6943,6 +6984,47 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   font-size: 13px;
   color: var(--ink-soft);
 }
+
+/* Las redes vinculadas a la cuenta del comensal. */
+.cuenta-redes {
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.cuenta-red {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.cuenta-red.conectada { border-color: var(--verde); }
+
+.cuenta-red-texto { display: grid; gap: 2px; min-width: 0; }
+
+.cuenta-red-texto strong { font-size: 15px; }
+
+.cuenta-red-aviso {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  background: var(--paper-warm);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.cuenta-red-aviso.es-ok { color: var(--verde); }
+
+.cuenta-red-aviso.es-error { color: #b42318; }
 
 .hueso-previa { min-height: 520px; background: var(--paper); border-radius: var(--radius); }
 

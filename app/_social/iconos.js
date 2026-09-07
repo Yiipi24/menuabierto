@@ -278,3 +278,13 @@ export function IconoEnchufe(props) {
     </Svg>
   );
 }
+
+// El eslabón de "copiar enlace".
+export function IconoEnlace(props) {
+  return (
+    <Svg {...props}>
+      <path d="M10.5 13.5a3.6 3.6 0 0 0 5.1 0l2.8-2.8a3.6 3.6 0 0 0-5.1-5.1l-1.4 1.4" />
+      <path d="M13.5 10.5a3.6 3.6 0 0 0-5.1 0l-2.8 2.8a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4" />
+    </Svg>
+  );
+}
