@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { invalidarFicha } from "../../../lib/cache";
 import { supabaseSession } from "../../../lib/supabase";
+import { repartirProgramadas } from "../../_social/datos";
 import {
   BUCKET_SOCIAL,
   MAX_TEXTO_POST,
   extensionDeMime,
   mediaDeMime,
   revisarMedia,
+  revisarProgramacion,
 } from "../../../lib/social";
 
 // Publicar, editar y borrar. Del lado del dueño.
@@ -46,6 +48,11 @@ export async function misPublicaciones(antes = null) {
   const { supabase, user } = await sesion();
   if (!user) return [];
 
+  // Antes de leer, repartir lo que ya salió: el dueño que abre su panel es
+  // quien más probablemente tenga algo programado esperando la hora, y así el
+  // aviso a sus seguidores no depende de que otra persona pase por el feed.
+  await repartirProgramadas(supabase);
+
   const { data, error } = await supabase.rpc("social_mias", { limite: 30, antes });
   if (error) {
     console.error("mis publicaciones", error.message);
@@ -76,6 +83,19 @@ function fallo(message) {
   return { status: "error", message };
 }
 
+// La hora de salida que pide el formulario, ya validada. Devuelve `{ error }`
+// con el aviso, o `{ publishAt }` con la fecha ISO —o null si sale ahora.
+function leerProgramacion(formData) {
+  const cuando = String(formData.get("cuando") ?? "ahora");
+  if (cuando !== "programar") return { publishAt: null };
+
+  const valor = String(formData.get("publish_at") ?? "");
+  const aviso = revisarProgramacion(valor);
+  if (aviso) return { error: aviso };
+
+  return { publishAt: new Date(valor).toISOString() };
+}
+
 export async function publicar(_prevState, formData) {
   const { supabase, user } = await sesion();
   if (!user) return fallo("Tu sesión expiró. Entra otra vez.");
@@ -98,6 +118,11 @@ export async function publicar(_prevState, formData) {
   const archivo = formData.get("media");
   const aviso = revisarMedia(archivo);
   if (aviso) return fallo(aviso);
+
+  // La hora se valida antes de subir diez megas: rechazar la fecha después de
+  // la subida es hacer esperar para nada.
+  const { publishAt, error: errorFecha } = leerProgramacion(formData);
+  if (errorFecha) return fallo(errorFecha);
 
   // Que los restaurantes elegidos sean suyos, y que estén publicados: una
   // historia en una ficha en borrador no la vería nadie, ni siquiera quien la
@@ -139,6 +164,9 @@ export async function publicar(_prevState, formData) {
       media_path: ruta,
       media_mime: archivo.type,
       media_kind: mediaDeMime(archivo.type),
+      // Nulo no llega nunca a la columna: el trigger pone `now()`. Se manda
+      // así para que "publicar ahora" y "programar" sean el mismo camino.
+      ...(publishAt ? { publish_at: publishAt } : {}),
     })
     .select("id")
     .single();
@@ -168,13 +196,33 @@ export async function publicar(_prevState, formData) {
   const cuantos = validos.length;
   const donde = cuantos === 1 ? "tu restaurante" : `tus ${cuantos} restaurantes`;
 
-  if (borradores.length) {
+  // El aviso de las fichas en borrador se dice igual programando: enterarse el
+  // martes de que la promoción del martes no se vio es tarde.
+  const enBorrador = borradores.length
+    ? ` Ojo: ${
+        borradores.length === 1 ? "uno está" : `${borradores.length} están`
+      } en borrador, así que ahí no se ve hasta que publiques la ficha.`
+    : "";
+
+  if (publishAt) {
+    const cuando = new Date(publishAt).toLocaleString("es-MX", {
+      day: "numeric",
+      month: "long",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: zonaDelFormulario(formData),
+    });
+
     return {
       status: "ok",
-      message: `Listo, se publicó en ${donde}. Ojo: ${
-        borradores.length === 1 ? "uno está" : `${borradores.length} están`
-      } en borrador, así que ahí no se ve hasta que publiques la ficha.`,
+      message: `Programado para el ${cuando} en ${donde}.${
+        tipo === "historia" ? " Sus 24 horas empiezan a contar ahí." : ""
+      }${enBorrador}`,
     };
+  }
+
+  if (enBorrador) {
+    return { status: "ok", message: `Listo, se publicó en ${donde}.${enBorrador}` };
   }
 
   return {
@@ -184,6 +232,21 @@ export async function publicar(_prevState, formData) {
         ? `Tu historia ya está en ${donde}. Se ve durante 24 horas.`
         : `Tu publicación ya está en ${donde}.`,
   };
+}
+
+// La zona horaria de quien llenó el formulario, que el navegador manda en un
+// campo oculto. El servidor corre en UTC: sin esto, "programado para las 8:00"
+// se le confirmaría al dueño como las 2:00 de la madrugada.
+function zonaDelFormulario(formData) {
+  const zona = String(formData.get("zona") ?? "").trim();
+  try {
+    // Una zona inventada revienta el formateo, y quedarse sin mensaje de éxito
+    // por eso sería perder la publicación de vista.
+    new Intl.DateTimeFormat("es-MX", { timeZone: zona });
+    return zona;
+  } catch {
+    return "America/Mexico_City";
+  }
 }
 
 export async function editarTexto(_prevState, formData) {
@@ -220,6 +283,77 @@ export async function editarTexto(_prevState, formData) {
   await revalidarFichas(supabase, (fichas ?? []).map((f) => f.restaurant_id));
 
   return { status: "ok", message: "Guardado." };
+}
+
+// Cambiar la hora de una pieza que todavía no sale, o adelantarla del todo.
+//
+// Las dos cosas son el mismo UPDATE porque son la misma decisión —cuándo
+// sale—, y el trigger de la base es el que impide lo que no se puede: mover la
+// fecha de algo ya publicado. Una historia reprogramada se lleva sus 24 horas
+// con ella, así que la que sale el viernes se ve el viernes entero.
+export async function reprogramar(_prevState, formData) {
+  const { supabase, user } = await sesion();
+  if (!user) return fallo("Tu sesión expiró. Entra otra vez.");
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return fallo("Recarga la página e inténtalo otra vez.");
+
+  const ahora = String(formData.get("ahora") ?? "") === "1";
+
+  let publishAt;
+  if (ahora) {
+    publishAt = new Date().toISOString();
+  } else {
+    const valor = String(formData.get("publish_at") ?? "");
+    const aviso = revisarProgramacion(valor);
+    if (aviso) return fallo(aviso);
+    publishAt = new Date(valor).toISOString();
+  }
+
+  // Solo lo que todavía no salió. La comprobación se repite en el trigger, que
+  // es el que manda; aquí sirve para poder decir por qué en vez de guardar en
+  // silencio algo que la base va a ignorar.
+  const { data: pieza } = await supabase
+    .from("social_posts")
+    .select("publish_at")
+    .eq("id", id)
+    .eq("author_id", user.id)
+    .maybeSingle();
+
+  if (!pieza) return fallo("No encontramos esa publicación. Recarga la página.");
+  if (new Date(pieza.publish_at) <= new Date()) {
+    return fallo("Esto ya se publicó, así que su fecha ya no se puede mover.");
+  }
+
+  const { error } = await supabase
+    .from("social_posts")
+    .update({ publish_at: publishAt })
+    .eq("id", id)
+    .eq("author_id", user.id);
+
+  if (error) {
+    console.error("reprogramar post", error.message);
+    return fallo("No pudimos cambiar la fecha. Inténtalo otra vez.");
+  }
+
+  const { data: fichas } = await supabase
+    .from("social_post_restaurants")
+    .select("restaurant_id")
+    .eq("post_id", id);
+
+  const donde = (fichas ?? []).map((f) => f.restaurant_id);
+
+  // Si acaba de salir, sus seguidores se enteran ahora y no cuando alguien
+  // pase por el feed.
+  if (ahora) await repartirProgramadas(supabase);
+
+  revalidatePath("/panel/publicaciones");
+  await revalidarFichas(supabase, donde);
+
+  return {
+    status: "ok",
+    message: ahora ? "Listo, ya está publicado." : "Cambiamos la fecha.",
+  };
 }
 
 export async function borrar(_prevState, formData) {

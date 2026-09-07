@@ -6401,6 +6401,70 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
 .post-contador { justify-self: end; font-size: 12.5px; color: var(--ink-faint); margin-top: -6px; }
 
+/* ---------- 4. cuándo sale ---------- */
+
+.post-cuando {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.post-momento {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.post-momento:hover { border-color: var(--accent); }
+
+.post-momento:focus-within { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+.post-momento.elegido { border-color: var(--accent); background: var(--accent-soft); }
+
+.post-momento input { margin-top: 4px; accent-color: var(--accent); }
+
+.post-momento-icono { color: var(--accent); display: grid; place-items: center; margin-top: 2px; }
+
+.post-momento-texto { display: grid; gap: 3px; }
+
+.post-momento-texto strong { font-size: 15px; }
+
+.post-momento-texto span { font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
+
+/* El calendario aparece debajo de las dos tarjetas, no dentro de una: dentro
+   se movía de sitio al cambiar de opción y la pantalla saltaba. */
+.post-programar {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper-warm);
+}
+
+.post-programar > label { font-size: 13.5px; font-weight: 600; }
+
+.post-fecha {
+  font: inherit;
+  color: inherit;
+  padding: 11px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  max-width: 280px;
+}
+
+.post-fecha:focus { outline: 2.5px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
 /* ---------- 4. las redes de fuera ---------- */
 
 .post-redes {
@@ -6961,6 +7025,64 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 .post-menu button:hover { background: var(--paper-warm); }
 
 .es-peligro { color: #b42318; }
+
+/* ---------- lo programado, en el panel ---------- */
+
+/* Va antes de lo publicado y separado por una línea: son dos listas y no una
+   con dos mitades. */
+.post-programadas {
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.post-programadas .post-lista-cabeza h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-programadas .post-lista-cabeza h2 .icono { color: var(--accent); }
+
+.post-lista-cuenta { font-size: 13px; color: var(--ink-faint); }
+
+/* La miniatura de lo que aún no sale se enseña apagada: es la señal de un
+   vistazo de que eso todavía no lo ve nadie. */
+.post-programadas .post-tarjeta-media img,
+.post-programadas .post-tarjeta-media video { opacity: 0.72; }
+
+.post-tarjeta-fecha.es-programada {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.post-numeros-programada { margin-right: auto; }
+
+.post-numeros-programada .btn-texto { font-size: 13px; }
+
+.post-reprogramar {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-warm);
+}
+
+.post-reprogramar > label { font-size: 13px; font-weight: 600; }
+
+.post-reprogramar .post-fecha { max-width: 240px; padding: 9px 11px; }
+
+.post-reprogramar-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
 
 .post-editar { display: grid; gap: 10px; }
 

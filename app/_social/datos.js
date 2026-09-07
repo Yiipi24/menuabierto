@@ -62,6 +62,13 @@ export async function cargarSocial(restauranteId, usuarioId) {
  */
 export async function cargarFeed(antes = null) {
   const supabase = await supabaseSession();
+
+  // Lo programado que ya salió reparte aquí sus avisos. El feed es el sitio
+  // con más tráfico de todo lo social y es justo donde el aviso importa, así
+  // que llegar tarde por unos minutos es lo peor que puede pasar: la pieza en
+  // sí ya se ve sola, porque las lecturas la filtran por su hora de salida.
+  await repartirProgramadas(supabase);
+
   // El doble de una página: entre lo que llega hay historias, que no ocupan
   // sitio en la lista de publicaciones sino un círculo arriba.
   const limite = POR_PAGINA_FEED * 2;
@@ -150,6 +157,19 @@ export async function avisosSinLeer(usuarioId) {
 
   if (error) return 0;
   return count ?? 0;
+}
+
+// El reparto de los avisos de lo programado cuya hora ya pasó. La pieza no
+// depende de esto para verse —eso lo hace el filtro por `publish_at` de cada
+// lectura—, solo la campana de quien la sigue. Como la barredora de historias,
+// corre desde donde hay tráfico y nunca puede estorbar a la página.
+export async function repartirProgramadas(cliente = null) {
+  try {
+    const supabase = cliente ?? (await supabaseSession());
+    await supabase.rpc("repartir_avisos_programados");
+  } catch {
+    // Un fallo aquí retrasa un aviso hasta la siguiente visita, nada más.
+  }
 }
 
 // La limpieza de las historias caducadas. Se llama desde la carga de la ficha

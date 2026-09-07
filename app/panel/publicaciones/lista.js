@@ -1,9 +1,20 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { borrar, editarTexto } from "./actions";
-import { conteo, esVideo, hace, leQueda, MAX_TEXTO_POST } from "../../../lib/social";
+import { borrar, editarTexto, reprogramar } from "./actions";
 import {
+  conteo,
+  cuandoSale,
+  esVideo,
+  estaProgramada,
+  hace,
+  leQueda,
+  paraInputLocal,
+  revisarProgramacion,
+  MAX_TEXTO_POST,
+} from "../../../lib/social";
+import {
+  IconoAvion,
   IconoBote,
   IconoComentario,
   IconoCorazon,
@@ -12,6 +23,7 @@ import {
   IconoMas,
   IconoChevronDer,
   IconoOjo,
+  IconoReloj,
 } from "../../_social/iconos";
 
 const inicial = { status: "idle", message: "" };
@@ -31,6 +43,12 @@ const DE_ENTRADA = 8;
 export default function Lista({ publicaciones }) {
   const [todas, setTodas] = useState(false);
 
+  // Lo programado se pinta arriba y en su propia lista. Mezclado con lo ya
+  // publicado se pierde: es lo único que todavía se puede mover de fecha o
+  // adelantar, y buscarlo entre treinta tarjetas no es buscar, es acordarse.
+  const programadas = publicaciones.filter((p) => estaProgramada(p));
+  const salidas = publicaciones.filter((p) => !estaProgramada(p));
+
   if (!publicaciones.length) {
     return (
       <>
@@ -49,13 +67,35 @@ export default function Lista({ publicaciones }) {
     );
   }
 
-  const visibles = todas ? publicaciones : publicaciones.slice(0, DE_ENTRADA);
+  const visibles = todas ? salidas : salidas.slice(0, DE_ENTRADA);
 
   return (
     <>
+      {programadas.length ? (
+        <section className="post-programadas">
+          <div className="post-lista-cabeza">
+            <h2 className="sub">
+              <IconoReloj ancho={17} />
+              Programado
+            </h2>
+            <span className="post-lista-cuenta">
+              {programadas.length === 1
+                ? "1 pieza esperando su hora"
+                : `${programadas.length} piezas esperando su hora`}
+            </span>
+          </div>
+
+          <ul className="post-lista">
+            {programadas.map((p) => (
+              <Tarjeta key={p.id} publicacion={p} programada />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="post-lista-cabeza">
         <h2 className="sub">Lo que ya publicaste</h2>
-        {publicaciones.length > DE_ENTRADA ? (
+        {salidas.length > DE_ENTRADA ? (
           <button className="btn-texto" type="button" onClick={() => setTodas((v) => !v)}>
             {todas ? "Ver menos" : "Ver todas mis publicaciones"}
             <IconoChevronDer ancho={16} />
@@ -63,22 +103,40 @@ export default function Lista({ publicaciones }) {
         ) : null}
       </div>
 
-      <ul className="post-lista">
-        {visibles.map((p) => (
-          <Tarjeta key={p.id} publicacion={p} />
-        ))}
-      </ul>
+      {salidas.length ? (
+        <ul className="post-lista">
+          {visibles.map((p) => (
+            <Tarjeta key={p.id} publicacion={p} />
+          ))}
+        </ul>
+      ) : (
+        <p className="ayuda">
+          Todavía no ha salido nada. Lo de arriba aparecerá aquí solo, cuando llegue su hora.
+        </p>
+      )}
     </>
   );
 }
 
-function Tarjeta({ publicacion }) {
+function Tarjeta({ publicacion, programada = false }) {
   const caja = useRef(null);
   const [menu, setMenu] = useState(false);
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState(publicacion.body ?? "");
   const [borrado, setBorrado] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
+  const [cambiandoFecha, setCambiandoFecha] = useState(false);
+  const [fecha, setFecha] = useState("");
+  const [minimo, setMinimo] = useState("");
+  // La hora se pinta hasta que el componente monta: escrita en el servidor
+  // sería la hora de UTC, y quien programó "las 8 de la noche" leería otra.
+  const [montado, setMontado] = useState(false);
+
+  useEffect(() => {
+    setMontado(true);
+    setFecha(paraInputLocal(publicacion.publish_at));
+    setMinimo(paraInputLocal(new Date()));
+  }, [publicacion.publish_at]);
 
   const [estadoEditar, accionEditar, editandoPend] = useActionState(async (prev, formData) => {
     const r = await editarTexto(prev, formData);
@@ -89,6 +147,14 @@ function Tarjeta({ publicacion }) {
   const [estadoBorrar, accionBorrar, borrandoPend] = useActionState(async (prev, formData) => {
     const r = await borrar(prev, formData);
     if (r.status === "ok") setBorrado(true);
+    return r;
+  }, inicial);
+
+  // Cambiar la fecha y publicar ahora son la misma acción —cuándo sale— y por
+  // eso el mismo formulario: el botón que se pulsa dice cuál de las dos.
+  const [estadoFecha, accionFecha, fechaPend] = useActionState(async (prev, formData) => {
+    const r = await reprogramar(prev, formData);
+    if (r.status === "ok") setCambiandoFecha(false);
     return r;
   }, inicial);
 
@@ -121,6 +187,7 @@ function Tarjeta({ publicacion }) {
   }
 
   const esHistoria = publicacion.kind === "historia";
+  const avisoFecha = fecha ? revisarProgramacion(fecha) : null;
   const caducada = esHistoria && new Date(publicacion.expires_at) <= new Date();
   const restaurantes = Array.isArray(publicacion.restaurantes) ? publicacion.restaurantes : [];
 
@@ -140,10 +207,19 @@ function Tarjeta({ publicacion }) {
             {esHistoria ? <IconoDestello ancho={13} /> : null}
             {esHistoria ? "Historia" : "Publicación"}
           </span>
-          <span className="post-tarjeta-fecha">
-            {hace(publicacion.created_at)}
-            {esHistoria ? <> · {caducada ? "Ya caducó" : leQueda(publicacion.expires_at)}</> : null}
-          </span>
+          {programada ? (
+            <span className="post-tarjeta-fecha es-programada">
+              <IconoReloj ancho={13} />
+              {montado ? `Sale ${cuandoSale(publicacion.publish_at).toLowerCase()}` : "Programado"}
+            </span>
+          ) : (
+            <span className="post-tarjeta-fecha">
+              {hace(publicacion.publish_at ?? publicacion.created_at)}
+              {esHistoria ? (
+                <> · {caducada ? "Ya caducó" : leQueda(publicacion.expires_at)}</>
+              ) : null}
+            </span>
+          )}
         </div>
 
         {editando ? (
@@ -196,20 +272,40 @@ function Tarjeta({ publicacion }) {
             publicaciones no: una publicación se ve al bajar por la ficha, así
             que "vistas" ahí querría decir algo distinto y no se mide. */}
         <ul className="post-numeros">
-          {esHistoria ? (
+          {/* Una pieza programada no tiene números que enseñar: cero Me gusta
+              en algo que nadie ha visto no es un dato, es ruido. En su sitio va
+              lo único que ahí importa, que es qué hacer con la fecha. */}
+          {programada ? (
+            <li className="post-numeros-programada">
+              <button
+                type="button"
+                className="btn-texto"
+                onClick={() => setCambiandoFecha((v) => !v)}
+              >
+                <IconoReloj ancho={16} />
+                {cambiandoFecha ? "Cerrar" : "Cambiar fecha"}
+              </button>
+            </li>
+          ) : null}
+
+          {!programada && esHistoria ? (
             <li title="Visualizaciones">
               <IconoOjo ancho={16} />
               {conteo(publicacion.views_count)}
             </li>
           ) : null}
-          <li title="Me gusta">
-            <IconoCorazon ancho={16} />
-            {conteo(publicacion.likes_count)}
-          </li>
-          <li title="Comentarios">
-            <IconoComentario ancho={16} />
-            {conteo(publicacion.comments_count)}
-          </li>
+          {!programada ? (
+            <li title="Me gusta">
+              <IconoCorazon ancho={16} />
+              {conteo(publicacion.likes_count)}
+            </li>
+          ) : null}
+          {!programada ? (
+            <li title="Comentarios">
+              <IconoComentario ancho={16} />
+              {conteo(publicacion.comments_count)}
+            </li>
+          ) : null}
 
           <li className="post-tarjeta-menu">
             <button
@@ -225,6 +321,19 @@ function Tarjeta({ publicacion }) {
 
             {menu ? (
               <div className="post-menu" role="menu">
+                {programada ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setCambiandoFecha(true);
+                      setMenu(false);
+                    }}
+                  >
+                    <IconoReloj ancho={16} />
+                    Cambiar fecha
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   role="menuitem"
@@ -252,6 +361,69 @@ function Tarjeta({ publicacion }) {
             ) : null}
           </li>
         </ul>
+
+        {/* Cambiar la fecha, o mandarlo ya. Lo segundo va como botón del mismo
+            formulario porque es la misma decisión: adelantar la salida hasta
+            ahora mismo. */}
+        {programada && cambiandoFecha ? (
+          <form action={accionFecha} className="post-reprogramar">
+            <input type="hidden" name="id" value={publicacion.id} />
+            <label htmlFor={`fecha-${publicacion.id}`}>Nueva fecha y hora</label>
+            <input
+              id={`fecha-${publicacion.id}`}
+              className="post-fecha"
+              type="datetime-local"
+              name="publish_at"
+              value={fecha}
+              min={minimo}
+              onChange={(e) => setFecha(e.target.value)}
+            />
+
+            {avisoFecha ? (
+              <p className="form-msg err" role="status">
+                {avisoFecha}
+              </p>
+            ) : null}
+
+            <div className="post-reprogramar-botones">
+              <button
+                className="btn btn-sm"
+                type="submit"
+                disabled={fechaPend || Boolean(avisoFecha)}
+              >
+                {fechaPend ? "Guardando…" : "Guardar fecha"}
+              </button>
+              {/* El nombre del botón viaja con su valor: la acción distingue
+                  "guardar esta fecha" de "publicar ahora" por él. */}
+              <button
+                className="btn-linea btn-sm"
+                type="submit"
+                name="ahora"
+                value="1"
+                disabled={fechaPend}
+              >
+                <IconoAvion ancho={15} />
+                Publicar ahora
+              </button>
+              <button
+                className="btn-texto"
+                type="button"
+                onClick={() => {
+                  setFecha(paraInputLocal(publicacion.publish_at));
+                  setCambiandoFecha(false);
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        ) : null}
+
+        {estadoFecha.message ? (
+          <p className={estadoFecha.status === "ok" ? "form-msg ok" : "form-msg err"} role="status">
+            {estadoFecha.message}
+          </p>
+        ) : null}
 
         {/* Borrar pide confirmación en el sitio y no en un diálogo del
             navegador: es irreversible y se lleva por delante los comentarios
