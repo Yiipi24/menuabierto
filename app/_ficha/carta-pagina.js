@@ -6,6 +6,7 @@ import { MedirVista } from "../medir";
 import { cargarPublico, PRECIO } from "./datos";
 import { rutaFicha, rutaMenu, rutaMenuCarta } from "../../lib/slug";
 import { imagenesDeCompartir, metaCompartir } from "../../lib/compartir";
+import { urlDelSitio } from "../../lib/sitio";
 import { jsonLdCarta } from "../../lib/jsonld";
 import DatosEstructurados from "./datos-estructurados";
 
@@ -55,7 +56,7 @@ export default async function CartaPagina({ slug, menuId = null }) {
   }
   if (!datos) notFound();
 
-  const { r, cocinas, menus, destacados } = datos;
+  const { r, cocinas, menus, destacados, pedidos } = datos;
 
   // Con un id en la ruta la página es la de una sola carta: es la que abre el
   // QR pegado en la barra o en la mesa, y no debe traerse las demás detrás.
@@ -113,10 +114,16 @@ export default async function CartaPagina({ slug, menuId = null }) {
           {solo ? `${solo.name} de ${r.name}` : `Menú de ${r.name}`}
         </h1>
 
+        {/* La `url` viaja dentro del mensaje de WhatsApp, así que va absoluta:
+            el dueño lo recibe en su teléfono, fuera del sitio, y una ruta
+            suelta ahí no lleva a ningún lado. */}
         <Carta
           menus={cartas}
           restaurante={{ name: r.name, linea }}
           destacados={destacados}
+          pedidos={pedidos}
+          slug={slug}
+          url={urlDelSitio(solo ? rutaMenuCarta(slug, solo.id) : rutaMenu(slug))}
         />
       </main>
 

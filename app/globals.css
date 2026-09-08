@@ -7400,3 +7400,197 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
   .listado-intro { font-size: 15.5px; }
 }
+
+/* ── Pedir por WhatsApp ─────────────────────────────────────────────────────
+   El verde es el de la marca y solo se usa aquí: en una ficha donde todo lo
+   que se toca es del naranja de la casa, el botón que se sale del color es el
+   que se lee como "esto abre otra aplicación". */
+
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: #25d366;
+  border-color: #25d366;
+  color: #08351b;
+}
+
+.btn-whatsapp:hover { background: #1eb955; border-color: #1eb955; color: #08351b; }
+
+.btn-whatsapp .icono { flex: none; }
+
+/* El botón de la ficha, debajo del estado del local. */
+.ficha-pedir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 14px 0 0;
+}
+
+.ficha-pedir-nota {
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 46ch;
+}
+
+/* El aviso de arriba de la carta: dice que se puede pedir antes de que alguien
+   descubra el primer "+" por accidente. */
+.pedido-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 13px 16px;
+  border: 1px solid #cdeedb;
+  border-radius: var(--radius);
+  background: #f2fbf6;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.pedido-aviso-logo { color: #25d366; flex: none; line-height: 0; margin-top: 1px; }
+
+.pedido-aviso b { font-weight: 700; }
+
+/* El "+" de cada platillo. Cuarenta píxeles de lado: es un botón que se toca
+   con el pulgar, sentado en la mesa y con el teléfono en una mano. */
+.menu-pedir,
+.menu-pedir-cuenta button {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.menu-pedir:hover,
+.menu-pedir-cuenta button:hover { border-color: #25d366; color: #12864a; }
+
+.menu-pedir:focus-visible,
+.menu-pedir-cuenta button:focus-visible {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.menu-pedir-cuenta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.menu-pedir-cuenta output {
+  min-width: 22px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* La barra de abajo, con el pedido que se lleva armado. Queda fija sobre la
+   carta porque se toca al final de una lista larga y volver a subir a buscar
+   el botón es donde se pierde el pedido. */
+.pedido-barra {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin: 28px 0 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--paper);
+  box-shadow: 0 -10px 30px -18px rgba(42, 33, 28, 0.55);
+}
+
+.pedido-barra-dentro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+  max-width: var(--max);
+  margin: 0 auto;
+}
+
+.pedido-barra-cuenta { display: flex; flex-direction: column; line-height: 1.3; }
+
+.pedido-barra-cuenta strong { font-size: 16px; }
+
+.pedido-barra-cuenta span { font-size: 14px; color: var(--ink-soft); }
+
+.pedido-barra-acciones { display: flex; align-items: center; gap: 12px; }
+
+.pedido-barra-nota {
+  max-width: var(--max);
+  margin: 8px auto 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+/* El interruptor del panel. Se ve como las casillas de servicios porque es lo
+   mismo que hace: prender algo que va a salir en la ficha. */
+.grupo-pedidos .campo { margin-top: 14px; }
+
+.pedidos-interruptor { display: block; cursor: pointer; }
+
+.pedidos-interruptor input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pedidos-cara {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pedidos-cara:hover { border-color: var(--ink-faint); }
+
+.pedidos-interruptor input:checked + .pedidos-cara {
+  border-color: #25d366;
+  background: #f2fbf6;
+}
+
+.pedidos-interruptor input:focus-visible + .pedidos-cara {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pedidos-logo { color: #25d366; flex: none; line-height: 0; }
+
+.pedidos-texto { display: flex; flex-direction: column; gap: 2px; }
+
+.pedidos-texto strong { font-weight: 600; }
+
+.pedidos-texto em { font-style: normal; font-size: 14px; color: var(--ink-soft); }
+
+@media (max-width: 620px) {
+  .pedido-barra-dentro { flex-direction: column; align-items: stretch; }
+  .pedido-barra-acciones { justify-content: space-between; }
+  .pedido-barra-acciones .btn { flex: 1; justify-content: center; }
+
+  /* En un teléfono el renglón del platillo mide lo que mide: los veinte
+     píxeles de separación de la carta más un botón de treinta y ocho parten el
+     nombre y su precio en dos líneas. */
+  .menu-item { gap: 12px; }
+  .menu-pedir,
+  .menu-pedir-cuenta button { width: 34px; height: 34px; font-size: 18px; }
+}

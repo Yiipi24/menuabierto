@@ -99,6 +99,45 @@ se guardan un día bajo la etiqueta `rutas`, junto con el sitemap. Publicar,
 ocultar o borrar una ficha las tira: un restaurante que se publica quiere estar
 en Google hoy.
 
+## Pedir por WhatsApp
+
+El restaurante ya toma pedidos por ahí. Lo que no tenía era forma de decirlo en
+su ficha ni de recibir la lista escrita, así que el pedido llegaba como
+"quiero dos hamburguesas de las que vi" y el dueño preguntaba tres veces qué
+eran.
+
+El dueño lo prende en su panel con un número —casi nunca es el teléfono de la
+ficha, que suele ser el fijo del local— y una línea de letra chica: el mínimo,
+hasta dónde entregan, a qué hora cierra la cocina. Es lo que se pregunta por
+chat, y preguntarlo es donde se cae un pedido.
+
+Con eso, la ficha enseña un botón junto a "Abierto ahora" y la carta se vuelve
+tocable: cada platillo tiene su `+`, abajo aparece una barra con la cuenta, y
+"Enviar por WhatsApp" abre el chat con el mensaje ya escrito —los platillos,
+sus cantidades, el total y el enlace de la carta—. Una carta de archivo (un PDF
+o una foto) no se puede tocar platillo por platillo, así que ahí el botón abre
+el chat a secas.
+
+**Aquí no se cobra nada.** No hay carrito guardado, ni pedido en la base, ni
+pasarela: lo que sale es texto, y quien confirma, prepara y cobra sigue siendo
+el restaurante. El total viaja diciendo que es aproximado, porque los precios
+de la carta pueden ir hasta una hora por detrás de la cocina y un número que el
+local no confirmó no puede presentarse como la cuenta. El pedido a medias que
+nadie contestó no queda "pendiente" en ningún lado, porque no existe en ningún
+lado.
+
+El tablero cuenta dos cosas distintas: `whatsapp_click`, tocar el botón, y
+`whatsapp_order`, mandar el pedido armado desde la carta. La distancia entre
+las dos es lo único que dice si la carta digital está vendiendo o solo
+consultándose. La tarjeta del panel enseña la segunda.
+
+El número se guarda normalizado —solo dígitos y con lada, como lo quiere
+`wa.me`— en `lib/whatsapp.js`, que es donde el panel lo valida, la ficha arma
+el enlace y la carta arma el mensaje. Diez dígitos son mexicanos y se les pone
+el 52; el `1` viejo de los celulares se quita solo. Apagar el interruptor no
+borra el número: apagarlo un martes no debería costar volver a teclearlo el
+miércoles.
+
 ## Datos estructurados y enlaces compartidos
 
 Cada ficha y cada carta llevan su bloque `application/ld+json`
@@ -107,6 +146,10 @@ horario, su rango de precio, su calificación y sus últimas reseñas— y la ca
 como `Menu`, con sus secciones, sus platillos y sus precios. Las dos apuntan al
 mismo `@id`, así que un buscador entiende que hablan del mismo lugar. El marcado
 solo dice lo que la página ya enseña.
+
+Un restaurante que toma pedidos declara además su `OrderAction`, que apunta al
+mismo chat con el mismo mensaje que el botón: la regla de esa hoja es que el
+marcado no diga nada que la página no enseñe.
 
 Las mismas páginas arman sus etiquetas de Open Graph y de Twitter con
 `lib/compartir.js`, para que un enlace pegado en WhatsApp llegue con la foto del

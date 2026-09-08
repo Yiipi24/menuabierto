@@ -11,6 +11,7 @@ import { clasesDeCarta, variablesDeEstilo } from "../lib/plantillas";
 import { iconoDePlatillo } from "../lib/iconos-platillo";
 import { IconoPlatillo } from "./menu-iconos";
 import { IconoDestacado } from "./destacados";
+import { BotonAgregar } from "./_ficha/pedido";
 
 function Adorno({ lado }) {
   // El adorno del pizarrón: los cubiertos cruzados de un lado y el fuego del
@@ -91,6 +92,11 @@ function Platillo({ platillo, conIcono }) {
           <span className="menu-etiqueta">Agotado hoy</span>
         ) : null}
       </div>
+
+      {/* Solo sale cuando el restaurante toma pedidos por WhatsApp: sin eso el
+          componente no pinta nada y la carta queda como estaba, aquí y en la
+          vista previa del panel. */}
+      <BotonAgregar platillo={platillo} />
     </li>
   );
 }

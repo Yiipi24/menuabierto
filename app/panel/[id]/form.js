@@ -11,6 +11,7 @@ import {
   TIPOS_ESTACIONAMIENTO,
   serviciosDe,
 } from "../../../lib/servicios";
+import { MAX_NOTA, telefonoLegible, telefonoWhatsapp } from "../../../lib/whatsapp";
 import { IconoRed } from "../../redes-iconos";
 import { IconoPago } from "../../pagos-iconos";
 import { IconoServicio } from "../../servicios-iconos";
@@ -100,6 +101,20 @@ export default function EditarForm({
     () => new Set(serviciosDe(catalogoServicios, restaurante.amenities)),
   );
   const [modoServicio, setModoServicio] = useState(restaurante.service_mode ?? "");
+
+  // Los pedidos por WhatsApp se llevan en estado porque el número solo se
+  // pregunta cuando el interruptor está prendido: un campo pidiendo un
+  // teléfono para algo que el dueño no activó es una pregunta de más en un
+  // formulario que ya es largo.
+  const [pedidos, setPedidos] = useState(() => ({
+    activo: Boolean(restaurante.whatsapp_orders),
+    telefono: restaurante.whatsapp_phone ? telefonoLegible(restaurante.whatsapp_phone) : "",
+    nota: restaurante.whatsapp_note ?? "",
+  }));
+  // Lo que va a quedar guardado, para poder enseñarlo antes de guardar: el
+  // dueño escribe "8112345678" y aquí se le confirma que eso es +52 81 1234
+  // 5678. Es el mismo normalizador que corre en el servidor.
+  const telefonoPedidos = telefonoWhatsapp(pedidos.telefono);
   // El costo va aparte del servicio porque es su letra chica: aparece cuando
   // el estacionamiento se marca y desaparece —vacío— cuando se desmarca.
   const [costoEstacionamiento, setCostoEstacionamiento] = useState(
@@ -395,6 +410,98 @@ export default function EditarForm({
             </button>
           ) : (
             <p className="ayuda">Ya son {MAX_REDES} enlaces: es el máximo.</p>
+          )}
+        </fieldset>
+
+        {/* Pedir por WhatsApp. Va en Contacto y no en Servicios porque no es
+            algo que el local tenga, como el estacionamiento: es una forma de
+            que le escriban, y se prende con un número. */}
+        <fieldset className="grupo grupo-pedidos">
+          <legend>
+            Pedidos por WhatsApp <em>(opcional)</em>
+          </legend>
+          <p className="ayuda">
+            Tu ficha y tu carta enseñan un botón para pedirte. Quien pide elige
+            los platillos y te llega el mensaje ya escrito, con la lista y el
+            enlace de tu carta. El pedido lo confirmas y lo cobras tú, como
+            siempre: aquí no se paga nada.
+          </p>
+
+          <label className="pedidos-interruptor">
+            <input
+              type="checkbox"
+              name="whatsapp_orders"
+              checked={pedidos.activo}
+              onChange={(e) =>
+                setPedidos((antes) => ({ ...antes, activo: e.target.checked }))
+              }
+            />
+            <span className="pedidos-cara">
+              <span className="pedidos-logo">
+                <IconoRed slug="whatsapp" ancho={22} />
+              </span>
+              <span className="pedidos-texto">
+                <strong>Recibir pedidos por WhatsApp</strong>
+                <em>Se enseña en tu ficha y arriba de tu carta</em>
+              </span>
+            </span>
+          </label>
+
+          {pedidos.activo ? (
+            <>
+              <label className="campo">
+                <span>Número de WhatsApp</span>
+                <input
+                  type="tel"
+                  name="whatsapp_phone"
+                  maxLength={24}
+                  inputMode="tel"
+                  value={pedidos.telefono}
+                  onChange={(e) =>
+                    setPedidos((antes) => ({ ...antes, telefono: e.target.value }))
+                  }
+                  placeholder="81 1234 5678"
+                  aria-describedby="ayuda-whatsapp"
+                />
+              </label>
+              <p className="ayuda" id="ayuda-whatsapp">
+                {/* Se confirma antes de guardar: el número que el dueño teclea
+                    y el que va a abrir el chat no siempre se ven igual, y
+                    descubrirlo cuando ya nadie le contesta es tarde. */}
+                {pedidos.telefono.trim() === ""
+                  ? "Puede ser distinto al teléfono de arriba: casi siempre es el celular de quien contesta."
+                  : telefonoPedidos
+                    ? `Los pedidos van a llegar a ${telefonoLegible(telefonoPedidos)}.`
+                    : "Ese número no se entiende. Escríbelo con lada, así: 81 1234 5678."}
+              </p>
+
+              <label className="campo">
+                <span>
+                  La letra chica <em>(opcional)</em>
+                </span>
+                <input
+                  type="text"
+                  name="whatsapp_note"
+                  maxLength={MAX_NOTA}
+                  value={pedidos.nota}
+                  onChange={(e) =>
+                    setPedidos((antes) => ({ ...antes, nota: e.target.value }))
+                  }
+                  placeholder="Pedido mínimo $150. Entregamos en Centro y Obispado."
+                />
+              </label>
+              <p className="ayuda">
+                Sale junto al botón. Es donde se dice el mínimo, hasta dónde
+                entregan y a qué hora cierra la cocina: preguntarlo por chat es
+                lo que hace que un pedido se caiga.
+              </p>
+            </>
+          ) : (
+            /* Apagado, el número viaja igual y escondido: apagar los pedidos
+               un martes no debería costarle al dueño volver a teclearlo el
+               miércoles. Sin esto el formulario no mandaría el campo y el
+               guardado lo borraría. */
+            <input type="hidden" name="whatsapp_phone" value={pedidos.telefono} />
           )}
         </fieldset>
 

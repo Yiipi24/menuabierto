@@ -5,6 +5,9 @@ import { rutaFicha, rutaMenuCarta } from "../../lib/slug";
 import { descripcionDeMenu } from "../../lib/menus";
 import { imagenesDeCompartir, metaCompartir } from "../../lib/compartir";
 import { jsonLdFicha } from "../../lib/jsonld";
+import { enlaceWhatsapp, mensajeDeContacto, telefonoLegible } from "../../lib/whatsapp";
+import { urlDelSitio } from "../../lib/sitio";
+import { BotonPedirWhatsapp } from "./pedido";
 import DatosEstructurados from "./datos-estructurados";
 import Nav from "../nav";
 import Resenas from "./resenas";
@@ -94,6 +97,7 @@ export default async function Ficha({ slug }) {
     pagos,
     servicios,
     cerrados,
+    pedidos,
   } = datos;
 
   // La ficha es publica, asi que la sesion puede no existir. Solo sirve para
@@ -239,6 +243,24 @@ export default async function Ficha({ slug }) {
                 <BotonGuardar slug={slug} nombre={r.name} />
               </p>
 
+              {/* Pedir va arriba, junto al estado del local: quien decide
+                  pedir ya decidió al leer "Abierto ahora", y mandarlo a
+                  buscar el botón al final de la ficha es perder la venta que
+                  el restaurante vino a hacer aquí. La carta tiene el suyo,
+                  con los platillos elegidos dentro del mensaje. */}
+              {pedidos ? (
+                <p className="ficha-pedir">
+                  <BotonPedirWhatsapp
+                    telefono={pedidos.telefono}
+                    mensaje={mensajeDeContacto(r.name, urlDelSitio(volverAqui))}
+                    slug={slug}
+                  />
+                  {pedidos.nota ? (
+                    <span className="ficha-pedir-nota">{pedidos.nota}</span>
+                  ) : null}
+                </p>
+              ) : null}
+
               {tiraDestacados.length ? (
                 <ul className="ficha-destacados">
                   {tiraDestacados.map((d, i) => (
@@ -355,6 +377,7 @@ export default async function Ficha({ slug }) {
           {r.phone ||
           r.website ||
           redes.length ||
+          pedidos ||
           semana.length ||
           pagos.length ||
           servicios.length ? (
@@ -406,7 +429,7 @@ export default async function Ficha({ slug }) {
                 </div>
               ) : null}
 
-              {r.phone || r.website || redes.length ? (
+              {r.phone || r.website || pedidos || redes.length ? (
                 <div className="ficha-card ficha-card-contacto">
                   <div className="ficha-card-cabeza">
                     <h3>
@@ -421,8 +444,32 @@ export default async function Ficha({ slug }) {
                     </p>
                   ) : null}
 
-                  {r.phone || r.website ? (
+                  {r.phone || r.website || pedidos ? (
                     <ul className="ficha-contacto">
+                      {/* El WhatsApp encabeza la lista y va con su número a la
+                          vista: es el que se toca, y el que alguien copia para
+                          guardarlo en su agenda. Puede no ser el mismo
+                          teléfono de arriba —casi nunca lo es— así que se
+                          enseñan los dos. */}
+                      {pedidos ? (
+                        <li>
+                          <EnlaceMedido
+                            slug={slug}
+                            evento="whatsapp_click"
+                            href={enlaceWhatsapp(
+                              pedidos.telefono,
+                              mensajeDeContacto(r.name, urlDelSitio(volverAqui)),
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <span className="ficha-red-logo red-whatsapp">
+                              <IconoRed slug="whatsapp" ancho={18} />
+                            </span>
+                            Pedidos por WhatsApp · {telefonoLegible(pedidos.telefono)}
+                          </EnlaceMedido>
+                        </li>
+                      ) : null}
                       {r.phone ? (
                         <li>
                           <EnlaceMedido

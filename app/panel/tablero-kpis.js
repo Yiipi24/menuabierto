@@ -1,3 +1,4 @@
+import { KPIS } from "../../lib/metricas";
 import { ICONOS_KPI } from "./tablero-iconos";
 
 const NUMERO = new Intl.NumberFormat("es-MX");
@@ -50,14 +51,15 @@ export default function RejillaKpis({ kpis, comparativa }) {
   );
 }
 
-// Mientras se recalcula un periodo se dejan las mismas seis cajas en su
-// lugar: si desaparecieran, la página daría un salto y el dueño perdería de
-// vista lo que estaba leyendo.
+// Mientras se recalcula un periodo se dejan las mismas cajas en su lugar: si
+// desaparecieran, la página daría un salto y el dueño perdería de vista lo que
+// estaba leyendo. Son tantas como KPIs para que el hueco mida lo mismo que lo
+// que va a llegar.
 export function KpisCargando() {
   return (
     <ul className="kpis" aria-hidden="true">
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <li key={i} className="kpi kpi-hueso">
+      {KPIS.map((kpi) => (
+        <li key={kpi.id} className="kpi kpi-hueso">
           <div className="hueso hueso-linea corta" />
           <div className="hueso hueso-linea ancha" />
           <div className="hueso hueso-linea corta" />

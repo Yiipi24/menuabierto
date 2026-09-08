@@ -6,6 +6,7 @@ import { destacadosDe } from "../destacados";
 import { conEsquema, nombreDeRed } from "../../lib/redes";
 import { catalogoDePagos, detallesDePago } from "../../lib/pagos";
 import { catalogoDeServicios, detallesDeServicio } from "../../lib/servicios";
+import { pedidosDe } from "../../lib/whatsapp";
 import { conteoDe } from "../../lib/insignias";
 import { agruparPlatillos } from "../../lib/menus";
 
@@ -112,7 +113,7 @@ async function traerFicha(slug) {
   const { data: r } = await supabase
     .from("restaurants")
     .select(
-      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, followers_count, highlights, social_links, payment_methods, amenities, parking_cost, parking_kind, service_mode, closed_days",
+      "id, owner_id, slug, name, summary, description, price_level, phone, website, street, neighborhood, city, state, postal_code, timezone, rating_avg, rating_count, followers_count, highlights, social_links, payment_methods, amenities, parking_cost, parking_kind, service_mode, closed_days, whatsapp_orders, whatsapp_phone, whatsapp_note",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -187,6 +188,11 @@ async function traerFicha(slug) {
         url: conEsquema(red?.url),
       }))
       .filter((red) => red.url),
+    // Los pedidos por WhatsApp llegan resueltos —el número ya normalizado y
+    // la nota recortada— o en `null` cuando el restaurante no toma pedidos.
+    // Así ni la ficha ni la carta tienen que cruzar tres columnas para saber
+    // si pintan el botón.
+    pedidos: pedidosDe(r),
     // Las formas de pago se resuelven aquí, con su nombre y su pista: la
     // ficha pinta lo que recibe y no traduce claves mientras genera HTML.
     pagos: detallesDePago(pagos, r.payment_methods),

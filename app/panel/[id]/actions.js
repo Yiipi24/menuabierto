@@ -7,6 +7,7 @@ import { supabaseSession } from "../../../lib/supabase";
 import { geocodificar, mismaDireccion } from "../../../lib/geocodificar";
 import { estadoValido } from "../../../lib/estados";
 import { conEsquema, redValida } from "../../../lib/redes";
+import { MAX_NOTA, telefonoWhatsapp } from "../../../lib/whatsapp";
 import { formasDePagoDe } from "../../../lib/pagos";
 import {
   costoDeEstacionamiento,
@@ -139,6 +140,9 @@ export async function guardarRestaurante(_prevState, formData) {
   const modo = modoDeServicio(formData.get("service_mode"));
   const cerrados = leerDiasCerrados(formData);
 
+  const pedidos = leerPedidos(formData);
+  if (pedidos.error) return { status: "error", message: pedidos.error };
+
   const { error } = await supabase
     .from("restaurants")
     .update({
@@ -157,6 +161,9 @@ export async function guardarRestaurante(_prevState, formData) {
       parking_kind: tipoEstacionamiento?.slug ?? null,
       service_mode: modo?.slug ?? null,
       closed_days: cerrados,
+      whatsapp_orders: pedidos.activo,
+      whatsapp_phone: pedidos.telefono,
+      whatsapp_note: pedidos.nota,
     })
     .eq("id", id);
 
@@ -201,6 +208,33 @@ function leerDestacados(formData) {
     lista.push({ icon: iconoValido(icono) ? icono : ICONO_POR_DEFECTO, text: texto });
   }
   return lista;
+}
+
+// Pedidos por WhatsApp: el interruptor, el número y la letra chica.
+//
+// Se valida antes de escribir nada, como la ubicación y por lo mismo: la base
+// tiene un check que prohíbe prenderlo sin número, y dejar que ella lo rechace
+// convertiría un dedo de más en "No pudimos guardar los cambios", que no dice
+// qué arreglar. El número se guarda ya normalizado —solo dígitos y con lada—
+// porque es lo que wa.me necesita y no es el visitante quien debe repararlo.
+function leerPedidos(formData) {
+  const activo = formData.get("whatsapp_orders") != null;
+  const telefono = telefonoWhatsapp(formData.get("whatsapp_phone"));
+  const nota = String(formData.get("whatsapp_note") ?? "").trim().slice(0, MAX_NOTA);
+
+  if (telefono === undefined) {
+    return {
+      error: "Ese número de WhatsApp no se entiende. Escríbelo con lada: 81 1234 5678.",
+    };
+  }
+  if (activo && !telefono) {
+    return { error: "Para recibir pedidos por WhatsApp hace falta el número." };
+  }
+
+  // El número se guarda aunque el interruptor esté apagado: apagarlo un martes
+  // no debería costarle al dueño volver a teclearlo el miércoles. Lo que no se
+  // guarda es la nota de unos pedidos que no existen.
+  return { activo, telefono, nota: activo && nota ? nota : null };
 }
 
 function leerRedes(formData) {
