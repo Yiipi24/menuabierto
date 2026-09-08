@@ -8,6 +8,13 @@ private `Yiipi24/middleware-api` repository, along with the credentials each
 environment needs. This repository is public, so those details are deliberately
 not recorded here.
 
+**It is read-only.** Its controllers expose four `GET` routes and nothing else:
+a repository summary, its pull requests, the deployment list and one
+deployment. There is no endpoint that creates a pull request, merges, or
+triggers a deploy. So "go through the middleware instead of the MCP tools"
+holds for reading; every write still goes through the GitHub and Vercel tools.
+Worth knowing before planning a release around it.
+
 ## Network access
 
 The middleware host is not on the default allowlist, so sessions in a `Trusted`
@@ -19,7 +26,16 @@ Allowed domains** list took effect on a session that was already running, so a
 
 `curl -sS "$HTTPS_PROXY/__agentproxy/status"` distinguishes a network-policy
 denial from a service failure, which otherwise look alike from inside a
-session.
+session. It also names the host it rejected, which is what tells apart "the
+site is down" from "this session cannot reach it".
+
+The production domain is on that same list: `menuabierto.com`. Without it, a
+smoke test against the deployed site fails exactly like the middleware does —
+`403` to CONNECT — and reads as an outage when it is only the session's egress
+policy. `www.menuabierto.com` is a separate entry and is **not** on the list,
+so smoke-test the apex. Vercel's own `web_fetch_vercel_url` reaches a
+deployment without going through the proxy at all, and is the way around this
+when the domain cannot be added.
 
 ### Running the app against the real database
 
@@ -40,6 +56,19 @@ NODE_OPTIONS=--use-env-proxy npm run dev
 The MCP tools are not affected: connector traffic does not go through the
 session's allowlist, which is why Supabase MCP queries keep working while the
 app cannot reach the same project.
+
+## A panel route answers 200 to an anonymous request
+
+`/panel/...` pages call `redirect("/entrar")` when there is no session, but a
+`curl` without cookies gets `200`, not `307`. That is not a leak and not a bug:
+in Next 15 the redirect is emitted after the response has started streaming, so
+the status line is already sent and the redirect travels inside the payload as
+`NEXT_REDIRECT` for the client to act on.
+
+The way to confirm it is the body, not the status: it carries `NEXT_REDIRECT`
+and none of the page's data — no restaurant name, no rows, nothing the loader
+would have fetched. Only the `<title>` from the route's exported `metadata`
+makes it into the shell. Check that before treating a `200` here as an incident.
 
 ## Current state
 
