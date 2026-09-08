@@ -232,8 +232,28 @@ export const ICONOS_KPI = {
   telefono: IconoTelefono,
   pin: IconoPin,
   marcador: IconoMarcador,
+  whatsapp: IconoWhatsapp,
   estrella: IconoEstrella,
 };
+
+// El logo va relleno, como los de `redes-iconos`: es una marca y de trazo no
+// se reconoce. Es el único de esta hoja que rompe la regla, y por eso trae su
+// propio svg en vez de pasar por `Svg`.
+export function IconoWhatsapp({ ancho = 20 }) {
+  return (
+    <svg
+      className="icono"
+      width={ancho}
+      height={ancho}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M12 2a9.9 9.9 0 0 0-8.5 15L2 22l5.2-1.4A9.9 9.9 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-3-.2-.3A8 8 0 1 1 12 20zm4.5-5.9c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.1-.2 0-.4.1-.5l.4-.5c.1-.2.1-.3 0-.5l-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.2.2 1.8 2.9 4.4 3.9 1.6.6 2.2.7 3 .6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2z" />
+    </svg>
+  );
+}
 
 export const ICONOS_IDEA = {
   tendencia: IconoTendencia,

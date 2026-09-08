@@ -1,11 +1,18 @@
 import { estiloDeMenu } from "../../lib/plantillas";
 import MenuPintado from "../menu-render";
+import { mensajeDeContacto } from "../../lib/whatsapp";
+import {
+  AvisoPedido,
+  BarraPedido,
+  BotonPedirWhatsapp,
+  PedidoProvider,
+} from "./pedido";
 
 // El marcado de la carta vive aparte porque la ficha ya no la pinta: ahora la
 // enseña la página /menu, y el día que vuelva a hacer falta en otro lado no hay
 // que copiarla.
 
-export default function Carta({ menus, restaurante, destacados = [] }) {
+export default function Carta({ menus, restaurante, destacados = [], pedidos = null, slug = "", url = "" }) {
   if (!menus.length) {
     return (
       <p className="ficha-vacio">
@@ -15,7 +22,10 @@ export default function Carta({ menus, restaurante, destacados = [] }) {
   }
 
   return (
-    <>
+    // El pedido envuelve la carta entera porque los platillos que se eligen
+    // pueden salir de dos cartas distintas —la de comida y la de bebidas— y
+    // quien pide manda un solo mensaje, no uno por carta.
+    <PedidoProvider pedidos={pedidos} nombre={restaurante.name} slug={slug} url={url}>
       {/* Con varias cartas, unos enlaces de ancla llevan a cada una. Son anclas
           y no pestañas de JavaScript porque así funcionan con la página a medio
           cargar, se pueden compartir y las indexa el buscador. */}
@@ -28,6 +38,10 @@ export default function Carta({ menus, restaurante, destacados = [] }) {
           ))}
         </nav>
       ) : null}
+
+      {/* La carta de archivo no tiene platillos que tocar, así que el aviso
+          dice otra cosa cuando todas lo son. */}
+      <AvisoPedido conPlatillos={menus.some((m) => m.kind !== "archivo")} />
 
       {menus.map((m) => (
         <section className="menu-carta" id={`menu-${m.id}`} key={m.id}>
@@ -54,6 +68,17 @@ export default function Carta({ menus, restaurante, destacados = [] }) {
               <a className="btn btn-sm" href={m.fileUrl} target="_blank" rel="noopener noreferrer">
                 Abrir el menú completo
               </a>
+              {/* Una carta de archivo no se puede tocar platillo por platillo,
+                  así que aquí el pedido es el botón suelto: se abre el chat y
+                  quien pide escribe lo que vio en el PDF. */}
+              {pedidos ? (
+                <BotonPedirWhatsapp
+                  telefono={pedidos.telefono}
+                  mensaje={mensajeDeContacto(restaurante.name, url)}
+                  slug={slug}
+                  clase="btn btn-sm btn-whatsapp"
+                />
+              ) : null}
             </div>
           ) : (
             <MenuPintado
@@ -65,6 +90,8 @@ export default function Carta({ menus, restaurante, destacados = [] }) {
           )}
         </section>
       ))}
-    </>
+
+      <BarraPedido />
+    </PedidoProvider>
   );
 }
