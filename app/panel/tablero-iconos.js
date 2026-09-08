@@ -229,11 +229,15 @@ export function IconoEquis(props) {
 export const ICONOS_KPI = {
   ojo: IconoOjo,
   qr: IconoQr,
+  carta: IconoCarta,
   telefono: IconoTelefono,
   pin: IconoPin,
   marcador: IconoMarcador,
   whatsapp: IconoWhatsapp,
   estrella: IconoEstrella,
+  gente: IconoGente,
+  corazon: IconoCorazon,
+  cupon: IconoCupon,
 };
 
 // El logo va relleno, como los de `redes-iconos`: es una marca y de trazo no
@@ -260,3 +264,79 @@ export const ICONOS_IDEA = {
   horario: IconoReloj,
   contenido: IconoCamara,
 };
+
+// Los que estrenó la pantalla de menús: el ⋮ de cada fila, el PDF que se baja,
+// duplicar, renombrar y la bombilla de los consejos.
+export function IconoPuntos(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}
+
+export function IconoDocumento(props) {
+  return (
+    <Svg {...props}>
+      <path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3.5V8h4.5" />
+      <path d="M9 13h6M9 16.5h4" />
+    </Svg>
+  );
+}
+
+export function IconoCopiar(props) {
+  return (
+    <Svg {...props}>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M15 6.5V5.5a2 2 0 0 0-2-2H5.5a2 2 0 0 0-2 2V13a2 2 0 0 0 2 2h1" />
+    </Svg>
+  );
+}
+
+export function IconoTexto(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4.5 6.5V4.5h11v2M10 4.5v15M7.5 19.5h5" />
+      <path d="M15.5 12.5v-1h5v1M18 11.5v8M16.5 19.5h3" />
+    </Svg>
+  );
+}
+
+export function IconoFoco(props) {
+  return (
+    <Svg {...props}>
+      <path d="M9.5 17.5h5M10 20.5h4" />
+      <path d="M12 3.5a5.5 5.5 0 0 0-3.2 9.9c.5.4.8 1 .8 1.6h4.8c0-.6.3-1.2.8-1.6A5.5 5.5 0 0 0 12 3.5z" />
+    </Svg>
+  );
+}
+
+export function IconoCupon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M3.5 8.5V6.8a1.3 1.3 0 0 1 1.3-1.3h14.4a1.3 1.3 0 0 1 1.3 1.3v1.7a2.4 2.4 0 0 0 0 7v1.7a1.3 1.3 0 0 1-1.3 1.3H4.8a1.3 1.3 0 0 1-1.3-1.3v-1.7a2.4 2.4 0 0 0 0-7z" />
+      <path d="M9.5 9.5l5 5M9.7 9.7h.01M14.3 14.3h.01" />
+    </Svg>
+  );
+}
+
+export function IconoCorazon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M12 20s-7.5-4.6-7.5-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" />
+    </Svg>
+  );
+}
+
+export function IconoGente(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
+      <path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M17.5 14.4A5.5 5.5 0 0 1 20.5 19" />
+    </Svg>
+  );
+}

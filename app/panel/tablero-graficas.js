@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { planoDeMapa } from "../../lib/mapa";
+import { ICONOS_KPI } from "./tablero-iconos";
 
 const NUMERO = new Intl.NumberFormat("es-MX");
 
@@ -387,6 +388,121 @@ export function Cartas({ cartas, restauranteId }) {
       <p className="tarjeta-nota">
         Se cuenta lo que pasó en la página de cada carta. Quien abre el menú
         completo desde la ficha cuenta arriba, no aquí.
+      </p>
+    </section>
+  );
+}
+
+
+/**
+ * Seguidores y favoritos.
+ *
+ * No son KPIs y por eso no van en la rejilla de arriba: un KPI cuenta lo que
+ * pasó en el periodo, y aquí lo que importa es el total acumulado. Una tarjeta
+ * con flecha diría "tus seguidores bajaron 20%" en una semana en la que nadie
+ * dejó de seguir, solo entraron menos.
+ *
+ * Así que el total va en grande y lo que entró en el periodo va debajo, que es
+ * lo único que de verdad sube y baja.
+ */
+export function Comunidad({ comunidad, comparativa, frase }) {
+  if (!comunidad?.length) return null;
+
+  return (
+    <section className="panel-tarjeta">
+      <div className="tarjeta-cabeza">
+        <h2>Tu comunidad</h2>
+      </div>
+
+      <ul className="comunidad">
+        {comunidad.map((c) => {
+          const Icono = ICONOS_KPI[c.icono] ?? ICONOS_KPI.ojo;
+          const sube = c.variacion != null && c.variacion >= 0;
+
+          return (
+            <li key={c.id}>
+              <span className="comunidad-icono">
+                <Icono ancho={19} />
+              </span>
+              <div className="comunidad-datos">
+                <p className="comunidad-cifra">{NUMERO.format(c.total)}</p>
+                <p className="comunidad-nombre">{c.etiqueta}</p>
+                <p className="comunidad-nuevos">
+                  {c.nuevos > 0
+                    ? `+${NUMERO.format(c.nuevos)} ${frase}`
+                    : `Sin nuevos ${frase}`}
+                  {c.variacion != null ? (
+                    <span className={sube ? "comunidad-var sube" : "comunidad-var baja"}>
+                      <span aria-hidden="true">{sube ? "↑" : "↓"}</span>{" "}
+                      {Math.abs(c.variacion)}% <em>{comparativa}</em>
+                    </span>
+                  ) : null}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <p className="tarjeta-nota">
+        Los seguidores reciben aviso de tus historias. Los favoritos te guardaron
+        en su lista para volver.
+      </p>
+    </section>
+  );
+}
+
+/**
+ * Los cupones, de punta a punta.
+ *
+ * Las tres cifras van en ese orden porque así se lee el embudo: cuántos lo
+ * vieron, cuántos se llevaron el código y cuántos lo dijeron en la caja. La
+ * conversión es la única que contesta si la promoción sirvió, y por eso es la
+ * única en color.
+ */
+export function CuponesMedidos({ cupones, restauranteId }) {
+  if (!cupones?.length) return null;
+
+  return (
+    <section className="panel-tarjeta">
+      <div className="tarjeta-cabeza">
+        <h2>Tus cupones</h2>
+        <Link className="btn-texto" href={`/panel/${restauranteId}/cupones`}>
+          Administrarlos
+        </Link>
+      </div>
+
+      <ul className="cupones-medidos">
+        {cupones.map((c) => (
+          <li key={c.id}>
+            <div className="carta-fila">
+              <span className="codigo-pastilla">{c.codigo}</span>
+              <span className="carta-nombre">{c.titulo}</span>
+              {c.activo ? null : <span className="estado">Apagado</span>}
+            </div>
+            <div className="cupon-embudo">
+              <span>
+                <strong>{NUMERO.format(c.vistas)}</strong> vistas
+              </span>
+              <span aria-hidden="true">→</span>
+              <span>
+                <strong>{NUMERO.format(c.copias)}</strong> copiados
+              </span>
+              <span aria-hidden="true">→</span>
+              <span>
+                <strong>{NUMERO.format(c.canjes)}</strong> canjes
+              </span>
+              <span className="cupon-conversion">
+                {c.conversion == null ? "—" : `${c.conversion}% de conversión`}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <p className="tarjeta-nota">
+        El canje lo registras tú cuando alguien dice el código en la caja. Sin esa
+        mitad, la conversión se queda en cero por más que el cupón se vea.
       </p>
     </section>
   );

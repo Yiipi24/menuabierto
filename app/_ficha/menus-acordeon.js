@@ -57,7 +57,24 @@ export default function MenusAcordeon({ cartas, titulo, pista, icono, nota }) {
                 {carta.icono}
               </span>
               <span className="menu-fila-texto">
-                <span className="menu-fila-nombre">{carta.nombre}</span>
+                <span className="menu-fila-nombre">
+                  {carta.nombre}
+                  {/* El horario va junto al nombre y no debajo: es lo que
+                      decide si esta es la carta que se vino a ver, y en una
+                      lista de cuatro se lee antes que el resumen. */}
+                  {carta.horario ? (
+                    <span
+                      className={
+                        carta.sirviendo
+                          ? "menu-fila-horario menu-fila-ahora"
+                          : "menu-fila-horario"
+                      }
+                    >
+                      {carta.horario}
+                      {carta.sirviendo ? " · ahora" : ""}
+                    </span>
+                  ) : null}
+                </span>
                 {carta.descripcion ? (
                   <span className="menu-fila-resumen">{carta.descripcion}</span>
                 ) : null}

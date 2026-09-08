@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../../lib/supabase";
 import { menusIncluidos } from "../../../../lib/planes";
 import { estiloDeMenu, nombreDePlantilla, plantillaValida } from "../../../../lib/plantillas";
+import { franjaDe, franjaValida, horaValida } from "../../../../lib/horarios-menu";
 import { iconoPlatilloValido } from "../../../../lib/iconos-platillo";
 import { catalogoDeEtiquetas, etiquetasValidas } from "../../../../lib/etiquetas-platillo";
 import { aCentavos } from "../../../../lib/precios";
@@ -105,6 +106,7 @@ export async function crearMenu(_prevState, formData) {
   const tipo = String(formData.get("kind") ?? "digital");
   const kind = TIPOS_MENU.includes(tipo) ? tipo : "digital";
   const template = plantillaValida(String(formData.get("template") ?? ""));
+  const franja = franjaValida(String(formData.get("franja") ?? ""));
 
   const { count } = await supabase
     .from("menus")
@@ -128,9 +130,13 @@ export async function crearMenu(_prevState, formData) {
       name: nombre,
       kind,
       template,
+      service_time: franja,
       // Vacío a propósito: así el menú recién creado se ve como la plantilla
       // diga hoy, incluso si mañana le cambiamos los valores de fábrica.
       style: {},
+      // El primero es la carta principal sin que nadie lo decida: un
+      // restaurante con una sola carta tiene, por definición, esa.
+      is_primary: (count ?? 0) === 0,
       position: count ?? 0,
     })
     .select("id")
@@ -203,6 +209,174 @@ export async function guardarMenu(_prevState, formData) {
     status: "ok",
     message: `Guardado. Tu carta se ve con la plantilla ${nombreDePlantilla(template)}.`,
     template,
+  };
+}
+
+export async function renombrarMenu(_prevState, formData) {
+  const id = String(formData.get("id") ?? "");
+  const menuId = String(formData.get("menu") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) return NO_ES_TUYO;
+
+  const menu = await menuDelDueno(supabase, id, menuId);
+  if (!menu) return NO_ES_TU_MENU;
+
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  if (nombre.length < 2) {
+    return { status: "error", message: "Ponle nombre al menú. Por ejemplo: Bebidas." };
+  }
+  if (nombre.length > 60) {
+    return { status: "error", message: "Usa un nombre más corto." };
+  }
+  if (nombre === menu.name) return { status: "ok", message: "" };
+
+  const { error } = await supabase
+    .from("menus")
+    .update({ name: nombre })
+    .eq("id", menuId)
+    .eq("restaurant_id", id);
+
+  if (error) {
+    console.error("renombrar menu", error.message);
+    return { status: "error", message: "No pudimos cambiar el nombre." };
+  }
+
+  refrescar(restaurante, menuId);
+  return { status: "ok", message: `Ahora se llama "${nombre}".` };
+}
+
+// El horario de una carta son dos datos que se contestan juntos: la franja
+// —desayuno, cena— y, si el dueño quiere, sus horas exactas. Dejar el rango
+// vacío no es un error: significa "usa el de la franja", que es lo que ya
+// hacía antes de esta pantalla.
+export async function cambiarHorarioMenu(_prevState, formData) {
+  const id = String(formData.get("id") ?? "");
+  const menuId = String(formData.get("menu") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) return NO_ES_TUYO;
+
+  const menu = await menuDelDueno(supabase, id, menuId);
+  if (!menu) return NO_ES_TU_MENU;
+
+  const franja = franjaValida(String(formData.get("franja") ?? ""));
+  const desdeBruto = limpio(formData, "desde");
+  const hastaBruto = limpio(formData, "hasta");
+  const desde = desdeBruto ? horaValida(desdeBruto) : null;
+  const hasta = hastaBruto ? horaValida(hastaBruto) : null;
+
+  if ((desdeBruto && !desde) || (hastaBruto && !hasta)) {
+    return { status: "error", message: "Esa hora no se entiende. Usa el reloj del campo." };
+  }
+  // Media hora escrita no es un horario: sin la otra punta la ficha no puede
+  // decir si la carta se está sirviendo, y se quedaría con la de la franja
+  // sin avisar de que lo capturado se ignoró.
+  if (Boolean(desde) !== Boolean(hasta)) {
+    return { status: "error", message: "Pon las dos horas: desde cuándo y hasta cuándo." };
+  }
+  if (desde && desde === hasta) {
+    return { status: "error", message: "La hora de inicio y la de fin no pueden ser la misma." };
+  }
+
+  const { error } = await supabase
+    .from("menus")
+    .update({ service_time: franja, serves_from: desde, serves_to: hasta })
+    .eq("id", menuId)
+    .eq("restaurant_id", id);
+
+  if (error) {
+    console.error("horario menu", error.message);
+    return { status: "error", message: "No pudimos guardar el horario." };
+  }
+
+  refrescar(restaurante, menuId);
+  return { status: "ok", message: `Se sirve en ${franjaDe(franja).nombre.toLowerCase()}.` };
+}
+
+// La carta principal es la que la ficha pone primero y la que abre el QR
+// cuando hay varias. Que sea una sola lo garantiza la base: el trigger
+// desmarca la anterior en la misma transacción, así que aquí no hay que
+// apagarla antes ni cuidar el orden.
+export async function establecerPrincipalMenu(formData) {
+  const id = String(formData.get("id") ?? "");
+  const menuId = String(formData.get("menu") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) return;
+
+  const menu = await menuDelDueno(supabase, id, menuId);
+  if (!menu) return;
+
+  const { error } = await supabase
+    .from("menus")
+    // Una carta oculta de principal dejaría la ficha señalando algo que nadie
+    // puede abrir, así que marcarla como principal la publica.
+    .update({ is_primary: true, is_visible: true })
+    .eq("id", menuId)
+    .eq("restaurant_id", id);
+
+  if (error) console.error("menu principal", error.message);
+  refrescar(restaurante, menuId);
+}
+
+/**
+ * Duplicar una carta, aquí o en otra sucursal.
+ *
+ * Todo el trabajo lo hace `duplicar_menu` en la base: copiar tres tablas con
+ * los ids remapeados tiene que ser una sola transacción, y una carta a medio
+ * copiar es peor que ninguna. La función comprueba que las dos puntas sean del
+ * mismo dueño, así que un id de destino ajeno no pasa de ahí.
+ */
+export async function duplicarMenu(_prevState, formData) {
+  const id = String(formData.get("id") ?? "");
+  const menuId = String(formData.get("menu") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) return NO_ES_TUYO;
+
+  const menu = await menuDelDueno(supabase, id, menuId);
+  if (!menu) return NO_ES_TU_MENU;
+
+  const destino = String(formData.get("destino") ?? "") || id;
+  const nombre = String(formData.get("nombre") ?? "").trim().slice(0, 60);
+
+  const { data: nuevo, error } = await supabase.rpc("duplicar_menu", {
+    p_menu: menuId,
+    p_destino: destino,
+    p_nombre: nombre || null,
+  });
+
+  if (error) {
+    if (esLimiteDeMenus(error)) {
+      return {
+        status: "error",
+        message:
+          destino === id
+            ? "Ya tienes todos los menús que incluye tu plan. Sube de plan o borra uno."
+            : "Esa sucursal ya tiene todos los menús que incluye su plan.",
+      };
+    }
+    console.error("duplicar menu", error.message);
+    return { status: "error", message: "No pudimos duplicar el menú." };
+  }
+
+  // La copia nace oculta —el dueño la revisa antes de que la vea nadie— así
+  // que hay dos fichas que refrescar cuando el destino es otra sucursal.
+  refrescar(restaurante, nuevo);
+  if (destino !== id) {
+    const { data: otra } = await supabase
+      .from("restaurants")
+      .select("id, slug")
+      .eq("id", destino)
+      .maybeSingle();
+    if (otra) refrescar(otra, nuevo);
+  }
+
+  return {
+    status: "ok",
+    message:
+      destino === id
+        ? "Listo, tienes la copia. Nace oculta: revísala y publícala."
+        : "Copiada a la otra sucursal. Nace oculta: revísala allá y publícala.",
+    menuId: nuevo,
+    destino,
   };
 }
 

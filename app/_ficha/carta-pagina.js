@@ -9,6 +9,7 @@ import { imagenesDeCompartir, metaCompartir } from "../../lib/compartir";
 import { urlDelSitio } from "../../lib/sitio";
 import { jsonLdCarta } from "../../lib/jsonld";
 import DatosEstructurados from "./datos-estructurados";
+import Imprimir from "./imprimir";
 
 // Una carta suelta se busca dentro de las visibles: si el dueño la ocultó o la
 // borró, el QR que ya está pegado en la barra da 404 en vez de enseñar algo
@@ -85,6 +86,9 @@ export default async function CartaPagina({ slug, menuId = null }) {
 
       <main className="wrap ficha ficha-menu-pagina">
         <DatosEstructurados datos={jsonLdCarta(datos, slug, menuId)} />
+        {/* Con ?pdf=1 la carta se abre directa en el diálogo de impresión:
+            es el botón "PDF" del panel y el "Descargar en PDF" de la ficha. */}
+        <Imprimir />
         {/* El menú también es una visita a la ficha: quien llega por el QR
             nunca pasa por la portada, y sin esto su visita no existiría. */}
         <MedirVista

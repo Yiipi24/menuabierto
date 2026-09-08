@@ -94,6 +94,12 @@ function armarMenus(supabase, menus, secciones, platillos, catalogoEtiquetas) {
         description: m.description,
         kind: m.kind,
         template: plantillaValida(m.template),
+        // El horario viaja tal cual: quien lo pinta usa `lib/horarios-menu`,
+        // que sabe caer al de la franja cuando el dueño no puso el suyo.
+        isPrimary: m.is_primary,
+        service_time: m.service_time,
+        serves_from: m.serves_from,
+        serves_to: m.serves_to,
         // El estilo se pasa tal cual: quien lo pinta lo sanea con
         // `estiloDeMenu`, que sabe cuáles son los ajustes de esa plantilla.
         style: m.style,
@@ -137,6 +143,7 @@ async function traerFicha(slug) {
     catalogoServicios,
     catalogoPagos,
     catalogoEtiquetas,
+    cupones,
   ] = await Promise.all([
     supabase.from("restaurant_cuisines").select("cuisines (name)").eq("restaurant_id", r.id),
     supabase
@@ -153,7 +160,9 @@ async function traerFicha(slug) {
     // la del día. Las ocultas son las que el dueño está preparando.
     supabase
       .from("menus")
-      .select("id, name, description, kind, template, style, file_path, file_mime, position")
+      .select(
+        "id, name, description, kind, template, style, file_path, file_mime, position, is_primary, service_time, serves_from, serves_to",
+      )
       .eq("restaurant_id", r.id)
       .eq("is_visible", true)
       .order("position")
@@ -179,6 +188,14 @@ async function traerFicha(slug) {
     supabase.from("amenities").select("slug, name, hint, icon").order("position"),
     supabase.from("payment_methods").select("slug, name, hint, icon").order("position"),
     supabase.from("dish_labels").select("slug, name, hint, icon, kind").order("position"),
+    // Los cupones vigentes. La política de la tabla ya filtra por vigencia
+    // —encendido, dentro de fechas y sin agotarse—, así que lo que llega aquí
+    // es exactamente lo que se puede enseñar.
+    supabase
+      .from("coupons")
+      .select("id, code, title, description, terms, kind, value_int, starts_at, ends_at")
+      .eq("restaurant_id", r.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const servicios = catalogoDeServicios(catalogoServicios.data ?? []);
@@ -212,6 +229,7 @@ async function traerFicha(slug) {
       r.service_mode,
       r.parking_kind,
     ),
+    cupones: cupones.data ?? [],
     cerrados: (r.closed_days ?? []).map(Number),
     cocinas: (cocinas.data ?? []).map((c) => c.cuisines?.name).filter(Boolean),
     horarios: horarios.data ?? [],

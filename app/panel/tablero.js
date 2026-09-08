@@ -8,7 +8,14 @@ import {
 } from "../../lib/metricas";
 import { metricasDeSeleccion } from "./metricas-actions";
 import RejillaKpis, { KpisCargando } from "./tablero-kpis";
-import { Cartas, GraficaRendimiento, Lugares, FuentesDeTrafico } from "./tablero-graficas";
+import {
+  Cartas,
+  Comunidad,
+  CuponesMedidos,
+  GraficaRendimiento,
+  Lugares,
+  FuentesDeTrafico,
+} from "./tablero-graficas";
 import Ideas from "./tablero-ideas";
 import FiltroDeMetricas, { FiltroDePeriodo } from "./tablero-filtro";
 
@@ -170,6 +177,17 @@ export default function Tablero({
                 al sumar varios, "Comida" de dos locales sería una sola barra. */}
             {varios ? null : (
               <Cartas cartas={metricas.cartas} restauranteId={sujeto.id} />
+            )}
+            {/* Seguidores y favoritos sí se suman entre sucursales: son
+                personas, y quien tiene tres locales quiere saber a cuántas les
+                gusta su negocio. Los cupones no, por lo mismo que las cartas. */}
+            <Comunidad
+              comunidad={metricas.comunidad}
+              comparativa={metricas.periodo.comparativa}
+              frase={metricas.periodo.frase}
+            />
+            {varios ? null : (
+              <CuponesMedidos cupones={metricas.cupones} restauranteId={sujeto.id} />
             )}
           </div>
 
