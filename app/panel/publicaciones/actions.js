@@ -249,6 +249,101 @@ function zonaDelFormulario(formData) {
   }
 }
 
+/**
+ * Copiar una historia o una publicación a otras sucursales.
+ *
+ * No hace una copia: agrega la misma pieza a más fichas. Duplicar el archivo y
+ * la fila daría dos publicaciones con likes y comentarios repartidos entre las
+ * dos, y para el dueño sería la misma foto contada dos veces. Una sola pieza en
+ * varias fichas es lo que ya hace el formulario de alta cuando se marcan tres
+ * restaurantes; esto es poder hacerlo después, cuando la promoción funcionó en
+ * un local y se quiere en los otros.
+ *
+ * Solo suma. Quitarla de una ficha donde ya lleva días —con sus vistas y sus
+ * comentarios— es otra cosa y se hace borrando la pieza entera.
+ *
+ * Para una historia el reloj no se reinicia: se ve en las nuevas fichas lo que
+ * le quede de sus 24 horas. Reiniciarlo sería tener la misma historia viva en
+ * un local y muerta en el de al lado.
+ */
+export async function copiarASucursales(_prevState, formData) {
+  const { supabase, user } = await sesion();
+  if (!user) return fallo("Tu sesión expiró. Entra otra vez.");
+
+  const postId = String(formData.get("post") ?? "");
+  const elegidos = formData.getAll("restaurantes").map(String).filter(Boolean);
+  if (!elegidos.length) return fallo("Elige al menos una sucursal.");
+
+  // Que la pieza sea suya. La política de `social_post_restaurants` lo exige
+  // igual; aquí se comprueba antes para contestar con palabras.
+  const { data: post } = await supabase
+    .from("social_posts")
+    .select("id, kind, expires_at")
+    .eq("id", postId)
+    .eq("author_id", user.id)
+    .maybeSingle();
+
+  if (!post) return fallo("Esa publicación ya no es tuya. Recarga la página.");
+
+  const { data: propios } = await supabase
+    .from("restaurants")
+    .select("id, status")
+    .eq("owner_id", user.id)
+    .in("id", elegidos);
+
+  const validos = (propios ?? []).map((r) => r.id);
+  if (validos.length !== elegidos.length) {
+    return fallo("Una de las sucursales que elegiste ya no es tuya. Recarga la página.");
+  }
+
+  // Una historia caducada no se copia a ningún lado: nacería muerta en la
+  // ficha nueva y el dueño creería que la repartió.
+  if (post.expires_at && new Date(post.expires_at).getTime() <= Date.now()) {
+    return fallo("Esa historia ya venció. Sube una nueva para las otras sucursales.");
+  }
+
+  // Las que ya la tienen se quedan fuera del insert: el índice las rechazaría
+  // y se llevaría por delante a las que sí faltan.
+  const { data: yaEstan } = await supabase
+    .from("social_post_restaurants")
+    .select("restaurant_id")
+    .eq("post_id", postId);
+
+  const puestos = new Set((yaEstan ?? []).map((f) => f.restaurant_id));
+  const faltan = validos.filter((id) => !puestos.has(id));
+
+  if (!faltan.length) {
+    return fallo("Ya está publicada en todas las sucursales que elegiste.");
+  }
+
+  const { error } = await supabase
+    .from("social_post_restaurants")
+    .insert(faltan.map((id) => ({ post_id: postId, restaurant_id: id })));
+
+  if (error) {
+    console.error("copiar a sucursales", error.message);
+    return fallo("No pudimos copiarla. Inténtalo otra vez.");
+  }
+
+  revalidatePath("/panel/publicaciones");
+  await revalidarFichas(supabase, faltan);
+
+  const borradores = (propios ?? []).filter(
+    (r) => faltan.includes(r.id) && r.status !== "publicado",
+  );
+  const enBorrador = borradores.length
+    ? ` Ojo: ${
+        borradores.length === 1 ? "una está" : `${borradores.length} están`
+      } en borrador, así que ahí no se ve hasta que publiques la ficha.`
+    : "";
+
+  const cuantas = faltan.length;
+  return {
+    status: "ok",
+    message: `Listo, también sale en ${cuantas === 1 ? "una sucursal más" : `${cuantas} sucursales más`}.${enBorrador}`,
+  };
+}
+
 export async function editarTexto(_prevState, formData) {
   const { supabase, user } = await sesion();
   if (!user) return fallo("Tu sesión expiró. Entra otra vez.");

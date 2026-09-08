@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { borrar, editarTexto, reprogramar } from "./actions";
+import { borrar, copiarASucursales, editarTexto, reprogramar } from "./actions";
 import {
   conteo,
   cuandoSale,
@@ -40,7 +40,7 @@ const DE_ENTRADA = 8;
 // publicación que ya tiene likes y comentarios convertiría esos likes en likes
 // de otra cosa; quien se equivocó de foto la borra y sube la buena, que es un
 // clic más y ninguna mentira.
-export default function Lista({ publicaciones }) {
+export default function Lista({ publicaciones, restaurantes = [] }) {
   const [todas, setTodas] = useState(false);
 
   // Lo programado se pinta arriba y en su propia lista. Mezclado con lo ya
@@ -87,7 +87,7 @@ export default function Lista({ publicaciones }) {
 
           <ul className="post-lista">
             {programadas.map((p) => (
-              <Tarjeta key={p.id} publicacion={p} programada />
+              <Tarjeta key={p.id} publicacion={p} restaurantes={restaurantes} programada />
             ))}
           </ul>
         </section>
@@ -106,7 +106,7 @@ export default function Lista({ publicaciones }) {
       {salidas.length ? (
         <ul className="post-lista">
           {visibles.map((p) => (
-            <Tarjeta key={p.id} publicacion={p} />
+            <Tarjeta key={p.id} publicacion={p} restaurantes={restaurantes} />
           ))}
         </ul>
       ) : (
@@ -118,7 +118,7 @@ export default function Lista({ publicaciones }) {
   );
 }
 
-function Tarjeta({ publicacion, programada = false }) {
+function Tarjeta({ publicacion, restaurantes = [], programada = false }) {
   const caja = useRef(null);
   const [menu, setMenu] = useState(false);
   const [editando, setEditando] = useState(false);
@@ -147,6 +147,15 @@ function Tarjeta({ publicacion, programada = false }) {
   const [estadoBorrar, accionBorrar, borrandoPend] = useActionState(async (prev, formData) => {
     const r = await borrar(prev, formData);
     if (r.status === "ok") setBorrado(true);
+    return r;
+  }, inicial);
+
+  // Copiar a otra sucursal no duplica nada: agrega la misma pieza a más
+  // fichas. Ver `copiarASucursales`.
+  const [copiando, setCopiando] = useState(false);
+  const [estadoCopia, accionCopia, copiaPend] = useActionState(async (prev, formData) => {
+    const r = await copiarASucursales(prev, formData);
+    if (r.status === "ok") setCopiando(false);
     return r;
   }, inicial);
 
@@ -189,7 +198,11 @@ function Tarjeta({ publicacion, programada = false }) {
   const esHistoria = publicacion.kind === "historia";
   const avisoFecha = fecha ? revisarProgramacion(fecha) : null;
   const caducada = esHistoria && new Date(publicacion.expires_at) <= new Date();
-  const restaurantes = Array.isArray(publicacion.restaurantes) ? publicacion.restaurantes : [];
+  const enFichas = Array.isArray(publicacion.restaurantes) ? publicacion.restaurantes : [];
+  // Las sucursales donde todavía no sale. Una historia caducada no se copia a
+  // ningún lado: nacería muerta en la ficha nueva.
+  const puestos = new Set(enFichas.map((r) => r.id));
+  const faltantes = caducada ? [] : restaurantes.filter((r) => !puestos.has(r.id));
 
   return (
     <li className="post-tarjeta" ref={caja}>
@@ -264,8 +277,8 @@ function Tarjeta({ publicacion, programada = false }) {
           </p>
         ) : null}
 
-        {restaurantes.length ? (
-          <p className="post-tarjeta-donde">{restaurantes.map((r) => r.name).join(" · ")}</p>
+        {enFichas.length ? (
+          <p className="post-tarjeta-donde">{enFichas.map((r) => r.name).join(" · ")}</p>
         ) : null}
 
         {/* Los números. Las historias cuentan visualizaciones y las
@@ -345,6 +358,21 @@ function Tarjeta({ publicacion, programada = false }) {
                   <IconoLapiz ancho={16} />
                   Editar texto
                 </button>
+                {/* Solo si hay a dónde copiarla: con un restaurante, la
+                    opción no significaría nada. */}
+                {faltantes.length ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setCopiando(true);
+                      setMenu(false);
+                    }}
+                  >
+                    <IconoChevronDer ancho={16} />
+                    Copiar a otra sucursal
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   role="menuitem"
@@ -361,6 +389,50 @@ function Tarjeta({ publicacion, programada = false }) {
             ) : null}
           </li>
         </ul>
+
+        {/* Copiar a otra sucursal. Casillas y no un selector: quien tiene
+            cuatro locales casi siempre la quiere en todos, y marcar tres es un
+            gesto en vez de tres vueltas al desplegable. */}
+        {copiando ? (
+          <form action={accionCopia} className="post-copiar">
+            <input type="hidden" name="post" value={publicacion.id} />
+            <p className="post-copiar-titulo">
+              {esHistoria
+                ? "También en estas sucursales. Se ve lo que le quede de sus 24 horas."
+                : "También en estas sucursales."}
+            </p>
+
+            <ul className="post-copiar-lista">
+              {faltantes.map((r) => (
+                <li key={r.id}>
+                  <label>
+                    <input type="checkbox" name="restaurantes" value={r.id} defaultChecked />
+                    <span>{r.name}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+
+            {estadoCopia.status === "error" ? (
+              <p className="form-msg err" role="alert">
+                {estadoCopia.message}
+              </p>
+            ) : null}
+
+            <div className="post-reprogramar-botones">
+              <button className="btn btn-sm" type="submit" disabled={copiaPend}>
+                {copiaPend ? "Copiando…" : "Copiar"}
+              </button>
+              <button
+                className="btn-linea btn-sm"
+                type="button"
+                onClick={() => setCopiando(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        ) : null}
 
         {/* Cambiar la fecha, o mandarlo ya. Lo segundo va como botón del mismo
             formulario porque es la misma decisión: adelantar la salida hasta

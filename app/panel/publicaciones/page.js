@@ -42,7 +42,7 @@ export default async function Publicaciones() {
             <Nuevo restaurantes={restaurantes} conexiones={conexiones} />
 
             <section className="bloque-post">
-              <Lista publicaciones={publicaciones} />
+              <Lista publicaciones={publicaciones} restaurantes={restaurantes} />
             </section>
           </>
         ) : (

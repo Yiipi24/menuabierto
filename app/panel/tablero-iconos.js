@@ -229,11 +229,15 @@ export function IconoEquis(props) {
 export const ICONOS_KPI = {
   ojo: IconoOjo,
   qr: IconoQr,
+  carta: IconoCarta,
   telefono: IconoTelefono,
   pin: IconoPin,
   marcador: IconoMarcador,
   whatsapp: IconoWhatsapp,
   estrella: IconoEstrella,
+  gente: IconoGente,
+  corazon: IconoCorazon,
+  cupon: IconoCupon,
 };
 
 // El logo va relleno, como los de `redes-iconos`: es una marca y de trazo no
