@@ -7767,3 +7767,493 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   .menu-pedir,
   .menu-pedir-cuenta button { width: 34px; height: 34px; font-size: 18px; }
 }
+
+/* ---------- la pantalla de menús ---------- */
+
+/* La lista y el formulario viven en la misma página, así que el encabezado
+   lleva su explicación pegada al título en vez de un párrafo suelto. */
+.panel-lead-pegado { margin: 8px 0 0; max-width: 46em; }
+
+.btn-con-icono { padding-left: 18px; }
+
+/* La lista de menús va en su propia tarjeta: separa de un vistazo "lo que ya
+   tienes" de "crear uno nuevo", que es lo que sigue abajo. */
+.tarjeta-lista {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 24px 6px;
+}
+
+.tarjeta-lista-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 6px;
+}
+
+.tarjeta-lista-top h2 { font-size: 17px; font-weight: 650; }
+
+.tarjeta-lista-top .cupo {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-weight: 500;
+  color: var(--ink-faint);
+}
+
+/* La barra del cupo. El número solo dice "2 de 5"; la barra dice cuánto falta
+   para que el plan se llene, que es la pregunta de verdad. */
+.cupo-barra-caja { display: flex; align-items: center; gap: 12px; }
+
+.cupo-texto { font-size: 13.5px; color: var(--ink-faint); white-space: nowrap; }
+
+.cupo-barra {
+  display: block;
+  width: 180px;
+  max-width: 40vw;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  overflow: hidden;
+}
+
+.cupo-barra-llena {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--verde);
+  transition: width 0.2s ease;
+}
+
+/* Lleno no es un error —el plan da para eso— pero deja de ser "vas bien". */
+.cupo-barra-llena.cupo-lleno { background: var(--accent); }
+
+.fila-menu-titulo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.fila-meta-suave { color: var(--ink-faint); font-size: 13.5px; margin-top: 2px; }
+
+/* Las etiquetas de la fila: "Menú principal", el horario. Son datos, no
+   estados, así que no compiten con la pastilla de Visible/Oculto. */
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper-warm);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.insignia-principal { background: #fdf6e3; border-color: #f2e3c0; color: #9a6b12; }
+
+.insignia-principal .icono { color: #d9a227; }
+
+/* La carta que se está sirviendo a esta hora. Es el único verde de la fila y
+   por eso significa algo. */
+.insignia-ahora {
+  background: #eaf7ef;
+  border-color: #cbe9d6;
+  color: #1f7a46;
+}
+
+/* Ver, QR y PDF. Botones de línea y chicos: son tres por fila y con el peso
+   del botón naranja la lista entera gritaría. */
+.btn-fila {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-fila:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-fila-off { opacity: 0.45; cursor: default; }
+
+.btn-fila-off:hover { border-color: var(--line); color: var(--ink-soft); }
+
+.btn-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.btn-icono:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- el menú de tres puntos ---------- */
+
+.menu-acciones { position: relative; }
+
+.menu-flotante {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 232px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(42, 33, 28, 0.14);
+}
+
+.menu-flotante form { display: block; }
+
+.menu-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu-opcion:hover { background: var(--paper-warm); }
+
+.menu-opcion .icono { color: var(--ink-faint); flex: none; }
+
+.menu-opcion-peligro { color: #b3261e; }
+
+.menu-opcion-peligro .icono { color: #b3261e; }
+
+.menu-opcion-peligro:hover { background: #fdecea; }
+
+.menu-raya { height: 1px; margin: 5px 8px; background: var(--line); }
+
+/* ---------- diálogos ---------- */
+
+.modal {
+  padding: 0;
+  border: 0;
+  background: none;
+  max-width: min(460px, calc(100vw - 32px));
+  width: 100%;
+}
+
+.modal::backdrop { background: rgba(42, 33, 28, 0.45); }
+
+.modal-caja {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 24px 22px;
+  text-align: left;
+}
+
+.modal-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.modal-cabecera h2 { font-size: 19px; font-weight: 650; }
+
+.modal-cerrar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.modal-cerrar:hover { background: var(--paper-warm); color: var(--ink); }
+
+.modal-texto { color: var(--ink-soft); font-size: 14.5px; margin-bottom: 18px; }
+
+.modal-botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* Borrar es lo único que no se deshace, y es el único botón rojo del panel. */
+.btn-peligro-solido {
+  background: #b3261e;
+  border-color: #b3261e;
+}
+
+.btn-peligro-solido:hover { background: #931d17; border-color: #931d17; }
+
+/* ---------- crear un menú, con sus tarjetas de al lado ---------- */
+
+.menus-columnas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  margin-top: 34px;
+}
+
+.bloque-nuevo {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 24px 24px;
+}
+
+.bloque-nuevo-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bloque-nuevo-titulo .sub { margin: 0 0 4px; }
+
+.pastilla {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.bloque-nuevo .form-alta { margin-top: 20px; }
+
+.campo-suelto { margin-bottom: 8px; }
+
+.form-acciones {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+}
+
+/* Las dos formas de poner un menú, lado a lado: se comparan de un vistazo en
+   vez de leerse en fila. */
+.opciones-par { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.opcion-caja {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.opcion-caja.opcion-on { border-color: var(--accent); background: var(--accent-soft); }
+
+.opcion-caja input { margin-top: 3px; accent-color: var(--accent); flex: none; }
+
+.opcion-cuerpo { display: grid; gap: 4px; }
+
+.opcion-cuerpo strong { font-size: 15px; font-weight: 650; }
+
+.opcion-cuerpo em { font-style: normal; font-size: 13.5px; color: var(--ink-faint); }
+
+/* ---------- las tarjetas de plantilla ---------- */
+
+.plantillas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.plantilla-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.plantilla-card.plantilla-on { border-color: var(--accent); background: var(--accent-soft); }
+
+/* El control se esconde y la tarjeta entera hace de botón, pero el foco del
+   teclado tiene que seguir viéndose: por eso el borde del contenedor. */
+.plantilla-card input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.plantilla-card:focus-within { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+
+.plantilla-nombre { font-size: 14.5px; font-weight: 650; }
+
+.plantilla-texto { font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; }
+
+/* La miniatura: cuatro rectángulos que insinúan la carta. No es una captura
+   —habría que rehacerla cada vez que cambie el CSS de las plantillas— sino la
+   forma dibujada con los mismos datos de la plantilla. */
+.mini {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  height: 78px;
+  border-radius: 8px;
+  background: var(--paper-warm);
+  overflow: hidden;
+  align-content: start;
+}
+
+.mini-dos { grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+
+.mini-fila { display: flex; align-items: center; gap: 6px; }
+
+.mini-foto {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #d9c4a8;
+}
+
+.mini-texto { flex: 1; display: grid; gap: 3px; min-width: 0; }
+
+.mini-linea { height: 4px; border-radius: 2px; background: #cbbca9; }
+
+.mini-linea.corta { width: 55%; background: #ded2c1; }
+
+.mini-precio { flex: none; width: 16px; height: 4px; border-radius: 2px; background: #c0ae99; }
+
+/* ---------- las tarjetas de la columna de al lado ---------- */
+
+.menus-columna-lado { display: grid; gap: 16px; }
+
+.tarjeta-lado {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+
+.tarjeta-lado h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15.5px;
+  font-weight: 650;
+  margin-bottom: 14px;
+}
+
+.tarjeta-lado h2 .icono { color: var(--accent); }
+
+.tarjeta-lado .btn-texto { margin-top: 14px; }
+
+.tarjeta-lado-plan { background: var(--paper-warm); }
+
+.tarjeta-lado-plan p { font-size: 14.5px; color: var(--ink-soft); }
+
+.lista-palomitas, .lista-iconos { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+
+.lista-palomitas li, .lista-iconos li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.lista-iconos .icono { color: var(--ink-faint); flex: none; margin-top: 1px; }
+
+/* La palomita se dibuja con el pseudo-elemento: son cinco y un SVG por cada
+   una sería más marcado que texto. */
+.lista-palomitas li::before {
+  content: "";
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--verde);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 17px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 17px no-repeat;
+}
+
+@media (max-width: 900px) {
+  .menus-columnas { grid-template-columns: 1fr; }
+  .opciones-par { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .tarjeta-lista { padding: 18px 16px 4px; }
+  .bloque-nuevo { padding: 18px 16px 20px; }
+  /* En el teléfono la fila se apila: los botones pasan debajo del nombre en
+     vez de exprimirse en el mismo renglón. */
+  .fila-menu { align-items: flex-start; }
+  .fila-botones { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .menu-acciones { margin-left: auto; }
+  .cupo-barra-caja { width: 100%; }
+  .cupo-barra { flex: 1; max-width: none; }
+}
+
+/* ---------- la carta impresa ---------- */
+
+/* "Descargar en PDF" abre esta misma página en el diálogo de impresión, así
+   que lo que no es la carta —la barra de arriba, las salidas, el pie— no debe
+   salir en el papel. */
+@media print {
+  .nav, .footer, .carta-salidas, .menu-indice, .menu-archivo-publico {
+    display: none !important;
+  }
+
+  body { background: #fff; }
+
+  .wrap { max-width: none; padding: 0; }
+
+  .carta { box-shadow: none; border: 0; }
+
+  /* Que una sección no se parta a la mitad entre dos hojas, y que un
+     platillo nunca deje su precio en la página siguiente. */
+  .menu-seccion { break-inside: avoid; }
+
+  .menu-item { break-inside: avoid; }
+
+  /* Cada carta empieza en su hoja cuando se imprimen varias juntas. */
+  .menu-carta + .menu-carta { break-before: page; }
+}
