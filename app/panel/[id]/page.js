@@ -40,6 +40,7 @@ export default async function Editar({ params }) {
     { data: menus },
     { data: catalogoServicios },
     { data: catalogoPagos },
+    { count: cupones },
   ] = await Promise.all([
     supabase.from("cuisines").select("slug, name").order("name"),
     supabase
@@ -68,6 +69,13 @@ export default async function Editar({ params }) {
     // la tabla, así que uno nuevo aparece aquí sin tocar el código.
     supabase.from("amenities").select("slug, name, hint, icon").order("position"),
     supabase.from("payment_methods").select("slug, name, hint, icon").order("position"),
+    // Solo el número: la tarjeta de abajo dice cuántos hay encendidos y el
+    // detalle vive en su propia pantalla.
+    supabase
+      .from("coupons")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", id)
+      .eq("is_active", true),
   ]);
 
   const conUrl = (fotos ?? []).map((f) => ({
@@ -156,6 +164,23 @@ export default async function Editar({ params }) {
 
             <Link className="btn" href={`/panel/${restaurante.id}/menus`}>
               {menus?.length ? "Administrar los menús" : "Crear el primer menú"}
+            </Link>
+          </section>
+
+          {/* Los cupones cuelgan de los menús y no del tablero: son la otra
+              cosa que el dueño publica en su ficha, y la que le dice cuántos
+              de los que la vieron acabaron sentados en una mesa. */}
+          <section className="bloque-qr">
+            <div className="bloque-qr-texto">
+              <h2 className="sub">Cupones</h2>
+              <p className="ayuda">
+                Una promoción con código se puede medir: sale en tu ficha, el
+                cliente se lo lleva y lo dice en la caja.
+                {cupones ? ` Tienes ${cupones} ${cupones === 1 ? "encendido" : "encendidos"}.` : ""}
+              </p>
+            </div>
+            <Link className="btn" href={`/panel/${restaurante.id}/cupones`}>
+              {cupones ? "Administrar los cupones" : "Crear un cupón"}
             </Link>
           </section>
 

@@ -16,8 +16,10 @@ import Historias from "../_social/historias";
 import Publicaciones from "../_social/publicaciones";
 import { cargarSocial, recogerHistoriasViejas } from "../_social/datos";
 import ComoLlegar from "./como-llegar";
+import Cupones from "./cupones";
 import MenusAcordeon from "./menus-acordeon";
 import { IconoDeMenu } from "./iconos-menu";
+import { ordenarParaLaFicha, seSirveAhora, textoDeHorario } from "../../lib/horarios-menu";
 import { MedirVista, EnlaceMedido, BotonGuardar } from "../medir";
 import {
   cargar,
@@ -98,6 +100,7 @@ export default async function Ficha({ slug }) {
     servicios,
     cerrados,
     pedidos,
+    cupones,
   } = datos;
 
   // La ficha es publica, asi que la sesion puede no existir. Solo sirve para
@@ -141,10 +144,19 @@ export default async function Ficha({ slug }) {
   // Ya no lleva QR: el código impreso es uno solo por restaurante y abre esta
   // misma ficha, así que enseñar cuatro códigos aquí sería ofrecer cuatro
   // vinilos que nadie va a pegar.
-  const cartas = menus.map((m) => ({
+  // El orden no es el que puso el dueño a secas: primero la carta principal,
+  // luego las que se están sirviendo a esta hora y al final las que no. Quien
+  // abre la ficha a las nueve de la noche viene por la cena, y tener el menú
+  // de desayuno hasta arriba lo obliga a leer tres cartas para descartar dos.
+  const cartas = ordenarParaLaFicha(menus, r.timezone).map((m) => ({
     id: m.id,
     nombre: m.name,
     descripcion: descripcionDeMenu(m),
+    horario: textoDeHorario(m),
+    // `null` cuando la carta se sirve a cualquier hora: ahí no hay nada que
+    // marcar, ni a favor ni en contra.
+    sirviendo: seSirveAhora(m, r.timezone),
+    principal: Boolean(m.isPrimary),
     href: rutaMenuCarta(slug, m.id),
     icono: <IconoDeMenu nombre={m.name} ancho={24} />,
   }));
@@ -311,6 +323,10 @@ export default async function Ficha({ slug }) {
               <ComoLlegar slug={slug} nombre={r.name} direccion={direccion} />
             ) : null}
           </section>
+
+          {/* Los cupones van antes de los menús: son lo que caduca, y quien
+              baja directo a la carta ya no vuelve a subir. */}
+          <Cupones slug={slug} cupones={cupones} />
 
           {/* Las cartas no se despliegan aquí: cada una se abre en su página, y
               quien está sentado en la mesa entra por su QR. La ficha vuelve a

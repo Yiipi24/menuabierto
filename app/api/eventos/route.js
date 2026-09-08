@@ -4,10 +4,11 @@ import { supabaseServer } from "../../../lib/supabase";
 import {
   COOKIE_VISITANTE,
   DIAS_COOKIE,
+  eventoDeCupon,
   eventoValido,
   fuenteValida,
 } from "../../../lib/eventos";
-import { menuIdValido } from "../../../lib/slug";
+import { menuIdValido, uuidValido } from "../../../lib/slug";
 
 // Aquí aterrizan los eventos de las fichas públicas. Va por el servidor y no
 // directo a Supabase desde el navegador por tres razones: la ciudad la sabe el
@@ -48,6 +49,11 @@ export async function POST(request) {
   // vez de tumbar el evento: el escaneo sigue contando aunque no se sepa de
   // qué carta.
   const menu = menuIdValido(cuerpo?.menu) ? String(cuerpo.menu) : null;
+  // El cupón viaja igual que la carta y con el mismo criterio: solo en los
+  // eventos que ocurren dentro de uno, y un id con mala forma se descarta sin
+  // tumbar el evento.
+  const cupon =
+    eventoDeCupon(evento) && uuidValido(cuerpo?.cupon) ? String(cuerpo.cupon) : null;
 
   if (!slug || !eventoValido(evento)) return new Response(null, { status: 400 });
 
@@ -93,10 +99,25 @@ export async function POST(request) {
     menuId = carta?.id ?? null;
   }
 
+  // Que el cupón sea de esta ficha lo vuelve a comprobar la política de la
+  // tabla; aquí se filtra antes para que un id ajeno no convierta el evento
+  // entero en un error de RLS.
+  let cuponId = null;
+  if (ficha?.id && cupon) {
+    const { data: fila } = await supabase
+      .from("coupons")
+      .select("id")
+      .eq("id", cupon)
+      .eq("restaurant_id", ficha.id)
+      .maybeSingle();
+    cuponId = fila?.id ?? null;
+  }
+
   if (ficha?.id) {
     const { error } = await supabase.from("restaurant_events").insert({
       restaurant_id: ficha.id,
       menu_id: menuId,
+      coupon_id: cuponId,
       event: evento,
       source: fuente,
       city: ciudad,

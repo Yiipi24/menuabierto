@@ -155,3 +155,15 @@ export function IconoDescargar(props) {
     </Svg>
   );
 }
+
+// Las tijeras del cupón recortable. Es el dibujo que todo el mundo reconoce
+// como "promoción" sin leer la palabra.
+export function IconoTijeras(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="6" cy="18" r="2.5" />
+      <path d="M20 4L8.5 16.5M20 20L8.5 7.5" />
+    </Svg>
+  );
+}

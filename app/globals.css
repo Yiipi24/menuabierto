@@ -8257,3 +8257,242 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   /* Cada carta empieza en su hoja cuando se imprimen varias juntas. */
   .menu-carta + .menu-carta { break-before: page; }
 }
+
+/* El horario junto al nombre de cada carta de la ficha. La que se está
+   sirviendo ahora es la única en verde: es la respuesta a "¿cuál me toca?". */
+.menu-fila-horario {
+  display: inline-block;
+  margin-left: 9px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.menu-fila-horario.menu-fila-ahora {
+  background: #eaf7ef;
+  border-color: #cbe9d6;
+  color: #1f7a46;
+}
+
+/* ---------- cupones en la ficha ---------- */
+
+.ficha-cupones { margin-bottom: 18px; }
+
+.cupones { display: grid; gap: 12px; margin-top: 16px; }
+
+/* El cupón se dibuja como lo que imita: un boleto con su muesca. La línea
+   punteada separa la promoción del código, que es lo que se arranca. */
+.cupon {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex-wrap: wrap;
+  border: 1.5px dashed var(--accent);
+  border-radius: 14px;
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+
+.cupon-cuerpo { flex: 1; min-width: 220px; padding: 18px 20px; }
+
+.cupon-descuento {
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.cupon-titulo { font-size: 17px; font-weight: 650; margin-bottom: 5px; }
+
+.cupon-texto { font-size: 14.5px; color: var(--ink-soft); margin-bottom: 6px; }
+
+.cupon-vigencia { font-size: 13.5px; font-weight: 600; color: var(--ink-soft); }
+
+.cupon-condiciones { font-size: 12.5px; color: var(--ink-faint); margin-top: 5px; }
+
+.cupon-lado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 20px;
+  border-left: 1.5px dashed var(--accent);
+  background: #fff;
+}
+
+.cupon-codigo {
+  display: grid;
+  gap: 3px;
+  padding: 10px 18px;
+  border: 1.5px solid var(--accent);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.cupon-codigo:hover { background: var(--accent-soft); }
+
+.cupon-codigo-texto {
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  color: var(--accent);
+}
+
+.cupon-codigo-accion { font-size: 12px; font-weight: 600; color: var(--ink-faint); }
+
+.cupon-instruccion { font-size: 12.5px; color: var(--ink-faint); }
+
+@media (max-width: 560px) {
+  .cupon-lado { width: 100%; border-left: 0; border-top: 1.5px dashed var(--accent); }
+}
+
+/* ---------- cupones en el panel ---------- */
+
+/* La caja de canje va arriba del todo: es lo único de esta pantalla que se usa
+   a diario, con el cliente enfrente y con prisa. */
+.caja-canje {
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 22px;
+}
+
+.caja-canje-texto h2 { font-size: 17px; font-weight: 650; margin-bottom: 4px; }
+
+.caja-canje-texto p { font-size: 14.5px; color: var(--ink-soft); }
+
+.caja-canje-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.caja-canje-form input { flex: 1; min-width: 180px; }
+
+.caja-canje .form-msg { margin-top: 12px; }
+
+/* El código se captura y se enseña en mayúsculas y espaciado: se dicta en voz
+   alta en la caja, y ahí una O y un cero tienen que distinguirse. */
+.campo-codigo {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 650;
+}
+
+.cupones-resumen {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.resumen-caja {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* La conversión es la única cifra que contesta "¿sirvió?", así que es la única
+   que va en color. */
+.resumen-caja-fuerte { background: var(--accent-soft); border-color: transparent; }
+
+.resumen-caja-fuerte .resumen-cifra { color: var(--accent); }
+
+.resumen-cifra { font-size: 26px; font-weight: 700; line-height: 1.1; }
+
+.resumen-nombre { font-size: 13.5px; color: var(--ink-faint); }
+
+.resumen-nota {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.lista-cupones { list-style: none; margin: 0; padding: 0; }
+
+.fila-cupon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.fila-cupon:last-child { border-bottom: 0; }
+
+.fila-cupon-datos { flex: 1; min-width: 220px; }
+
+.fila-cupon-titulo { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 7px; }
+
+.fila-cupon-nombre { font-size: 16px; font-weight: 650; margin-bottom: 3px; }
+
+.codigo-pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Los cuatro estados de un cupón. Solo "vigente" es verde: los otros tres son
+   razones distintas por las que no se está usando, y el dueño necesita
+   distinguirlas para saber si lo alarga, lo enciende o lo deja ir. */
+.estado-vigente { background: #eaf7ef; border-color: transparent; color: #1f7a46; }
+
+.estado-programado { background: #eef2fb; border-color: transparent; color: #3f5ea8; }
+
+.estado-agotado { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+
+.cupon-cifras {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.cupon-cifras div { display: grid; gap: 2px; }
+
+.cupon-cifras dt { font-size: 12.5px; color: var(--ink-faint); }
+
+.cupon-cifras dd { font-size: 19px; font-weight: 700; margin: 0; }
+
+.cupon-cifra-fuerte dd { color: var(--accent); }
+
+.lista-glosario li { display: block; }
+
+.lista-glosario strong { font-weight: 650; color: var(--ink); }
+
+.campo-pista-alto { align-self: end; margin-bottom: 22px; }
+
+@media (max-width: 780px) {
+  .cupones-resumen { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 520px) {
+  .cupon-cifras { gap: 16px; }
+  .cupon-cifras dd { font-size: 17px; }
+}

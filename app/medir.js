@@ -45,15 +45,17 @@ function fuenteActual() {
 /**
  * Manda un evento. `menu` es la carta en la que pasó, y solo la tiene la
  * página de una sola: es lo que deja saber después cuál de los QR impresos
- * —el de la barra o el de la mesa— es el que trae gente.
+ * —el de la barra o el de la mesa— es el que trae gente. `cupon` es lo mismo
+ * para las promociones con código: sin él, "alguien copió un código" no diría
+ * cuál de los tres que reparte el restaurante está funcionando.
  */
-export function medir(slug, evento, menu = null) {
+export function medir(slug, evento, menu = null, cupon = null) {
   if (!slug || typeof window === "undefined") return;
   try {
     fetch("/api/eventos", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ slug, evento, menu, fuente: fuenteActual() }),
+      body: JSON.stringify({ slug, evento, menu, cupon, fuente: fuenteActual() }),
       // keepalive para que el evento salga aunque el clic se lleve la página
       // por delante (un tel: o un enlace a Instagram).
       keepalive: true,
