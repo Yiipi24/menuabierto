@@ -6,6 +6,7 @@ import { destacadosDe } from "../destacados";
 import { conEsquema, nombreDeRed } from "../../lib/redes";
 import { catalogoDePagos, detallesDePago } from "../../lib/pagos";
 import { catalogoDeServicios, detallesDeServicio } from "../../lib/servicios";
+import { catalogoDeEtiquetas, conEtiquetas } from "../../lib/etiquetas-platillo";
 import { pedidosDe } from "../../lib/whatsapp";
 import { conteoDe } from "../../lib/insignias";
 import { agruparPlatillos } from "../../lib/menus";
@@ -72,10 +73,15 @@ export function repiteDireccion(texto, r) {
 // Cada menú se arma completo aquí y no en el render: la página pinta lo que
 // recibe y no tiene que cruzar tres listas mientras genera HTML. El agrupado
 // en sí vive en lib/menus porque la vista previa del panel usa el mismo.
-function armarMenus(supabase, menus, secciones, platillos) {
+function armarMenus(supabase, menus, secciones, platillos, catalogoEtiquetas) {
+  // Las etiquetas se resuelven aquí, una vez y contra el catálogo, por lo mismo
+  // que las formas de pago: la carta pinta lo que recibe y no traduce claves
+  // mientras genera HTML.
+  const conSuyas = conEtiquetas(catalogoEtiquetas, platillos);
+
   return menus
     .map((m) => {
-      const mios = platillos.filter((p) => p.menu_id === m.id);
+      const mios = conSuyas.filter((p) => p.menu_id === m.id);
       const grupos = agruparPlatillos(
         secciones.filter((s) => s.menu_id === m.id),
         mios,
@@ -130,6 +136,7 @@ async function traerFicha(slug) {
     resenas,
     catalogoServicios,
     catalogoPagos,
+    catalogoEtiquetas,
   ] = await Promise.all([
     supabase.from("restaurant_cuisines").select("cuisines (name)").eq("restaurant_id", r.id),
     supabase
@@ -159,7 +166,7 @@ async function traerFicha(slug) {
       .order("created_at"),
     supabase
       .from("menu_items")
-      .select("id, menu_id, section_id, name, description, price_cents, currency, icon, is_available, position")
+      .select("id, menu_id, section_id, name, description, price_cents, currency, icon, labels, is_available, position")
       .eq("restaurant_id", r.id)
       .order("position")
       .order("created_at"),
@@ -171,10 +178,12 @@ async function traerFicha(slug) {
     // diminuta y en paralelo no cuesta nada.
     supabase.from("amenities").select("slug, name, hint, icon").order("position"),
     supabase.from("payment_methods").select("slug, name, hint, icon").order("position"),
+    supabase.from("dish_labels").select("slug, name, hint, icon, kind").order("position"),
   ]);
 
   const servicios = catalogoDeServicios(catalogoServicios.data ?? []);
   const pagos = catalogoDePagos(catalogoPagos.data ?? []);
+  const etiquetas = catalogoDeEtiquetas(catalogoEtiquetas.data ?? []);
 
   return {
     r,
@@ -219,6 +228,7 @@ async function traerFicha(slug) {
       menus.data ?? [],
       secciones.data ?? [],
       platillos.data ?? [],
+      etiquetas,
     ),
     resenas: resenas.data ?? [],
   };

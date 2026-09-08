@@ -7,6 +7,7 @@ import { supabaseSession } from "../../../../lib/supabase";
 import { menusIncluidos } from "../../../../lib/planes";
 import { estiloDeMenu, nombreDePlantilla, plantillaValida } from "../../../../lib/plantillas";
 import { iconoPlatilloValido } from "../../../../lib/iconos-platillo";
+import { catalogoDeEtiquetas, etiquetasValidas } from "../../../../lib/etiquetas-platillo";
 import { aCentavos } from "../../../../lib/precios";
 import { MAX_ARCHIVO_BYTES } from "../../../../lib/subidas";
 
@@ -529,12 +530,28 @@ export async function guardarPlatillo(_prevState, formData) {
   // corrige solo en vez de quedarse con el del nombre viejo.
   const icono = String(formData.get("icono") ?? "auto");
 
+  // Las etiquetas se filtran contra el catálogo antes de guardar. La base
+  // también las valida con un trigger, pero ahí una clave inventada es una
+  // excepción que el dueño vería como "no pudimos guardar el platillo"; aquí,
+  // simplemente no se guarda. Y llegan siempre, aunque vengan vacías: quitarle
+  // la última etiqueta a un platillo tiene que poder guardarse.
+  const { data: filasEtiquetas } = await supabase
+    .from("dish_labels")
+    .select("slug, name, hint, icon, kind")
+    .order("position");
+
+  const etiquetas = etiquetasValidas(
+    catalogoDeEtiquetas(filasEtiquetas ?? []),
+    formData.getAll("etiquetas").map((v) => String(v)),
+  );
+
   const campos = {
     name: nombre,
     description: limpio(formData, "descripcion"),
     price_cents: centavos,
     section_id: seccionId,
     icon: iconoPlatilloValido(icono) ? icono : null,
+    labels: etiquetas,
     is_available: formData.get("agotado") !== "on",
   };
 

@@ -2221,6 +2221,44 @@ section { scroll-margin-top: 84px; }
   color: var(--ink-soft);
 }
 
+/* Las etiquetas del platillo. Los distintivos son marcas pequeñas con su
+   dibujo —"vegano", "picante"— y van pegados al platillo porque son parte de
+   qué es. Se usan igual en la carta pública y en la lista del panel, para que
+   el dueño revise lo que puso viendo lo mismo que ve el comensal. */
+.menu-etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.menu-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.menu-marca .icono { color: var(--ink-faint); flex: none; }
+
+/* Los alérgenos no son un distintivo que presumir: son la advertencia que
+   alguien está buscando. Van en palabras y en su propio renglón —cinco dibujos
+   seguidos habría que descifrarlos— y en letra chica, para que quien no es
+   alérgico pase de largo. */
+.menu-alergenos {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
 .menu-precio { font-weight: 600; white-space: nowrap; }
 
 /* Agotado se tacha en vez de esconderse: quien busca ese platillo necesita
@@ -3074,6 +3112,18 @@ img.menu-archivo-vista { min-height: 0; }
   color: var(--menu-acento);
 }
 
+/* Dentro de la carta las marcas toman el color de la plantilla, como todo lo
+   demás: en la elegante son doradas y en el pizarrón, claras sobre la madera. */
+.carta .menu-marca {
+  border-color: var(--menu-acento-suave);
+  background: var(--menu-acento-suave);
+  color: var(--menu-acento);
+}
+
+.carta .menu-marca .icono { color: currentColor; }
+
+.carta .menu-alergenos { color: var(--carta-suave); }
+
 .carta .menu-agotado .menu-nombre { color: var(--carta-suave); }
 
 .carta .menu-agotado .menu-precio {
@@ -3190,6 +3240,13 @@ img.menu-archivo-vista { min-height: 0; }
 .carta-pizarron .menu-etiqueta,
 .carta-pizarra .menu-etiqueta {
   background: rgba(244, 239, 228, 0.14);
+  color: #e5ddd0;
+}
+
+.carta-pizarron .menu-marca,
+.carta-pizarra .menu-marca {
+  border-color: rgba(244, 239, 228, 0.28);
+  background: rgba(244, 239, 228, 0.1);
   color: #e5ddd0;
 }
 
@@ -3758,6 +3815,122 @@ img.menu-archivo-vista { min-height: 0; }
   line-height: 1.2;
   text-align: center;
   color: var(--ink-faint);
+}
+
+/* El selector de etiquetas del formulario del platillo. Plegado, porque son
+   treinta casillas debajo de un formulario de cuatro campos: quien captura
+   veinte platillos no debería pasar por ellas cada vez. El renglón del resumen
+   dice lo que hay marcado sin abrirlo. */
+.campo-etiquetas {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  padding: 10px 14px;
+}
+
+.campo-etiquetas > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.campo-etiquetas > summary::-webkit-details-marker { display: none; }
+
+/* El triángulo lo dibujamos nosotros: el de fábrica no se puede alinear igual
+   en los tres navegadores. */
+.campo-etiquetas > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--ink-faint);
+  border-bottom: 2px solid var(--ink-faint);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 0.15s ease;
+}
+
+.campo-etiquetas[open] > summary::after {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+.campo-etiquetas-resumen {
+  font-size: 13px;
+  color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+
+.etiquetas-grupo {
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.etiquetas-grupo legend {
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.etiquetas-grupo .ayuda { margin: 2px 0 9px; }
+
+.etiquetas-edicion { display: flex; flex-wrap: wrap; gap: 7px; }
+
+/* Píldoras y no la caja de dos renglones de los servicios: son treinta y de
+   nombre corto, y en cajas ocuparían pantalla y media. La pista de cada una
+   vive en el `title`, que es donde se busca cuando hay duda. */
+.etiqueta-opcion input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.etiqueta-cara {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.etiqueta-cara .icono { color: var(--ink-faint); flex: none; }
+
+.etiqueta-cara:hover { border-color: var(--ink-faint); }
+
+.etiqueta-opcion input:checked + .etiqueta-cara {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.etiqueta-opcion input:checked + .etiqueta-cara .icono { color: var(--accent); }
+
+/* Un alérgeno marcado no es un logro: es una advertencia, y se prende en el
+   color de aviso para que se distinga de un "vegano" de un vistazo. */
+.etiqueta-opcion-alergeno input:checked + .etiqueta-cara {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #b3261e;
+}
+
+.etiqueta-opcion-alergeno input:checked + .etiqueta-cara .icono { color: #b3261e; }
+
+.etiqueta-opcion input:focus-visible + .etiqueta-cara {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .editor-platillo-dibujo { flex: none; color: var(--accent); opacity: 0.8; }

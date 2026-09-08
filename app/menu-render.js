@@ -9,7 +9,9 @@
 import { pesos } from "../lib/precios";
 import { clasesDeCarta, variablesDeEstilo } from "../lib/plantillas";
 import { iconoDePlatillo } from "../lib/iconos-platillo";
+import { fraseDeAlergenos, partirEtiquetas } from "../lib/etiquetas-platillo";
 import { IconoPlatillo } from "./menu-iconos";
+import { IconoEtiqueta } from "./etiquetas-iconos";
 import { IconoDestacado } from "./destacados";
 import { BotonAgregar } from "./_ficha/pedido";
 
@@ -62,6 +64,10 @@ function Encabezado({ menu, restaurante, destacados, Titulo, conAdornos }) {
 
 function Platillo({ platillo, conIcono }) {
   const icono = conIcono ? iconoDePlatillo(platillo) : null;
+  // Llegan resueltas contra el catálogo desde el servidor —la ficha y la vista
+  // previa del panel las traen igual—, así que aquí solo se reparten en los
+  // dos lugares donde se leen.
+  const { distintivos, alergenos } = partirEtiquetas(platillo.etiquetas);
 
   return (
     <li className={platillo.is_available ? "menu-item" : "menu-item menu-agotado"}>
@@ -88,6 +94,28 @@ function Platillo({ platillo, conIcono }) {
         {platillo.description ? (
           <span className="menu-desc">{platillo.description}</span>
         ) : null}
+
+        {/* Los distintivos van pegados al platillo —"vegano", "pica"— porque
+            son parte de qué es. Los alérgenos van en su propio renglón, en
+            palabras: quien los busca lee "contiene", no descifra cinco
+            dibujos, y quien no es alérgico no tiene por qué pararse ahí. */}
+        {distintivos.length ? (
+          <span className="menu-etiquetas">
+            {distintivos.map((e) => (
+              <span className="menu-marca" key={e.slug} title={e.pista}>
+                <IconoEtiqueta slug={e.icono} ancho={14} />
+                <span>{e.nombre}</span>
+              </span>
+            ))}
+          </span>
+        ) : null}
+
+        {alergenos.length ? (
+          <span className="menu-alergenos">
+            Contiene: {fraseDeAlergenos(alergenos)}
+          </span>
+        ) : null}
+
         {!platillo.is_available ? (
           <span className="menu-etiqueta">Agotado hoy</span>
         ) : null}
