@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../../../lib/supabase";
 import { rutaMenuCarta } from "../../../../../lib/slug";
+import { catalogoDeEtiquetas, conEtiquetas } from "../../../../../lib/etiquetas-platillo";
 import CabeceraPanel from "../../../cabecera";
 import Ajustes from "./ajustes";
 import Archivo from "./archivo";
@@ -38,7 +39,7 @@ export default async function EditarMenu({ params }) {
 
   if (!menu) notFound();
 
-  const [{ data: secciones }, { data: platillos }] = await Promise.all([
+  const [{ data: secciones }, { data: platillos }, { data: etiquetas }] = await Promise.all([
     supabase
       .from("menu_sections")
       .select("id, name, position")
@@ -47,11 +48,20 @@ export default async function EditarMenu({ params }) {
       .order("created_at"),
     supabase
       .from("menu_items")
-      .select("id, section_id, name, description, price_cents, icon, is_available, position")
+      .select("id, section_id, name, description, price_cents, icon, labels, is_available, position")
       .eq("menu_id", menuId)
       .order("position")
       .order("created_at"),
+    // El catálogo de etiquetas vive en la base para que agregar una no exija
+    // desplegar. Va en el mismo Promise.all: es una consulta diminuta.
+    supabase.from("dish_labels").select("slug, name, hint, icon, kind").order("position"),
   ]);
+
+  // Se resuelven aquí, del lado del servidor, y ya resueltas viajan al editor y
+  // a la vista previa: los dos pintan lo mismo que la ficha y ninguno tiene que
+  // cruzar el catálogo mientras dibuja.
+  const catalogoEtiquetas = catalogoDeEtiquetas(etiquetas ?? []);
+  const platillosConEtiquetas = conEtiquetas(catalogoEtiquetas, platillos ?? []);
 
   const urlArchivo = menu.file_path
     ? supabase.storage.from(BUCKET_MENUS).getPublicUrl(menu.file_path).data.publicUrl
@@ -87,7 +97,7 @@ export default async function EditarMenu({ params }) {
           menu={menu}
           restaurante={restaurante}
           secciones={secciones ?? []}
-          platillos={platillos ?? []}
+          platillos={platillosConEtiquetas}
         />
 
         <section className="panel-enlace-carta">
@@ -122,7 +132,8 @@ export default async function EditarMenu({ params }) {
             id={id}
             menuId={menu.id}
             secciones={secciones ?? []}
-            platillos={platillos ?? []}
+            platillos={platillosConEtiquetas}
+            catalogoEtiquetas={catalogoEtiquetas}
           />
         )}
       </main>

@@ -8,7 +8,14 @@ import {
   ICONOS_PLATILLO,
   SIN_ICONO,
 } from "../../../../../lib/iconos-platillo";
+import {
+  GRUPOS_ETIQUETA,
+  TIPO_ALERGENO,
+  fraseDeAlergenos,
+  partirEtiquetas,
+} from "../../../../../lib/etiquetas-platillo";
 import { IconoPlatillo } from "../../../../menu-iconos";
+import { IconoEtiqueta } from "../../../../etiquetas-iconos";
 import {
   borrarPlatillo,
   borrarSeccion,
@@ -25,7 +32,13 @@ const inicial = { status: "idle", message: "" };
 // El editor arma los mismos grupos que la ficha pública: una sección por
 // bloque y, al final, los platillos que se quedaron sin sección. Ese último
 // grupo solo aparece si tiene algo; si no, sería una caja vacía permanente.
-export default function Editor({ id, menuId, secciones, platillos }) {
+export default function Editor({
+  id,
+  menuId,
+  secciones,
+  platillos,
+  catalogoEtiquetas = [],
+}) {
   const sueltos = platillos.filter((p) => !p.section_id);
 
   return (
@@ -43,6 +56,7 @@ export default function Editor({ id, menuId, secciones, platillos }) {
           menuId={menuId}
           seccion={s}
           platillos={platillos.filter((p) => p.section_id === s.id)}
+          catalogoEtiquetas={catalogoEtiquetas}
           primera={i === 0}
           ultima={i === secciones.length - 1}
         />
@@ -54,6 +68,7 @@ export default function Editor({ id, menuId, secciones, platillos }) {
           menuId={menuId}
           seccion={null}
           platillos={sueltos}
+          catalogoEtiquetas={catalogoEtiquetas}
           primera
           ultima
         />
@@ -102,7 +117,15 @@ function NuevaSeccion({ id, menuId, hayAlguna }) {
   );
 }
 
-function Seccion({ id, menuId, seccion, platillos, primera, ultima }) {
+function Seccion({
+  id,
+  menuId,
+  seccion,
+  platillos,
+  catalogoEtiquetas,
+  primera,
+  ultima,
+}) {
   const [renombrando, setRenombrando] = useState(false);
   const [editando, setEditando] = useState(null);
   const [agregando, setAgregando] = useState(false);
@@ -191,6 +214,7 @@ function Seccion({ id, menuId, seccion, platillos, primera, ultima }) {
                   menuId={menuId}
                   seccionId={seccion?.id ?? ""}
                   platillo={p}
+                  catalogoEtiquetas={catalogoEtiquetas}
                   alTerminar={() => setEditando(null)}
                 />
               </li>
@@ -204,6 +228,7 @@ function Seccion({ id, menuId, seccion, platillos, primera, ultima }) {
                   {p.description ? (
                     <span className="menu-desc">{p.description}</span>
                   ) : null}
+                  <EtiquetasDeFila platillo={p} />
                   {!p.is_available ? (
                     <span className="menu-etiqueta">Agotado hoy</span>
                   ) : null}
@@ -281,6 +306,7 @@ function Seccion({ id, menuId, seccion, platillos, primera, ultima }) {
           menuId={menuId}
           seccionId={seccion.id}
           platillo={null}
+          catalogoEtiquetas={catalogoEtiquetas}
           alTerminar={() => setAgregando(false)}
         />
       ) : (
@@ -369,12 +395,25 @@ function RenombrarSeccion({ id, menuId, seccion, alTerminar }) {
 // Mismo formulario para agregar y para editar: los campos son idénticos y la
 // acción distingue por el id oculto. Duplicarlo solo garantizaría que uno de
 // los dos se quede sin el siguiente campo que agreguemos.
-function PlatilloForm({ id, menuId, seccionId, platillo, alTerminar }) {
+function PlatilloForm({
+  id,
+  menuId,
+  seccionId,
+  platillo,
+  catalogoEtiquetas,
+  alTerminar,
+}) {
   const formulario = useRef(null);
   // El nombre se lleva en estado porque de él sale el dibujo sugerido: se
   // escribe "Hamburguesa" y el dibujo aparece antes de guardar.
   const [nombre, setNombre] = useState(platillo?.name ?? "");
   const [icono, setIcono] = useState(platillo?.icon ?? "auto");
+  // Las etiquetas se llevan en un Set y no en el DOM porque una casilla sin
+  // palomita no viaja en el formulario: sin estado, quitar la última etiqueta
+  // de un platillo no se distinguiría de no haber tocado nada.
+  const [etiquetas, setEtiquetas] = useState(
+    () => new Set(Array.isArray(platillo?.labels) ? platillo.labels : []),
+  );
   const [state, action, pending] = useActionState(async (prev, formData) => {
     const resultado = await guardarPlatillo(prev, formData);
     if (resultado.status === "ok") {
@@ -384,10 +423,20 @@ function PlatilloForm({ id, menuId, seccionId, platillo, alTerminar }) {
         formulario.current?.reset();
         setNombre("");
         setIcono("auto");
+        setEtiquetas(new Set());
       }
     }
     return resultado;
   }, inicial);
+
+  function alternarEtiqueta(slug) {
+    setEtiquetas((antes) => {
+      const ahora = new Set(antes);
+      if (ahora.has(slug)) ahora.delete(slug);
+      else ahora.add(slug);
+      return ahora;
+    });
+  }
 
   const sugerido = sugerirIcono(nombre);
   const dibujo = icono === SIN_ICONO ? null : icono === "auto" ? sugerido : icono;
@@ -468,6 +517,15 @@ function PlatilloForm({ id, menuId, seccionId, platillo, alTerminar }) {
         </div>
       </div>
 
+      {/* Las etiquetas: lo que el platillo declara de sí mismo. Van plegadas
+          porque son treinta casillas y la mayoría de los platillos no llevan
+          ninguna; el renglón del resumen dice cuáles tiene sin abrirlas. */}
+      <EtiquetasDelPlatillo
+        catalogo={catalogoEtiquetas}
+        marcadas={etiquetas}
+        alAlternar={alternarEtiqueta}
+      />
+
       <label className="eleccion eleccion-sola">
         <input
           type="checkbox"
@@ -514,5 +572,108 @@ function DibujoDeFila({ platillo }) {
     <span className="editor-platillo-dibujo" aria-hidden="true">
       <IconoPlatillo slug={slug} ancho={24} />
     </span>
+  );
+}
+
+/**
+ * El selector de etiquetas, plegado y en sus tres grupos.
+ *
+ * Va dentro de un `<details>` y no abierto porque son treinta casillas debajo
+ * de un formulario de cuatro campos: quien captura veinte platillos no quiere
+ * pasar por ellas cada vez. El resumen dice lo que hay marcado, así que el
+ * pliegue no esconde nada que haga falta ver.
+ *
+ * Las casillas marcadas viajan como campos ocultos y no como `checkbox` del
+ * formulario: un `checkbox` sin palomita no llega, y "este platillo ya no lleva
+ * ninguna" tiene que poder distinguirse de "no toqué las etiquetas".
+ */
+function EtiquetasDelPlatillo({ catalogo, marcadas, alAlternar }) {
+  if (!catalogo.length) return null;
+
+  const elegidas = catalogo.filter((e) => marcadas.has(e.slug));
+  const { distintivos, alergenos } = partirEtiquetas(elegidas);
+
+  return (
+    <details className="campo-etiquetas" open={elegidas.length > 0}>
+      <summary>
+        <span className="campo-etiqueta">Etiquetas</span>
+        <span className="campo-etiquetas-resumen">
+          {elegidas.length
+            ? [
+                distintivos.map((e) => e.nombre).join(", "),
+                alergenos.length ? `contiene ${fraseDeAlergenos(alergenos)}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : "Vegetariano, sin gluten, picante, alérgenos…"}
+        </span>
+      </summary>
+
+      {marcadas.size
+        ? [...marcadas].map((slug) => (
+            <input type="hidden" name="etiquetas" value={slug} key={slug} />
+          ))
+        : null}
+
+      {GRUPOS_ETIQUETA.map(([tipo, titulo, pista]) => {
+        const delGrupo = catalogo.filter((e) => e.tipo === tipo);
+        if (!delGrupo.length) return null;
+
+        return (
+          <fieldset className="etiquetas-grupo" key={tipo}>
+            <legend>{titulo}</legend>
+            <p className="ayuda">{pista}</p>
+            <div className="etiquetas-edicion">
+              {delGrupo.map((etiqueta) => (
+                <label
+                  className={
+                    tipo === TIPO_ALERGENO
+                      ? "etiqueta-opcion etiqueta-opcion-alergeno"
+                      : "etiqueta-opcion"
+                  }
+                  key={etiqueta.slug}
+                >
+                  <input
+                    type="checkbox"
+                    checked={marcadas.has(etiqueta.slug)}
+                    onChange={() => alAlternar(etiqueta.slug)}
+                  />
+                  <span className="etiqueta-cara" title={etiqueta.pista}>
+                    <IconoEtiqueta slug={etiqueta.icono} ancho={17} />
+                    <span>{etiqueta.nombre}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        );
+      })}
+    </details>
+  );
+}
+
+// En la lista, las etiquetas se leen igual que en la carta: los distintivos
+// como marcas y los alérgenos como el renglón "Contiene". Así el dueño revisa
+// lo que puso sin abrir platillo por platillo.
+function EtiquetasDeFila({ platillo }) {
+  const { distintivos, alergenos } = partirEtiquetas(platillo.etiquetas);
+  if (!distintivos.length && !alergenos.length) return null;
+
+  return (
+    <>
+      {distintivos.length ? (
+        <span className="menu-etiquetas">
+          {distintivos.map((e) => (
+            <span className="menu-marca" key={e.slug} title={e.pista}>
+              <IconoEtiqueta slug={e.icono} ancho={14} />
+              <span>{e.nombre}</span>
+            </span>
+          ))}
+        </span>
+      ) : null}
+      {alergenos.length ? (
+        <span className="menu-alergenos">Contiene: {fraseDeAlergenos(alergenos)}</span>
+      ) : null}
+    </>
   );
 }

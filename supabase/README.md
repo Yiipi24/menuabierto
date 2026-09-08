@@ -26,9 +26,21 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   `favoritos_del_comensal` (20260905120500 → 20260905092700) y
   `busqueda_con_servicios_y_coordenadas` (20260905120000 → 20260905092729),
   que además iban en el orden equivocado entre ellos: la fecha inventada
-  ponía la búsqueda antes que los favoritos y en la base fue al revés. Hoy
-  cada archivo del directorio coincide con una versión registrada, y no
-  sobra ninguna.
+  ponía la búsqueda antes que los favoritos y en la base fue al revés.
+  Volvió a pasar con lo social y lo de WhatsApp, y se corrigió igual:
+  `programar_publicaciones` (20260907210000 → 20260907214705),
+  `evento_de_pedido_por_whatsapp` (20260908101500 → 20260908022033) y
+  `pedidos_por_whatsapp` (20260908101600 → 20260908022555). En esa misma
+  ronda faltaban tres archivos de migraciones que sí estaban aplicadas
+  —`plan_de_trabajo_pasos`, `programar_publicaciones_permisos` y
+  `social_mias_no_es_para_anon`— y se escribieron con el SQL exacto que
+  guarda `supabase_migrations.schema_migrations`. Los dos últimos son las
+  correcciones que se habían metido dentro de `programar_publicaciones`, que
+  ya estaba aplicada: ese archivo queda con el contenido final de los tres,
+  igual que el cuarteto de la ubicación, así que reaplicar de cero da el
+  mismo esquema pasando dos veces por lo mismo. Hoy cada archivo del
+  directorio coincide con una versión registrada, y no sobra ninguna: son 62
+  y 62.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
@@ -210,6 +222,29 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   capturarla. Bucket aparte del de fotos porque este acepta PDF y aquel no.
   Lo capturado sale en las búsquedas por platillo; lo subido no, y el panel lo
   dice al elegir.
+- **Las etiquetas del platillo son un catálogo en tabla, no un CHECK.**
+  `dish_labels` guarda la lista —vegetariano, sin gluten, picante, los
+  alérgenos— y `menu_items.labels` las claves que cada platillo declara. Es el
+  mismo trato que `amenities`: la lista va a crecer cada vez que un dueño pida
+  la suya, y una migración por etiqueta sería una migración por semana. Agregar
+  una es un INSERT y aparece en el panel y en la carta sin desplegar; su dibujo
+  puede llegar después, porque `app/etiquetas-iconos.js` pinta uno genérico
+  mientras tanto. La validación la hace un trigger (`menu_items_validar_labels`)
+  y no una restricción, porque un CHECK no puede consultar otra tabla; además
+  nombra la etiqueta desconocida en el error.
+- **Un alérgeno no es un distintivo, y por eso `kind` existe.** `dieta` y
+  `caracteristica` son promesas del platillo y salen como marcas junto a su
+  nombre; `alergeno` es una advertencia y sale escrita, en el renglón
+  "Contiene: gluten, lácteos". Cinco dibujos seguidos habría que descifrarlos, y
+  quien es alérgico lee esa línea para decidir si pregunta o si se levanta. Los
+  trece alérgenos sembrados son los catorce que obliga a declarar la Unión
+  Europea menos el altramuz, que aquí no se come.
+- **En el JSON-LD solo entran las dietas que schema.org sabe nombrar.**
+  `RestrictedDiet` es un vocabulario cerrado: vegetariano, vegano, sin gluten,
+  sin lactosa, halal y kosher tienen término y se declaran; keto y sin azúcar no
+  lo tienen y se quedan solo en la carta. Los alérgenos tampoco entran:
+  `MenuItem` no tiene dónde declararlos y meterlos en la descripción sería
+  inventarle texto al dueño.
 - **La búsqueda solo mira menús visibles.** Encontrar un restaurante por un
   platillo de una carta que su dueño tiene guardada manda a la ficha a buscar
   algo que no está.
@@ -220,6 +255,10 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
 
 ## Avisos aceptados a propósito
 
+- `plan.pasos` con RLS y sin políticas: es el plan de trabajo interno y vive
+  fuera de `public` justamente para que PostgREST no lo exponga. Sin políticas
+  no lo lee nadie desde la API, que es lo que se quiere; se consulta con la
+  llave de servicio.
 - `spatial_ref_sys` sin RLS: es una tabla de sistema de PostGIS con el
   catálogo de sistemas de coordenadas. No contiene datos nuestros y no somos
   sus dueños.
