@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { telefonoWhatsapp, telefonoLegible, enlaceWhatsapp, pedidosDe, mensajeDePedido } from "../../lib/whatsapp.js";
+import { telefonoWhatsapp, telefonoLegible, enlaceWhatsapp, pedidosDe, mensajeDePedido, opcionesDeEntrega } from "../../lib/whatsapp.js";
 import { normalizarCodigo, codigoValido, aValorGuardado, textoDelDescuento, estaVigente, estadoDeCupon, conversion } from "../../lib/cupones.js";
 
 test("el número queda como lo quiere wa.me", () => {
@@ -20,10 +20,10 @@ test("el enlace y el pedido", () => {
   assert.ok(enlaceWhatsapp("528112345678", "hola qué tal").endsWith("?text=hola%20qu%C3%A9%20tal"));
 
   assert.equal(pedidosDe({ whatsapp_orders: true, whatsapp_phone: "" }), null);
-  assert.deepEqual(pedidosDe({ whatsapp_orders: true, whatsapp_phone: "8112345678", whatsapp_note: " Mínimo $150 " }), {
-    telefono: "528112345678",
-    nota: "Mínimo $150",
-  });
+  const p = pedidosDe({ whatsapp_orders: true, whatsapp_phone: "8112345678", whatsapp_note: " Mínimo $150 " });
+  assert.equal(p.telefono, "528112345678");
+  assert.equal(p.nota, "Mínimo $150");
+  assert.deepEqual(p.entregas.map((e) => e.slug), ["sitio", "llevar"]);
 
   const msj = mensajeDePedido({
     nombre: "Tacos",
@@ -38,6 +38,19 @@ test("el enlace y el pedido", () => {
   assert.match(msj, /• 1 × Agua\n/);
   assert.match(msj, /Total aproximado: \$50/);
   assert.doesNotMatch(msj, /Nada/);
+  assert.doesNotMatch(msj, /Para llevar|domicilio|en el lugar/);
+
+  const paraLlevar = mensajeDePedido({ nombre: "Tacos", url: "u", lineas: [{ nombre: "Pastor", cantidad: 1, precio: 100 }], entrega: "llevar" });
+  assert.match(paraLlevar, /• 1 × Pastor — \$1\nPara llevar\n/);
+  const inventada = mensajeDePedido({ nombre: "Tacos", url: "u", lineas: [{ nombre: "Pastor", cantidad: 1 }], entrega: "dron" });
+  assert.doesNotMatch(inventada, /dron/);
+});
+
+test("las opciones de entrega salen de lo que la ficha ya declara", () => {
+  assert.deepEqual(opcionesDeEntrega({}).map((e) => e.slug), ["sitio", "llevar"]);
+  assert.deepEqual(opcionesDeEntrega({ service_mode: "solo-llevar" }).map((e) => e.slug), ["llevar"]);
+  assert.deepEqual(opcionesDeEntrega({ service_mode: "solo-sitio", amenities: ["domicilio"] }).map((e) => e.slug), ["sitio", "domicilio"]);
+  assert.deepEqual(opcionesDeEntrega({ service_mode: "ambos", amenities: ["wifi", "domicilio"] }).map((e) => e.slug), ["sitio", "llevar", "domicilio"]);
 });
 
 test("los cupones: código, cifra y vigencia", () => {

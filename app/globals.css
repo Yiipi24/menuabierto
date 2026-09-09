@@ -7858,6 +7858,32 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
 .pedido-barra-acciones { display: flex; align-items: center; gap: 12px; }
 
+/* Para aquí, para llevar, a domicilio: las opciones que la ficha ya declara. */
+.pedido-entrega {
+  max-width: var(--max);
+  margin: 0 auto 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pedido-entrega-opcion {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pedido-entrega-opcion.es-elegida {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
 .pedido-barra-nota {
   max-width: var(--max);
   margin: 8px auto 0;
