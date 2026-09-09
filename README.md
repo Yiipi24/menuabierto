@@ -47,6 +47,30 @@ del comensal, `@vercel/analytics` en el layout cuenta páginas y orígenes sin
 cookies; hay que encender Web Analytics en el proyecto de Vercel para que
 empiece a guardar.
 
+## Reseñas verificadas por escaneo del QR
+
+Contra Google no se gana por volumen de reseñas sino por confianza, y el QR de
+la mesa es la única prueba de visita que tenemos: nadie la copia sin pegar un
+QR en cada mesa. Al escanear, `/q/<codigo>` —ahora una ruta y no una página,
+porque tiene que poder poner la cookie del visitante— registra un **pase de
+visita** (`visit_passes`) ligado a esa cookie y, si había sesión, a la
+cuenta. Dura siete días (`dias_de_pase()`); volver a escanear renueva el
+pase libre en vez de acumular otro.
+
+Al guardar una reseña, `canjear_pase()` busca un pase vigente, sin usar y del
+mismo local que sea de esa cookie o de esa cuenta; si lo hay, la reseña queda
+con `verified_at` y el pase con `used_review_id`: un pase, una reseña. Sin
+pase la reseña se guarda igual, solo sin marca. Editarla no se la quita, y
+borrarla libera el pase mientras no haya caducado. Un trigger impide que el
+autor ponga `verified_at` desde su propia política de update: la marca solo la
+escribe la función.
+
+En la ficha, las verificadas llevan la marca "✓ Verificada" junto al nombre, y
+si hay alguna aparece su promedio aparte y dos controles: "Solo verificadas" y
+"Verificadas primero" (`lib/pases.js`, con pruebas). Las no verificadas se
+muestran siempre: se distinguen, no se bloquean. Los pases viejos se barren
+con `limpiar_pases()`.
+
 ## Aplicación instalable y avisos por push
 
 Historias de 24 horas, seguir y una bandeja de avisos son mecánicas de

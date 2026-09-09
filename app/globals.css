@@ -2738,6 +2738,39 @@ section { scroll-margin-top: 84px; }
 
 .resena-sin-texto { font-style: italic; color: var(--ink-faint); }
 
+/* "Estuve ahí": la marca de la reseña escrita tras escanear el QR de la mesa. */
+.resena-verificada {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.resena.es-verificada { border-color: var(--accent-soft); }
+
+.resenas-verificadas-controles {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.resenas-verificadas-resumen { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+
+.resenas-verificadas-botones { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.resenas-filtro { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+
 /* La respuesta del dueño, dentro de la reseña: sangrada y con su línea, como
    una réplica y no como otra reseña. */
 .resena-respuesta {

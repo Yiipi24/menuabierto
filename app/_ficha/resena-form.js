@@ -30,6 +30,14 @@ export default function ResenaForm({ slug, restaurantId, mia }) {
   return (
     <div className="resena-form">
       <h3>{mia ? "Tu reseña" : "Escribe tu reseña"}</h3>
+      {mia?.verified_at ? (
+        <p className="ayuda">✓ Verificada: escaneaste el QR del local. Editarla no le quita la marca.</p>
+      ) : (
+        <p className="ayuda">
+          Si escaneaste el QR de la mesa en los últimos siete días, tu reseña queda
+          marcada como verificada.
+        </p>
+      )}
 
       <form action={action} onMouseLeave={() => setEncima(0)}>
         <input type="hidden" name="slug" value={slug} />
