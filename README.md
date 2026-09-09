@@ -25,6 +25,29 @@ reseñas. Viven en `tests/unitarias/` y corren con el `node --test` de Node 22,
 sin framework: el único truco es `_resolver.mjs`, que le agrega la extensión a
 los `import "./precios"` que Next resuelve solo.
 
+## Respuesta del dueño y reportes de reseñas
+
+Cualquiera con cuenta reseña, y ahora el dueño contesta: una respuesta por
+reseña, pública y editable, que se ve bajo la reseña en la ficha y se escribe
+desde `/panel/<id>/resenas` (o desde la propia ficha, si quien mira es el
+dueño). La escribe `responder_resena()`, una función que comprueba que quien
+responde es el dueño: la columna no se abre por RLS, cuya política de update
+sigue siendo solo del autor. Vaciar la respuesta la retira.
+
+Reportar una reseña lo puede hacer el dueño o cualquier comensal con cuenta
+—no el autor, que la borra— con un motivo (falsa, ofensiva, publicidad, otra)
+y un detalle opcional. Va a `review_reports` y queda **pendiente**: la reseña
+sigue visible, y solo el dueño ve la marca "en revisión". No hay moderación
+automática a propósito: la cola se resuelve a mano con `npm run reportes`
+(lista, `conservar <id>`, `retirar <id>`). Retirar borra la reseña, y el
+promedio se recalcula con el trigger de siempre.
+
+Los avisos reusan la bandeja de `/avisos`, que ya admitía más tipos: al dueño
+le llega `resena` cuando alguien califica su ficha (trigger
+`reviews_avisar_al_dueno`), y al autor `respuesta` cuando el dueño contesta.
+`mis_avisos` trae de qué reseña se trata para escribir "Ana te dejó 5
+estrellas" sin otra consulta.
+
 ## Cargar la carta desde una foto
 
 Capturar sesenta platillos a mano es la fricción número uno del alta. Desde el

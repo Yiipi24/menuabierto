@@ -6,8 +6,9 @@ import { invalidarFicha } from "../../lib/cache";
 import { supabaseSession } from "../../lib/supabase";
 // El slug viaja en el formulario solo para saber a dónde volver y qué ruta
 // revalidar. Quién puede escribir lo decide la RLS con el restaurant_id.
-import { rutaFicha } from "../../lib/slug";
+import { rutaFicha, uuidValido } from "../../lib/slug";
 import { conteoDe, insigniaAlLlegar } from "../../lib/insignias";
+import { MAX_DETALLE, leerRespuesta, motivoValido } from "../../lib/resenas";
 
 const MAX_TEXTO = 1500;
 
@@ -146,4 +147,63 @@ export async function borrarResena(_prevState, formData) {
   invalidarFicha(slug);
   revalidatePath("/panel/insignias");
   return { status: "ok", message: "Borramos tu reseña." };
+}
+
+/* ---------- respuesta del dueño y reportes ---------- */
+
+// La función de la base comprueba que quien responde es el dueño; aquí solo
+// se limpia el texto y se traduce el error. Vacío es "quitar la respuesta".
+export async function responderResena(_prevState, formData) {
+  const slug = String(formData.get("slug") ?? "").trim();
+  const reviewId = String(formData.get("review_id") ?? "").trim();
+  const { texto, error: errorTexto } = leerRespuesta(formData.get("respuesta"));
+  if (errorTexto) return { status: "error", message: errorTexto };
+  if (!slug || !uuidValido(reviewId)) {
+    return { status: "error", message: "Recarga la página e inténtalo otra vez." };
+  }
+
+  const { supabase } = await sesion(slug);
+  const { error } = await supabase.rpc("responder_resena", { p_review: reviewId, p_texto: texto });
+  if (error) {
+    if (error.code === "42501" || /solo_el_dueno/.test(error.message)) {
+      return { status: "error", message: "Solo el dueño del restaurante puede responder." };
+    }
+    console.error("responder resena", error.message);
+    return { status: "error", message: "No pudimos guardar la respuesta. Inténtalo otra vez." };
+  }
+
+  invalidarFicha(slug);
+  revalidatePath(`/panel`);
+  return { status: "ok", message: texto ? "Respuesta publicada." : "Respuesta retirada." };
+}
+
+export async function reportarResena(_prevState, formData) {
+  const slug = String(formData.get("slug") ?? "").trim();
+  const reviewId = String(formData.get("review_id") ?? "").trim();
+  const motivo = String(formData.get("motivo") ?? "");
+  const detalle = String(formData.get("detalle") ?? "").trim().slice(0, MAX_DETALLE);
+  if (!slug || !uuidValido(reviewId)) {
+    return { status: "error", message: "Recarga la página e inténtalo otra vez." };
+  }
+  if (!motivoValido(motivo)) return { status: "error", message: "Elige por qué la reportas." };
+
+  const { supabase } = await sesion(slug);
+  const { error } = await supabase.rpc("reportar_resena", {
+    p_review: reviewId,
+    p_reason: motivo,
+    p_detail: detalle || null,
+  });
+  if (error) {
+    if (/no_se_reporta_la_propia/.test(error.message)) {
+      return { status: "error", message: "Es tu reseña: si ya no la quieres, bórrala." };
+    }
+    console.error("reportar resena", error.message);
+    return { status: "error", message: "No pudimos registrar el reporte. Inténtalo otra vez." };
+  }
+
+  invalidarFicha(slug);
+  return {
+    status: "ok",
+    message: "Gracias. La reseña queda en revisión; sigue visible hasta que alguien la revise.",
+  };
 }

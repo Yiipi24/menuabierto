@@ -2717,6 +2717,64 @@ section { scroll-margin-top: 84px; }
 
 .resena-texto { color: var(--ink-soft); font-size: 15.5px; white-space: pre-line; }
 
+.resena-sin-texto { font-style: italic; color: var(--ink-faint); }
+
+/* La respuesta del dueño, dentro de la reseña: sangrada y con su línea, como
+   una réplica y no como otra reseña. */
+.resena-respuesta {
+  margin-top: 12px;
+  padding: 10px 0 0 14px;
+  border-left: 3px solid var(--accent-soft);
+}
+
+.resena-respuesta-quien {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 650;
+  margin-bottom: 4px;
+}
+
+.resena-responder { margin-top: 12px; display: flex; gap: 12px; align-items: center; }
+
+.resena-respuesta-form { margin-top: 12px; }
+
+.resena-respuesta-form .campo textarea { min-height: 80px; }
+
+.resena-respuesta-acciones { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+
+.resena-en-revision {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: #b45309;
+}
+
+.resena-reportar {
+  display: inline-block;
+  margin-top: 10px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.resena-reportar:hover { color: var(--ink); }
+
+.resena-reportar-listo { margin-top: 10px; font-size: 13.5px; color: var(--verde); }
+
+.resena-reportar-form { margin-top: 12px; }
+
+.resena-reportar-form fieldset { border: 0; padding: 0; margin: 0 0 10px; }
+
+.resena-reportar-form legend { font-weight: 650; margin-bottom: 8px; }
+
+.resena-lista-panel { grid-template-columns: 1fr; max-width: 720px; }
+
+.aviso-media-estrella { display: grid; place-items: center; color: #f59e0b; font-size: 20px; }
+
 /* ---------- menús: panel ---------- */
 
 /* Los <select> no heredaban el estilo de los campos porque hasta ahora no
