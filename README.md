@@ -201,7 +201,12 @@ chat, y preguntarlo es donde se cae un pedido.
 Con eso, la ficha enseña un botón junto a "Abierto ahora" y la carta se vuelve
 tocable: cada platillo tiene su `+`, abajo aparece una barra con la cuenta, y
 "Enviar por WhatsApp" abre el chat con el mensaje ya escrito —los platillos,
-sus cantidades, el total y el enlace de la carta—. Una carta de archivo (un PDF
+sus cantidades, el total y el enlace de la carta—. La barra pregunta también
+cómo lo quiere: para comer aquí, para llevar o a domicilio. Esas opciones no
+se inventan: salen del modo de servicio y del servicio a domicilio que la
+ficha ya declara (`opcionesDeEntrega` en `lib/whatsapp.js`), así que un local
+que solo vende para llevar nunca ofrece mesa, y la respuesta va en el mensaje
+para que el dueño no tenga que preguntarla. Una carta de archivo (un PDF
 o una foto) no se puede tocar platillo por platillo, así que ahí el botón abre
 el chat a secas.
 
