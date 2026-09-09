@@ -115,6 +115,47 @@ function armarMenus(supabase, menus, secciones, platillos, catalogoEtiquetas) {
     .filter((m) => (m.kind === "archivo" ? Boolean(m.fileUrl) : m.grupos.length > 0));
 }
 
+// Las fotos de la ficha, con todo lo que la galería necesita para pintarlas
+// y abrirlas: su URL pública, y —si el dueño la colgó de un platillo— el
+// precio y la carta de ese platillo, que salen de las listas que ya se
+// trajeron para armar los menús. Nada de esto es otra consulta.
+//
+// Las ocultas no llegan a la página: `is_visible` existe para guardar una
+// foto sin enseñarla. Las que se subieron antes de que existieran los nombres
+// llegan con `dishName` en null, y la galería sabe pintarlas sin franja.
+function armarFotos(supabase, fotos, menus, platillos) {
+  const porId = new Map(platillos.map((p) => [p.id, p]));
+  const cartasVisibles = new Set(menus.map((m) => m.id));
+
+  return fotos
+    .filter((f) => f.is_visible !== false)
+    .map((f) => {
+      const platillo = f.menu_item_id ? porId.get(f.menu_item_id) ?? null : null;
+      // Un platillo de una carta oculta no se enlaza: la página a la que
+      // llevaría no existe para quien mira.
+      const enCarta = platillo && cartasVisibles.has(platillo.menu_id) ? platillo : null;
+      return {
+        id: f.id,
+        storage_path: f.storage_path,
+        alt: f.alt,
+        category: f.category,
+        position: f.position,
+        url: supabase.storage.from(BUCKET_FOTOS).getPublicUrl(f.storage_path).data.publicUrl,
+        dishName: f.dish_name?.trim() || null,
+        dishLabel: f.dish_label?.trim() || null,
+        description: f.description?.trim() || null,
+        isFeatured: Boolean(f.is_featured),
+        menuItemId: enCarta ? enCarta.id : null,
+        menuId: enCarta ? enCarta.menu_id : null,
+        precio: enCarta?.price_cents ?? null,
+        moneda: enCarta?.currency ?? null,
+      };
+    })
+    // La fachada encabeza la ficha aunque se haya subido al final: es la foto
+    // que se reconoce al llegar al local.
+    .sort((a, b) => (a.category === "fachada" ? -1 : 0) - (b.category === "fachada" ? -1 : 0));
+}
+
 // El viaje completo a la base. No lo llama nadie directamente: entra siempre
 // por `cargarPublico`, que es el que lo guarda.
 async function traerFicha(slug) {
@@ -153,7 +194,9 @@ async function traerFicha(slug) {
       .order("weekday"),
     supabase
       .from("restaurant_media")
-      .select("storage_path, alt, category")
+      .select(
+        "id, storage_path, alt, category, dish_name, dish_label, description, menu_item_id, is_featured, is_visible, position",
+      )
       .eq("restaurant_id", r.id)
       .order("position"),
     // Un restaurante puede tener varias cartas: la de comida, la de bebidas,
@@ -235,12 +278,7 @@ async function traerFicha(slug) {
     horarios: horarios.data ?? [],
     // La fachada encabeza la ficha aunque se haya subido al final: es la foto
     // que se reconoce al llegar al local.
-    fotos: (fotos.data ?? [])
-      .map((f) => ({
-        ...f,
-        url: supabase.storage.from(BUCKET_FOTOS).getPublicUrl(f.storage_path).data.publicUrl,
-      }))
-      .sort((a, b) => (a.category === "fachada" ? -1 : 0) - (b.category === "fachada" ? -1 : 0)),
+    fotos: armarFotos(supabase, fotos.data ?? [], menus.data ?? [], platillos.data ?? []),
     menus: armarMenus(
       supabase,
       menus.data ?? [],

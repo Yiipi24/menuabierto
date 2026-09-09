@@ -117,12 +117,11 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
         </div>
       ) : (
         <p className="ficha-vacio resenas-vacio">
-          Todavía nadie reseña este lugar. Si ya comiste aquí, tu reseña es la
-          primera que van a leer los demás.
+          Todavía no hay reseñas. Sé el primero en compartir tu experiencia.
         </p>
       )}
 
-      <div className="resenas-escribir">
+      <div className="resenas-escribir" id="escribir-resena">
         {esDueno ? (
           <p className="resena-nota">
             Este restaurante es tuyo. Las reseñas las escriben los comensales, por

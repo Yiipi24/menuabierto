@@ -38,6 +38,7 @@ export default async function Editar({ params }) {
     { data: fotos },
     { data: coords },
     { data: menus },
+    { data: platillos },
     { data: catalogoServicios },
     { data: catalogoPagos },
     { count: cupones },
@@ -54,7 +55,9 @@ export default async function Editar({ params }) {
       .order("weekday"),
     supabase
       .from("restaurant_media")
-      .select("id, storage_path, alt, category")
+      .select(
+        "id, storage_path, alt, category, dish_name, dish_label, description, menu_item_id, is_featured, is_visible, position",
+      )
       .eq("restaurant_id", id)
       .order("position"),
     // `location` es geography y PostgREST la devuelve en hexadecimal, que no
@@ -65,6 +68,14 @@ export default async function Editar({ params }) {
       .select("id, name, is_visible")
       .eq("restaurant_id", id)
       .order("position"),
+    // Los platillos, solo id y nombre: son las opciones del selector con el
+    // que una foto se cuelga de un platillo de la carta.
+    supabase
+      .from("menu_items")
+      .select("id, name, menu_id")
+      .eq("restaurant_id", id)
+      .order("position")
+      .order("created_at"),
     // El catálogo de servicios: el formulario pinta las casillas que haya en
     // la tabla, así que uno nuevo aparece aquí sin tocar el código.
     supabase.from("amenities").select("slug, name, hint, icon").order("position"),
@@ -205,6 +216,11 @@ export default async function Editar({ params }) {
             id={restaurante.id}
             fotos={conUrl}
             cupoPlatillos={fotosPlatillosIncluidas(restaurante)}
+            platillos={(platillos ?? []).map((p) => ({
+              id: p.id,
+              nombre: p.name,
+              carta: (menus ?? []).find((m) => m.id === p.menu_id)?.name ?? "",
+            }))}
           />
         </EditarForm>
       </main>

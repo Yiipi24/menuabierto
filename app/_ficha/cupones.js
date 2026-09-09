@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { medir } from "../medir";
 import { textoDelDescuento, textoDeVigencia } from "../../lib/cupones";
-import { IconoTijeras } from "./iconos";
+import { IconoCopiar } from "./iconos";
 
-// Los cupones del restaurante, en la ficha.
+// Los cupones del restaurante, en la ficha, como un boleto de papel: el borde
+// perforado, el descuento grande y el código en su talón.
 //
 // Cada uno se cuenta dos veces desde aquí: al verlo y al llevarse el código.
 // La primera se manda una sola vez por cupón cuando la tarjeta entra en
@@ -33,10 +34,19 @@ function Codigo({ slug, cupon }) {
   }
 
   return (
-    <button type="button" className="cupon-codigo" onClick={copiar}>
+    <div className="cupon-talon">
+      <span className="cupon-talon-rotulo">Tu código</span>
       <span className="cupon-codigo-texto">{cupon.code}</span>
-      <span className="cupon-codigo-accion">{copiado ? "¡Copiado!" : "Copiar"}</span>
-    </button>
+      <button
+        type="button"
+        className={copiado ? "cupon-copiar es-copiado" : "cupon-copiar"}
+        onClick={copiar}
+        aria-live="polite"
+      >
+        <IconoCopiar ancho={17} />
+        {copiado ? "Código copiado" : "Copiar código"}
+      </button>
+    </div>
   );
 }
 
@@ -68,8 +78,9 @@ function Cupon({ slug, cupon }) {
   }, [slug, cupon.id]);
 
   return (
-    <article className="cupon" ref={caja}>
+    <article className="cupon" ref={caja} aria-label={`Promoción: ${cupon.title}`}>
       <div className="cupon-cuerpo">
+        <p className="cupon-rotulo">Promoción especial</p>
         <p className="cupon-descuento">{textoDelDescuento(cupon)}</p>
         <h3 className="cupon-titulo">{cupon.title}</h3>
         {cupon.description ? <p className="cupon-texto">{cupon.description}</p> : null}
@@ -89,22 +100,10 @@ export default function Cupones({ slug, cupones }) {
   if (!cupones?.length) return null;
 
   return (
-    <section className="ficha-menu-cta ficha-cupones">
-      <div className="ficha-menu-texto">
-        <span className="ficha-menu-icono" aria-hidden="true">
-          <IconoTijeras ancho={26} />
-        </span>
-        <div className="ficha-menu-titulo">
-          <h2>{cupones.length > 1 ? "Promociones para ti" : "Promoción para ti"}</h2>
-          <span>Enseña el código en la caja. Solo aquí, solo mientras dure.</span>
-        </div>
-      </div>
-
-      <div className="cupones">
-        {cupones.map((c) => (
-          <Cupon key={c.id} slug={slug} cupon={c} />
-        ))}
-      </div>
-    </section>
+    <div className="cupones">
+      {cupones.map((c) => (
+        <Cupon key={c.id} slug={slug} cupon={c} />
+      ))}
+    </div>
   );
 }
