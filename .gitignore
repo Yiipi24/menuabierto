@@ -5,3 +5,7 @@ node_modules
 
 # Claude Code: configuración personal (no compartida)
 .claude/settings.local.json
+
+# Pruebas de extremo a extremo
+playwright-report
+test-results

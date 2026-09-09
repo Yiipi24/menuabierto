@@ -60,7 +60,6 @@ export default function Archivo({ id, menu, url }) {
               </p>
             </object>
           ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
             <img className="menu-archivo-vista" src={url} alt={`Menú de ${menu.name}`} />
           )}
 

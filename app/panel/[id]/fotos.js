@@ -156,7 +156,6 @@ function Galeria({ id, fotos, platillos }) {
       <ul className="galeria">
         {fotos.map((f) => (
           <li key={f.id} className={f.is_visible === false ? "galeria-foto es-oculta" : "galeria-foto"}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={f.url} alt={f.alt ?? ""} loading="lazy" />
             {f.dish_name ? (
               <span className="galeria-nombre">
@@ -221,7 +220,6 @@ function FormFoto({ id, foto, platillos, alGuardar }) {
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="foto" value={foto.id} />
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="form-foto-vista" src={foto.url} alt="" />
 
       <label className="campo">
@@ -306,7 +304,7 @@ function FormFoto({ id, foto, platillos, alGuardar }) {
 
       <label className="casilla">
         <input type="checkbox" name="isFeatured" defaultChecked={Boolean(foto.is_featured)} />
-        <span>Destacada en "Favoritos de la casa"</span>
+        <span>Destacada en &ldquo;Favoritos de la casa&rdquo;</span>
       </label>
 
       <label className="casilla">

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { marcarVista } from "./actions";
-import { usarPuerta, AvisoPuerta } from "./puerta";
+import { usePuerta, AvisoPuerta } from "./puerta";
 import { conteo, esVideo, hace, leQueda } from "../../lib/social";
 import {
   IconoCerrar,
@@ -31,7 +31,7 @@ export default function Historias({ historias, nombre, volverA, titulo = "Histor
   const tira = useRef(null);
   const [puedeIzq, setPuedeIzq] = useState(false);
   const [puedeDer, setPuedeDer] = useState(false);
-  const { aviso, limpiar } = usarPuerta(volverA);
+  const { aviso, limpiar } = usePuerta(volverA);
 
   // Los chevrons solo aparecen si hay a dónde ir. Con cinco historias en una
   // pantalla de escritorio caben todas y dos flechas muertas serían ruido.

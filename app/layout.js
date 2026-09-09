@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { SITIO } from "../lib/sitio";
 import { imagenesDeCompartir } from "../lib/compartir";
 
@@ -37,7 +38,13 @@ export const viewport = { themeColor: "#1c1917" };
 export default function RootLayout({ children }) {
   return (
     <html lang="es-MX">
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Lo que hace el comensal —qué páginas ve, desde dónde llega— sin
+            cookies ni identificar a nadie. El lado del restaurante ya se mide
+            con restaurant_events; este es el otro lado. */}
+        <Analytics />
+      </body>
     </html>
   );
 }

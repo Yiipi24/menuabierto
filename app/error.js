@@ -26,6 +26,28 @@ export default function Error({ error, reset }) {
     }
   }, [error]);
 
+  // Lo que reventó en el navegador se avisa igual que lo del servidor. Un
+  // chunk que no cargó no cuenta: es la red o un despliegue, y ya se recarga.
+  useEffect(() => {
+    if (esChunk(error)) return;
+    try {
+      navigator.sendBeacon?.(
+        "/api/errores",
+        new Blob(
+          [
+            JSON.stringify({
+              mensaje: error?.message,
+              pila: error?.stack,
+              digest: error?.digest,
+              ruta: window.location.pathname,
+            }),
+          ],
+          { type: "application/json" },
+        ),
+      );
+    } catch {}
+  }, [error]);
+
   useEffect(() => {
     const t = setTimeout(() => {
       try {

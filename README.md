@@ -13,6 +13,83 @@ npm install
 npm run dev
 ```
 
+## Pruebas, CI y monitoreo
+
+```bash
+npm test          # unitarias, con node:test; no necesitan red ni llaves
+npm run lint      # eslint con las reglas de Next y de React
+npm run test:e2e  # Playwright contra el sitio construido (npm run build antes)
+```
+
+Las unitarias cubren la lógica que decide dinero y direcciones: `lib/precios`,
+`lib/slug`, `lib/planes`, `lib/cobro`, `lib/cupones`, `lib/whatsapp`, los
+catálogos y las métricas. Viven en `tests/unitarias/` y corren con el `node
+--test` de Node 22, sin framework: el único truco es `_resolver.mjs`, que le
+agrega la extensión a los `import "./precios"` que Next resuelve solo.
+
+Las de extremo a extremo (`tests/e2e/`) visitan lo que no puede romperse:
+portada y búsqueda, una ficha publicada tomada del sitemap y su carta, el
+panel mandando a `/entrar`, las páginas de `/comida`, y que el webhook de cobro
+rechace lo que no viene firmado. Necesitan `SUPABASE_URL` y
+`SUPABASE_PUBLISHABLE_KEY` porque las fichas son reales; con `BASE_URL` apuntan
+a un despliegue en vez de levantar uno.
+
+El workflow `ci.yml` corre lint, unitarias y build en cada push y pull request.
+Las de extremo a extremo corren después, solo si el repo tiene esas dos llaves
+como secretos; si no, el job avisa y se salta en vez de fallar.
+
+Los errores de producción salen por `instrumentation.js` (`onRequestError`,
+todo lo que revienta en el servidor) y por `app/error.js` (lo que revienta en
+el navegador, vía `POST /api/errores`). Los dos pasan por `lib/errores.js`, que
+los deja en el log de Vercel y, si existe `ERRORES_WEBHOOK_URL`, los manda a
+un webhook de Slack o Discord, que es el lugar donde alguien los lee. Del lado
+del comensal, `@vercel/analytics` en el layout cuenta páginas y orígenes sin
+cookies; hay que encender Web Analytics en el proyecto de Vercel para que
+empiece a guardar.
+
+## Cobro de los planes
+
+Plus y Premium se cobran con **Mercado Pago**, por suscripción mensual y por
+restaurante, no por cuenta. Se eligió por cobertura en México —tarjeta, OXXO y
+SPEI—; Stripe queda como alternativa y por eso `subscriptions.provider` existe
+como columna.
+
+El flujo:
+
+1. En `/panel/planes` el dueño toca "Contratar Plus". La acción
+   (`app/panel/planes/actions.js`) crea la suscripción en Mercado Pago
+   (`/preapproval`) con `external_reference = <restaurante>:<plan>`, guarda la
+   fila en `subscriptions` como pendiente y lo manda al `init_point` a pagar.
+2. Al pagar vuelve a `/panel/planes/volver?preapproval_id=…`, que sincroniza en
+   el momento para que vea su plan sin esperar al webhook.
+3. Mercado Pago avisa por webhook a `POST /api/cobro/webhook` cada vez que la
+   suscripción cambia (`subscription_preapproval`,
+   `subscription_authorized_payment`). Se verifica la firma `x-signature`
+   (HMAC-SHA256 sobre `id:…;request-id:…;ts:…;`, con tolerancia de cinco
+   minutos), y el aviso solo sirve de timbre: el estado se le pide a la API y
+   se escribe con `lib/suscripciones.js`. Procesarlo dos veces deja la base
+   igual que una.
+4. La regla del plan está en `estadoDesdeSuscripcion` (`lib/cobro.js`) y tiene
+   pruebas: `authorized` sube el plan hasta el siguiente cobro más siete días
+   de gracia; `paused` (cobro rechazado) conserva la vigencia que ya había y
+   la base degrada sola al vencer; `cancelled` respeta lo pagado y nada más.
+   Nunca se borra nada: los menús de más quedan guardados y ocultos.
+
+El plan solo lo escribe la llave de servicio. Un trigger
+(`plan_solo_desde_el_cobro`) rechaza cualquier cambio de `plan` o
+`premium_until` que venga de `anon` o `authenticated`: antes bastaba un PATCH
+con la llave publicable para ponerse Premium.
+
+Variables de entorno: `MP_ACCESS_TOKEN` (de la aplicación de Mercado Pago; el
+de prueba sirve para el sandbox), `MP_WEBHOOK_SECRET` (el secreto que da el
+panel de webhooks al registrar la URL), `SUPABASE_SERVICE_ROLE_KEY` (solo en el
+servidor), y opcionalmente `PRECIO_PLUS_MXN` y `PRECIO_PREMIUM_MXN` para mover
+los precios sin desplegar (por defecto 199 y 399). Sin `MP_ACCESS_TOKEN` la
+página de planes enseña los botones deshabilitados y no se puede contratar.
+
+Queda fuera, a propósito: la factura fiscal (CFDI), que Mercado Pago no emite
+por nosotros, y un panel de cobranza propio. La página lo dice.
+
 ## Lista de espera
 
 El formulario hace `POST /api/waitlist`. Hoy la ruta valida el correo y lo

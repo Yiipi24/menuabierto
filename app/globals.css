@@ -447,6 +447,25 @@ section { scroll-margin-top: 84px; }
 
 .fila-plan-nombre { flex: 1; min-width: 0; font-weight: 600; }
 
+.fila-plan-detalle {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+/* Contratar, cambiar y cancelar: una fila propia debajo, para que en un
+   telefono no se peleen con el nombre por el mismo renglon. */
+.fila-plan-acciones {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
 .plan-note {
   margin-top: 24px;
   font-size: 14.5px;

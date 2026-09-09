@@ -9,7 +9,7 @@ import {
   comentariosDe,
   masPublicaciones,
 } from "./actions";
-import { usarPuerta, useAccionPendiente, AvisoPuerta } from "./puerta";
+import { usePuerta, useAccionPendiente, AvisoPuerta } from "./puerta";
 import {
   conteo,
   esVideo,
@@ -130,7 +130,7 @@ export function Publicacion({
   const [texto, setTexto] = useState("");
   const [error, setError] = useState("");
   const [pendiente, empezar] = useTransition();
-  const { aviso, pedirCuenta, limpiar } = usarPuerta(volverA);
+  const { aviso, pedirCuenta, limpiar } = usePuerta(volverA);
   const campo = useRef(null);
 
   const esVid = esVideo(publicacion.media_mime);

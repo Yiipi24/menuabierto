@@ -277,13 +277,14 @@ const VUELTA = 2 * Math.PI * RADIO;
 export function FuentesDeTrafico({ fuentes, total }) {
   const [activo, setActivo] = useState(null);
 
-  let acumulado = 0;
-  const arcos = fuentes.map((f) => {
+  // Cada arco empieza donde terminó el anterior; se acumula con reduce y no
+  // con una variable que se reasigna durante el render.
+  const arcos = fuentes.reduce((lista, f) => {
+    const previo = lista.length ? lista[lista.length - 1] : null;
     const largo = (f.porcentaje / 100) * VUELTA;
-    const arco = { ...f, largo, desfase: -acumulado };
-    acumulado += largo;
-    return arco;
-  });
+    const desfase = previo ? previo.desfase - previo.largo : 0;
+    return [...lista, { ...f, largo, desfase }];
+  }, []);
 
   const resaltado = activo ? fuentes.find((f) => f.id === activo) : null;
 
