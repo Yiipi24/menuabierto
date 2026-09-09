@@ -62,7 +62,9 @@ app cannot reach the same project.
 `SUPABASE_SERVICE_ROLE_KEY` is read by `supabaseServicio()` in `lib/supabase.js`
 and used only where no user is acting: the Mercado Pago webhook and the plan
 sync. It bypasses RLS, so it never goes to the middleware or the browser.
-`MP_ACCESS_TOKEN` and `MP_WEBHOOK_SECRET` are the payment gateway's. The plan
+`MP_ACCESS_TOKEN` and `MP_WEBHOOK_SECRET` are the payment gateway's.
+`ANTHROPIC_API_KEY` is read only by `lib/vision.js`, which turns a photo of a
+menu into sections and dishes for the owner to review. The plan
 of a restaurant can only change through that key: a trigger rejects it from
 `anon` and `authenticated`, so "just update the column" from the panel fails
 by design.

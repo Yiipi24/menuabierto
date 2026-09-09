@@ -2925,6 +2925,99 @@ section { scroll-margin-top: 84px; }
 
 /* Un formulario de una línea: campo y botón lado a lado, y el mensaje debajo
    ocupando el ancho entero. */
+/* ---------- cargar la carta desde una foto ---------- */
+
+.importar-cta {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+}
+
+.importar-cta h2 { font-size: 17px; font-weight: 650; margin-bottom: 4px; }
+
+.importar-cta p { margin: 0; color: var(--ink-soft); font-size: 14.5px; max-width: 48em; }
+
+.campo-casilla {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.campo-casilla input { width: auto; }
+
+.revision { margin-top: 24px; }
+
+.revision-resumen { color: var(--ink-soft); margin-bottom: 18px; }
+
+.revision-seccion {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px 16px;
+  margin: 0 0 18px;
+}
+
+.revision-seccion-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 6px;
+}
+
+.revision-seccion-nombre {
+  font-weight: 650;
+  font-size: 16px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  min-width: 12em;
+}
+
+.revision-seccion-nombre:hover,
+.revision-seccion-nombre:focus { border-color: var(--line); background: var(--paper); }
+
+.revision-lista { list-style: none; margin: 8px 0 10px; padding: 0; }
+
+.revision-platillo {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 2fr) 110px minmax(160px, 3fr);
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+
+.revision-platillo.es-fuera input[type="text"] { opacity: 0.45; text-decoration: line-through; }
+
+.revision-platillo input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 14.5px;
+}
+
+.revision-precio.es-dudoso { border-color: #d97706; background: #fff7ed; }
+
+.revision-marca { display: flex; align-items: center; padding: 0 4px; }
+
+.revision-pie { margin-top: 24px; }
+
+.revision-acciones { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
+
+@media (max-width: 640px) {
+  .revision-platillo { grid-template-columns: auto 1fr 96px; }
+  .revision-descripcion { grid-column: 2 / -1; }
+}
+
 .form-linea {
   display: flex;
   flex-wrap: wrap;
