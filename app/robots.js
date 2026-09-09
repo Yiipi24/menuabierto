@@ -15,6 +15,7 @@ const PRIVADAS = [
   "/registro",
   "/recuperar",
   "/reclamar",
+  "/sin-conexion",
   "/novedades",
   "/avisos",
   "/explorar",

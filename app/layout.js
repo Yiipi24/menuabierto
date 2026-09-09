@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import RegistroPwa from "./pwa/registro";
 import { SITIO } from "../lib/sitio";
 import { imagenesDeCompartir } from "../lib/compartir";
 
@@ -16,6 +17,11 @@ export const metadata = {
   metadataBase: new URL(SITIO),
   title,
   description,
+  manifest: "/manifest.webmanifest",
+  // Lo que iOS necesita para instalar y abrir sin barra del navegador: el
+  // manifest no le basta, quiere sus propias etiquetas.
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Menú Abierto" },
+  icons: { apple: "/iconos/apple-touch-icon.png" },
   openGraph: {
     title,
     description,
@@ -44,6 +50,7 @@ export default function RootLayout({ children }) {
             cookies ni identificar a nadie. El lado del restaurante ya se mide
             con restaurant_events; este es el otro lado. */}
         <Analytics />
+        <RegistroPwa />
       </body>
     </html>
   );

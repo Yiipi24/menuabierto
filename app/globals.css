@@ -2792,6 +2792,23 @@ section { scroll-margin-top: 84px; }
 
 .resena-lista-panel { grid-template-columns: 1fr; max-width: 720px; }
 
+.instalar-pasos { padding-left: 22px; color: var(--ink-soft); line-height: 1.7; }
+
+.avisos-cuenta { margin-bottom: 8px; }
+
+.avisos-cuenta-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.avisos-cuenta-fila .ayuda { margin: 2px 0 0; }
+
+.avisos-cuenta-tipos { list-style: none; margin: 0; padding: 0; }
+
 .aviso-media-estrella { display: grid; place-items: center; color: #f59e0b; font-size: 20px; }
 
 /* ---------- menús: panel ---------- */

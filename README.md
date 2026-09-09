@@ -47,6 +47,45 @@ del comensal, `@vercel/analytics` en el layout cuenta páginas y orígenes sin
 cookies; hay que encender Web Analytics en el proyecto de Vercel para que
 empiece a guardar.
 
+## Aplicación instalable y avisos por push
+
+Historias de 24 horas, seguir y una bandeja de avisos son mecánicas de
+aplicación, y ahora el sitio se instala como una: `app/manifest.js` genera el
+manifest, `public/iconos/` trae los PNG (se regeneran desde `app/icon.svg` con
+`node scripts/generar-iconos.mjs`), el layout lleva las etiquetas que iOS
+exige, y `public/sw.js` es el service worker. Ese worker hace dos cosas y
+nada más: enseña los avisos que llegan por push y guarda `/sin-conexion` para
+cuando no hay red. No cachea fichas ni cartas a propósito: un precio viejo
+servido desde caché es peor que un "sin conexión" honesto.
+
+`/instalar` es la pantalla de instalación: en Android dispara el evento del
+navegador con un botón; en iPhone explica los tres toques de Safari, porque
+ahí no hay evento que disparar.
+
+Los avisos por push reusan la bandeja: cada fila de `notifications` que aún no
+salió (`pushed_at` nulo) se manda a las suscripciones de esa persona
+(`push_subscriptions`, una por navegador) si su `profiles.push_prefs` no tiene
+ese tipo apagado. Lo hace `repartirPush()` en `lib/push.js` con `web-push` y
+llaves VAPID; se llama de aventón desde las acciones que crean avisos
+(reseña nueva, respuesta del dueño, historia publicada, reparto de
+programadas) y, como red de seguridad, desde `/api/push/repartir` cada cinco
+minutos por el cron de `vercel.json`, protegido con `CRON_SECRET`. Un envío
+que responde 404 o 410 borra esa suscripción.
+
+Tipos: `historia`, `resena`, `respuesta` e `insignia` (nuevo: ganar una al
+reseñar deja aviso). Las preferencias por tipo y el interruptor del
+dispositivo viven en `/panel/cuenta#avisos`. Apagar el interruptor borra la
+suscripción: no guardamos a dónde mandar nada, que es lo que "desactivar"
+tiene que significar.
+
+Variables: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+(`mailto:`), `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (la misma pública, para el
+navegador) y `CRON_SECRET`. Se generan una vez con `npx web-push
+generate-vapid-keys`. Sin ellas la cuenta lo dice y no ofrece encender nada.
+
+iOS solo entrega push a una aplicación instalada y con iOS 16.4 o más nuevo;
+la pantalla de cuenta lo explica cuando el navegador no lo admite.
+
 ## Respuesta del dueño y reportes de reseñas
 
 Cualquiera con cuenta reseña, y ahora el dueño contesta: una respuesta por

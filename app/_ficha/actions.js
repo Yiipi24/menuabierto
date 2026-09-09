@@ -9,6 +9,7 @@ import { supabaseSession } from "../../lib/supabase";
 import { rutaFicha, uuidValido } from "../../lib/slug";
 import { conteoDe, insigniaAlLlegar } from "../../lib/insignias";
 import { MAX_DETALLE, leerRespuesta, motivoValido } from "../../lib/resenas";
+import { repartirPushDeAventon } from "../../lib/push";
 
 const MAX_TEXTO = 1500;
 
@@ -92,6 +93,16 @@ export async function guardarResena(_prevState, formData) {
   const despues = await resenasEscritas(supabase, user.id);
   const ganada = despues > antes ? insigniaAlLlegar(despues) : null;
 
+  // La insignia también es un aviso: queda en la bandeja y, si tiene push,
+  // llega al teléfono. La política solo deja insertar el propio.
+  if (ganada) {
+    await supabase
+      .from("notifications")
+      .insert({ profile_id: user.id, kind: "insignia", badge_slug: ganada.slug, restaurant_id: restaurantId });
+  }
+  // El aviso al dueño lo creó el trigger; el push sale de aventón.
+  repartirPushDeAventon();
+
   if (ganada) {
     return {
       status: "ok",
@@ -174,6 +185,7 @@ export async function responderResena(_prevState, formData) {
 
   invalidarFicha(slug);
   revalidatePath(`/panel`);
+  if (texto) repartirPushDeAventon();
   return { status: "ok", message: texto ? "Respuesta publicada." : "Respuesta retirada." };
 }
 

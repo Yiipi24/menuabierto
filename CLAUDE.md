@@ -64,7 +64,9 @@ and used only where no user is acting: the Mercado Pago webhook and the plan
 sync. It bypasses RLS, so it never goes to the middleware or the browser.
 `MP_ACCESS_TOKEN` and `MP_WEBHOOK_SECRET` are the payment gateway's.
 `ANTHROPIC_API_KEY` is read only by `lib/vision.js`, which turns a photo of a
-menu into sections and dishes for the owner to review. The plan
+menu into sections and dishes for the owner to review. `VAPID_PRIVATE_KEY`
+(with `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_SUBJECT`) signs
+web push sends in `lib/push.js`; `CRON_SECRET` guards `/api/push/repartir`. The plan
 of a restaurant can only change through that key: a trigger rejects it from
 `anon` and `authenticated`, so "just update the column" from the panel fails
 by design.

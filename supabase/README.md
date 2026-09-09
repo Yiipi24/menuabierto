@@ -48,7 +48,7 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   primero con `apply_migration`, leer la versión que quedó registrada en
   `supabase_migrations.schema_migrations` y nombrar el archivo con esa. Hoy
   cada archivo del directorio coincide con una versión registrada, y no sobra
-  ninguna: son 71 y 71.
+  ninguna: son 72 y 72.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y

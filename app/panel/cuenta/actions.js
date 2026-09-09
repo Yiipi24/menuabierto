@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { supabaseSession } from "../../../lib/supabase";
+import { prefsParaGuardar, suscripcionValida } from "../../../lib/avisos";
 import { urlAbsoluta } from "../../../lib/url";
 import { esProveedorApagado, redDeProveedor } from "../../../lib/redes-cuenta";
 import { BUCKET_AVATARES } from "../../../lib/avatar";
@@ -258,4 +260,70 @@ export async function desvincularRed(_prevState, formData) {
   revalidatePath("/panel/cuenta");
   const red = redDeProveedor(cual.provider);
   return { status: "ok", message: `${red?.nombre ?? "La red"} ya no está vinculada.` };
+}
+
+/* ---------- avisos por push ---------- */
+
+export async function guardarSuscripcionPush(cruda) {
+  let sub = null;
+  try {
+    sub = suscripcionValida(JSON.parse(String(cruda ?? "")));
+  } catch {
+    sub = null;
+  }
+  if (!sub) return { status: "error", message: "La suscripción llegó con mala forma." };
+
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) return { status: "error", message: "Tu sesión expiró. Vuelve a entrar." };
+
+  const agente = String((await headers()).get("user-agent") ?? "").slice(0, 300) || null;
+  // Un endpoint que ya estaba (otra cuenta en el mismo navegador, o una
+  // recarga) se reasigna a quien está firmado: es su navegador ahora.
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .upsert(
+      { profile_id: auth.user.id, endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth, user_agent: agente },
+      { onConflict: "endpoint" },
+    );
+  if (error) {
+    console.error("guardar suscripcion push", error.message);
+    return { status: "error", message: "No pudimos guardar la suscripción." };
+  }
+  return { status: "ok" };
+}
+
+export async function borrarSuscripcionPush(endpoint) {
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) return { status: "error", message: "Tu sesión expiró." };
+  const { error } = await supabase
+    .from("push_subscriptions")
+    .delete()
+    .eq("profile_id", auth.user.id)
+    .eq("endpoint", String(endpoint ?? ""));
+  if (error) {
+    console.error("borrar suscripcion push", error.message);
+    return { status: "error", message: "No pudimos darte de baja." };
+  }
+  return { status: "ok" };
+}
+
+export async function guardarPreferenciasPush(crudas) {
+  let prefs;
+  try {
+    prefs = prefsParaGuardar(JSON.parse(String(crudas ?? "")));
+  } catch {
+    return { status: "error", message: "Las preferencias llegaron con mala forma." };
+  }
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) return { status: "error", message: "Tu sesión expiró." };
+  const { error } = await supabase.from("profiles").update({ push_prefs: prefs }).eq("id", auth.user.id);
+  if (error) {
+    console.error("guardar preferencias push", error.message);
+    return { status: "error", message: "No pudimos guardar tus preferencias." };
+  }
+  revalidatePath("/panel/cuenta");
+  return { status: "ok" };
 }
