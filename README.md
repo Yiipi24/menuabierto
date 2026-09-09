@@ -47,6 +47,33 @@ del comensal, `@vercel/analytics` en el layout cuenta páginas y orígenes sin
 cookies; hay que encender Web Analytics en el proyecto de Vercel para que
 empiece a guardar.
 
+## Inteligencia de precios
+
+Guardamos precios estructurados por platillo, en centavos. Nadie más tiene ese
+dato —Google Maps guarda el menú como PDF— y hasta ahora no se usaba para
+nada. La migración `inteligencia_de_precios` lo convierte en tres cosas:
+
+- **Historial.** `menu_item_price_history` guarda cada cambio de precio con
+  su fecha (trigger `menu_items_registrar_precio`); lo que ya existía entró
+  como primer punto. El dueño ve el suyo.
+- **Para el comensal**, `/precios`: quién vende qué, a cuánto y a qué
+  distancia (`platillos_cerca`, un platillo por restaurante, con tope de
+  precio opcional y "cerca de mí"), y cuánto cuesta comer en una zona
+  (`precios_de_zona`: la mediana de las medianas por restaurante, con su
+  rango típico). Aquí sí salen nombres: son los precios que cada carta ya
+  publica.
+- **Para el dueño, dentro de Premium**, la tarjeta "Tu posición de precio"
+  del tablero (`posicion_de_precio`): la mediana de su carta contra la de su
+  colonia (o su ciudad, si la colonia no llega) y contra la de su cocina en la
+  ciudad, y un aviso cuando queda a más de un cuarto por encima o por debajo
+  (`UMBRAL_AVISO` en `lib/inteligencia-precios.js`). Solo cifras agregadas:
+  nunca el precio de un competidor con nombre.
+
+Ninguna agregación sale con menos de tres restaurantes detrás
+(`minimo_para_agregar()`): con menos, "la mediana de la colonia" es el precio
+de alguien identificable. No hay rankings de restaurantes más caros o más
+baratos por nombre, a propósito. `precios` es un segmento reservado.
+
 ## Reseñas verificadas por escaneo del QR
 
 Contra Google no se gana por volumen de reseñas sino por confianza, y el QR de

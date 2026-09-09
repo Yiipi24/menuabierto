@@ -2842,6 +2842,69 @@ section { scroll-margin-top: 84px; }
 
 .avisos-cuenta-tipos { list-style: none; margin: 0; padding: 0; }
 
+/* ---------- inteligencia de precios ---------- */
+
+.portada-precios { margin: 10px 0 0; font-size: 14.5px; }
+
+.portada-precios a { color: var(--ink-soft); }
+
+.form-precios {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 8px 0 26px;
+}
+
+.form-precios .campo { margin-bottom: 0; }
+
+.form-precios-acciones { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+.precios-zona {
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 22px;
+}
+
+.precios-zona h2 { font-size: 19px; font-weight: 600; margin-bottom: 6px; }
+
+.precios-zona p { margin: 0; color: var(--ink-soft); }
+
+.precios-lista { list-style: none; margin: 0; padding: 0; counter-reset: precio; }
+
+.precios-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.precios-fila-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.precios-fila-platillo { font-weight: 650; font-size: 16px; color: var(--ink); }
+
+.precios-fila-donde { font-size: 14px; color: var(--ink-soft); }
+
+.precios-fila-donde a { color: inherit; }
+
+.precios-fila-precio { font-size: 18px; white-space: nowrap; }
+
+.precios-nota { margin-top: 26px; }
+
+.bloque-precio.es-aviso { border-color: #d97706; }
+
+.bloque-precio-lista { margin: 8px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 14.5px; }
+
+.bloque-precio-lista li.es-aviso { color: #b45309; font-weight: 600; }
+
+.bloque-precio-aviso { margin: 10px 0 0; color: #b45309; font-size: 14.5px; }
+
+.bloque-precio-nota { margin-top: 8px; font-size: 13px; }
+
 .aviso-media-estrella { display: grid; place-items: center; color: #f59e0b; font-size: 20px; }
 
 /* ---------- menús: panel ---------- */
