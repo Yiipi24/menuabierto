@@ -23,7 +23,7 @@ export default async function Editar({ params }) {
   const { data: restaurante } = await supabase
     .from("restaurants")
     .select(
-      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status, plan, premium_until, highlights, social_links, payment_methods, amenities, parking_cost, parking_kind, service_mode, closed_days, whatsapp_orders, whatsapp_phone, whatsapp_note",
+      "id, name, summary, description, city, neighborhood, street, state, postal_code, phone, website, price_level, status, plan, premium_until, rating_count, highlights, social_links, payment_methods, amenities, parking_cost, parking_kind, service_mode, closed_days, whatsapp_orders, whatsapp_phone, whatsapp_note",
     )
     .eq("id", id)
     .eq("owner_id", auth.user.id)
@@ -192,6 +192,25 @@ export default async function Editar({ params }) {
             </div>
             <Link className="btn" href={`/panel/${restaurante.id}/cupones`}>
               {cupones ? "Administrar los cupones" : "Crear un cupón"}
+            </Link>
+          </section>
+
+          {/* Las reseñas son la segunda razón por la que se abre una ficha, y
+              la respuesta del dueño es lo que las vuelve una conversación en
+              vez de un veredicto. */}
+          <section className="bloque-qr">
+            <div className="bloque-qr-texto">
+              <h2 className="sub">Reseñas</h2>
+              <p className="ayuda">
+                Lo que dicen tus comensales. Responde en público —una respuesta
+                por reseña— y reporta la que no sea de un cliente de verdad.
+                {restaurante.rating_count
+                  ? ` Llevas ${restaurante.rating_count} ${restaurante.rating_count === 1 ? "reseña" : "reseñas"}.`
+                  : ""}
+              </p>
+            </div>
+            <Link className="btn" href={`/panel/${restaurante.id}/resenas`}>
+              Ver y responder reseñas
             </Link>
           </section>
 

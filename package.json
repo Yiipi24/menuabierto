@@ -10,7 +10,8 @@
     "test": "node --import ./tests/unitarias/_resolver.mjs --test 'tests/unitarias/**/*.test.mjs'",
     "test:e2e": "playwright test",
     "sembrar-denue": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/sembrar-denue.mjs",
-    "reclamos": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reclamos.mjs"
+    "reclamos": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reclamos.mjs",
+    "reportes": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reportes.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
