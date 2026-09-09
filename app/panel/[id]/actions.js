@@ -21,6 +21,12 @@ import { MAX_FOTO_BYTES, TIPOS_FOTO } from "../../../lib/subidas";
 
 const BUCKET_FOTOS = "restaurantes";
 const CATEGORIAS_FOTO = ["fachada", "platillo"];
+// Los topes de lo que se escribe sobre una foto. Los mismos que la base
+// exige, para responder con un mensaje y no con un error de constraint.
+const MAX_NOMBRE_PLATILLO = 80;
+const MAX_ETIQUETA_FOTO = 40;
+const MAX_DESCRIPCION_FOTO = 400;
+const MAX_ALT_FOTO = 200;
 const MAX_REDES = 8;
 
 // Todo lo de esta página exige ser el dueño. Se comprueba aquí además de en la
@@ -569,4 +575,85 @@ export async function borrarFoto(formData) {
 
   revalidatePath(`/panel/${id}`);
   invalidarFicha(restaurante.slug);
+}
+
+/**
+ * Lo que la foto dice de sí misma: el nombre del platillo, su etiqueta, la
+ * descripción, el platillo de la carta al que pertenece, si es favorita, su
+ * orden, si se enseña y su texto alternativo.
+ *
+ * Todo es opcional: una foto puede quedarse sin nombre y seguir en la
+ * galería como hasta hoy. Lo que sí se revisa es que el platillo elegido sea
+ * de este restaurante, para que una foto no apunte a la carta de otro.
+ */
+export async function editarFoto(_prevState, formData) {
+  const id = String(formData.get("id") ?? "");
+  const fotoId = String(formData.get("foto") ?? "");
+  const { supabase, restaurante } = await sesionYRestaurante(id);
+  if (!restaurante) {
+    return { status: "error", message: "Ese restaurante no es tuyo." };
+  }
+
+  const nombre = limpio(formData, "dishName") ?? "";
+  const etiqueta = limpio(formData, "dishLabel") ?? "";
+  const descripcion = limpio(formData, "description") ?? "";
+  const alt = limpio(formData, "altText") ?? "";
+  const platillo = limpio(formData, "menuItemId") ?? "";
+  const ordenBruto = limpio(formData, "displayOrder") ?? "";
+
+  if (nombre.length > MAX_NOMBRE_PLATILLO) {
+    return { status: "error", message: `El nombre cabe en ${MAX_NOMBRE_PLATILLO} letras.` };
+  }
+  if (etiqueta.length > MAX_ETIQUETA_FOTO) {
+    return { status: "error", message: `La etiqueta cabe en ${MAX_ETIQUETA_FOTO} letras.` };
+  }
+  if (descripcion.length > MAX_DESCRIPCION_FOTO) {
+    return { status: "error", message: `La descripción cabe en ${MAX_DESCRIPCION_FOTO} letras.` };
+  }
+  if (alt.length > MAX_ALT_FOTO) {
+    return { status: "error", message: `El texto alternativo cabe en ${MAX_ALT_FOTO} letras.` };
+  }
+
+  const orden = ordenBruto === "" ? null : Number(ordenBruto);
+  if (orden !== null && (!Number.isInteger(orden) || orden < 0 || orden > 999)) {
+    return { status: "error", message: "El orden es un número entero, de 0 en adelante." };
+  }
+
+  if (platillo) {
+    const { data: mio } = await supabase
+      .from("menu_items")
+      .select("id")
+      .eq("id", platillo)
+      .eq("restaurant_id", id)
+      .maybeSingle();
+    if (!mio) {
+      return { status: "error", message: "Ese platillo no está en tu carta." };
+    }
+  }
+
+  const cambios = {
+    dish_name: nombre || null,
+    dish_label: etiqueta || null,
+    description: descripcion || null,
+    alt: alt || null,
+    menu_item_id: platillo || null,
+    is_featured: formData.get("isFeatured") === "on",
+    is_visible: formData.get("isVisible") === "on",
+  };
+  if (orden !== null) cambios.position = orden;
+
+  const { error } = await supabase
+    .from("restaurant_media")
+    .update(cambios)
+    .eq("id", fotoId)
+    .eq("restaurant_id", id);
+
+  if (error) {
+    console.error("editar foto", error.message);
+    return { status: "error", message: "No pudimos guardar los cambios de la foto." };
+  }
+
+  revalidatePath(`/panel/${id}`);
+  invalidarFicha(restaurante.slug);
+  return { status: "ok", message: "Foto guardada." };
 }

@@ -115,6 +115,11 @@ export function Publicacion({
   slugCompartir = null,
   volverA,
   alBorrar = null,
+  // `compacta` la deja como vista previa: el texto en tres líneas y el campo
+  // de comentario escondido. `alExpandir` es lo que se llama cuando alguien
+  // pide verla completa.
+  compacta = false,
+  alExpandir = null,
 }) {
   const [meGusta, setMeGusta] = useState(Boolean(publicacion.me_gusta));
   const [likes, setLikes] = useState(publicacion.likes_count ?? 0);
@@ -151,6 +156,9 @@ export function Publicacion({
   }
 
   async function abrirComentarios() {
+    // En la vista previa, abrir los comentarios es pedir la publicación
+    // completa: ahí es donde está el campo para escribir el tuyo.
+    if (compacta) alExpandir?.();
     const siguiente = !abierto;
     setAbierto(siguiente);
     if (!siguiente || comentarios !== null) return;
@@ -222,7 +230,7 @@ export function Publicacion({
   );
 
   return (
-    <article className="publicacion">
+    <article className={compacta ? "publicacion es-compacta" : "publicacion"}>
       <header className="publicacion-cabeza">
         <span className="publicacion-avatar" aria-hidden="true">
           {publicacion.restaurant_foto ? (
@@ -283,6 +291,12 @@ export function Publicacion({
       </figure>
 
       {publicacion.body ? <p className="publicacion-texto">{publicacion.body}</p> : null}
+
+      {compacta ? (
+        <button type="button" className="publicacion-completa" onClick={() => alExpandir?.()}>
+          Ver publicación completa
+        </button>
+      ) : null}
 
       <div className="publicacion-acciones">
         <button
@@ -358,6 +372,7 @@ export function Publicacion({
         </div>
       ) : null}
 
+      {compacta ? null : (
       <form className="comentario-form" onSubmit={enviar}>
         <span className="comentario-avatar comentario-avatar-mio" aria-hidden="true" />
         <input
@@ -375,6 +390,7 @@ export function Publicacion({
           </button>
         ) : null}
       </form>
+      )}
 
       {error ? <p className="form-msg err">{error}</p> : null}
       <AvisoPuerta aviso={aviso} volverA={volverA} alCerrar={limpiar} />

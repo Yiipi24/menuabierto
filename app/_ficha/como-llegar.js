@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { medir } from "../medir";
-import { IconoCompartir } from "./iconos";
+import { IconoCompartir, IconoFlecha } from "./iconos";
 
 // "Cómo llegar" abría Google Maps y punto. En México media ciudad navega con
 // Waze, y a quien lo usa el botón le costaba dos pasos más: abrir Maps, copiar
@@ -64,7 +64,10 @@ function IconoWaze({ ancho = 20 }) {
 
 const ICONOS = { maps: IconoMaps, waze: IconoWaze };
 
-export default function ComoLlegar({ slug, nombre, direccion }) {
+// `enlace` lo pinta como un enlace de texto con flecha en vez de un botón:
+// es como va en el panel oscuro del encabezado, donde un segundo botón
+// competiría con "Pedir por WhatsApp".
+export default function ComoLlegar({ slug, nombre, direccion, enlace = false }) {
   const [abierto, setAbierto] = useState(false);
   const caja = useRef(null);
 
@@ -94,13 +97,14 @@ export default function ComoLlegar({ slug, nombre, direccion }) {
     <div className="ficha-comollegar" ref={caja}>
       <button
         type="button"
-        className="btn ficha-banda-boton"
+        className={enlace ? "ficha-comollegar-enlace" : "btn ficha-banda-boton"}
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         aria-haspopup="menu"
       >
-        <IconoCompartir ancho={19} />
+        {enlace ? null : <IconoCompartir ancho={19} />}
         Cómo llegar
+        {enlace ? <IconoFlecha ancho={17} /> : null}
       </button>
 
       {abierto ? (
