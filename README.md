@@ -25,6 +25,40 @@ reseñas. Viven en `tests/unitarias/` y corren con el `node --test` de Node 22,
 sin framework: el único truco es `_resolver.mjs`, que le agrega la extensión a
 los `import "./precios"` que Next resuelve solo.
 
+## Cargar la carta desde una foto
+
+Capturar sesenta platillos a mano es la fricción número uno del alta. Desde el
+editor de cada menú, "Cargar desde una foto" abre
+`/panel/<id>/menus/<menuId>/importar`: el dueño sube una foto o un PDF de su
+carta (o usa el archivo que el menú ya tiene), un modelo de visión la lee, y
+lo que leyó aparece en una **pantalla de revisión obligatoria**: cada sección y
+cada platillo se puede corregir, desmarcar o agregar, y nada entra al menú
+hasta que el dueño confirma. Lo que se guarda es lo que él dejó, no lo que
+devolvió el modelo.
+
+- **Modelo y salida.** `lib/vision.js` llama a `claude-opus-5` con esfuerzo
+  medio y salida estructurada contra el esquema JSON de `lib/extraccion.js`
+  (secciones → platillos con nombre, descripción y precio). Los precios viajan
+  como texto tal como están en la carta y pasan por `aCentavos`, así "1,250"
+  no se vuelve $1.25. Una carta ilegible vuelve como `legible=false` con el
+  motivo, no como platillos inventados. Los reintentos por negativa del
+  clasificador (`fallbacks: "default"`) están encendidos.
+- **Cupo y costo.** Cada lectura queda en `menu_extractions` con su modelo y
+  sus tokens, y `extracciones_del_mes()` la cuenta contra el cupo del plan:
+  3 al mes en Básico, 15 en Plus, 50 en Premium (`LECTURAS_POR_MES`). Una
+  lectura ilegible cuenta; un error nuestro o de la API no. No hay política
+  de borrado: el contador no se reinicia a mano.
+- **Entrada.** JPG, PNG, WebP, GIF o PDF hasta 10 MB. AVIF no lo acepta la
+  API y se rechaza antes de gastar la petición. La página declara
+  `maxDuration = 120` porque una foto grande tarda más de los quince segundos
+  que Vercel da por defecto.
+- **Un menú de archivo** que se importa pasa a ser digital; el archivo se
+  queda guardado. Las secciones nuevas van después de las que ya había.
+
+Necesita `ANTHROPIC_API_KEY` en el servidor; sin ella el botón se deshabilita
+y lo dice. La lógica que no habla con la API (esquema, limpieza, cupos,
+lectura de la revisión) tiene pruebas en `tests/unitarias/extraccion.test.mjs`.
+
 ## Fichas sembradas del DENUE (no reclamadas)
 
 Un buscador sin restaurantes no sirve, y ningún dueño publica donde no hay

@@ -11,6 +11,7 @@
     "reclamos": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reclamos.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "next": "^15.5.24",
