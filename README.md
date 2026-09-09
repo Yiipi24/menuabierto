@@ -13,6 +13,59 @@ npm install
 npm run dev
 ```
 
+## Pruebas
+
+```bash
+npm test   # unitarias, con node:test; no necesitan red ni llaves
+```
+
+Cubren la lógica que decide dinero y direcciones: `lib/precios`, el CSV del
+DENUE, los reclamos, la carta leída por visión, el pedido por WhatsApp y las
+reseñas. Viven en `tests/unitarias/` y corren con el `node --test` de Node 22,
+sin framework: el único truco es `_resolver.mjs`, que le agrega la extensión a
+los `import "./precios"` que Next resuelve solo.
+
+## Fichas sembradas del DENUE (no reclamadas)
+
+Un buscador sin restaurantes no sirve, y ningún dueño publica donde no hay
+comensales. Para arrancar, el directorio se siembra con fichas del **DENUE del
+INEGI**, el directorio público de negocios de México: nombre, dirección,
+colonia, municipio, coordenadas, teléfono y clase de actividad. Nada más: una
+ficha sembrada no tiene menú, ni precios, ni horarios, y no se inventan.
+
+```bash
+# El CSV se descarga de https://www.inegi.org.mx/app/descarga/?ti=6 (por entidad).
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
+  npm run sembrar-denue -- --archivo denue_19.csv --municipio Monterrey --simular
+# Sin --simular escribe. --limite N corta; --codificacion latin1 si el CSV no es UTF-8.
+```
+
+- **Idempotente.** Cada ficha lleva `source = 'denue'` y `source_id` (el id
+  del INEGI) con índice único: correr el script dos veces no crea dos fichas.
+  Además, `ficha_duplicada()` busca un nombre parecido (trigramas, sin acentos)
+  a menos de 150 m antes de insertar: si el DENUE trae el mismo local con dos
+  razones sociales, o si su dueño ya lo publicó, gana la ficha que ya está.
+- **Se distinguen a la vista.** En las tarjetas llevan la insignia "Sin
+  verificar" y no ofrecen "Ver menú"; la ficha abre con un aviso que dice de
+  dónde salieron los datos y enlaza a `/reclamar?ficha=<id>`. En relevancia,
+  la búsqueda pone las reclamadas antes que las sembradas.
+- **Reclamar.** El flujo de `/reclamar` es el mismo. Si el correo de la cuenta
+  es del dominio del sitio web que la ficha tiene registrado
+  (`pedro@tacoselgordo.mx` para `tacoselgordo.mx`), se aprueba al instante:
+  `aprobar_reclamo()` asigna `owner_id` sin tocar el id, el slug, el QR ni las
+  reseñas, así que la URL y el historial se conservan. Los demás quedan
+  pendientes y se resuelven con `npm run reclamos` (lista,
+  `aprobar <id>`, `rechazar <id>`). Los correos de proveedores públicos nunca
+  cuentan como prueba.
+- **Quién escribe.** El script y la aprobación usan la llave de servicio:
+  ninguna de las dos es una acción de un usuario. La política de reclamos solo
+  deja abrir solicitudes sobre fichas sin dueño.
+
+La traducción del CSV (nombres en mayúsculas, la cola "SA DE CV", la
+vialidad abreviada, la cocina a partir del nombre y de la clase SCIAN) vive en
+`lib/denue.js` y tiene pruebas. El mapa del INEGI y su API no son alcanzables
+desde el entorno de Claude, así que el script parte del archivo descargado.
+
 ## Lista de espera
 
 El formulario hace `POST /api/waitlist`. Hoy la ruta valida el correo y lo

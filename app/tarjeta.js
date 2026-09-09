@@ -42,6 +42,10 @@ export default function Tarjeta({ r, slugCocina, guardado = false }) {
           </span>
         )}
         {r.is_open_now ? <span className="insignia-abierto">Abierto ahora</span> : null}
+        {/* Una ficha sembrada del DENUE que su dueño no ha confirmado se
+            distingue a simple vista: no tiene menú ni horarios, y quien busca
+            debe saberlo antes de tocarla, no al llegar. */}
+        {r.is_claimed === false ? <span className="insignia-sinverificar">Sin verificar</span> : null}
         {lejos ? <span className="insignia-lejos">{lejos}</span> : null}
       </div>
 
@@ -86,12 +90,22 @@ export default function Tarjeta({ r, slugCocina, guardado = false }) {
         </p>
 
         <div className="tarjeta-acciones">
-          <Link className="btn" href={rutaMenu(r.slug)}>
-            Ver menú
-          </Link>
-          <Link className="btn-linea" href={rutaFicha(r.slug)}>
-            Ver detalles
-          </Link>
+          {/* Una ficha no reclamada nunca tiene carta: ofrecer "Ver menú"
+              sería mandar a una página vacía. */}
+          {r.is_claimed === false ? (
+            <Link className="btn-linea" href={rutaFicha(r.slug)}>
+              Ver detalles
+            </Link>
+          ) : (
+            <>
+              <Link className="btn" href={rutaMenu(r.slug)}>
+                Ver menú
+              </Link>
+              <Link className="btn-linea" href={rutaFicha(r.slug)}>
+                Ver detalles
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </article>

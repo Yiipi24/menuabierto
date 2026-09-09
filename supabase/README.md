@@ -56,6 +56,14 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
 
 ## Decisiones que conviene no reabrir a la ligera
 
+- **Una ficha sin `owner_id` es una ficha sembrada, y solo se reclama por
+  `aprobar_reclamo()`.** Las columnas `source` y `source_id` dicen de donde
+  salio (hoy solo `denue`) y su indice unico hace idempotente la importacion.
+  `ficha_duplicada()` evita sembrar encima de un local que ya esta. Las tres
+  funciones son security definer sin EXECUTE para anon/authenticated: las
+  llama el script con la llave de servicio, o la accion de reclamo cuando el
+  correo demuestra el dominio del sitio. La politica de insert de
+  `restaurant_claims` exige que la ficha no tenga dueno.
 - **La direccion de una ficha es su nombre pegado, y la reparte la base.**
   `slug` guarda la ruta completa (`jcsmokehouse`, o `jcsmokehouse/centro`
   cuando el nombre ya estaba tomado), no un tramo suelto: lo unico que tiene
