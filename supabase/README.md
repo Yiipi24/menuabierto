@@ -48,7 +48,7 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   primero con `apply_migration`, leer la versión que quedó registrada en
   `supabase_migrations.schema_migrations` y nombrar el archivo con esa. Hoy
   cada archivo del directorio coincide con una versión registrada, y no sobra
-  ninguna: son 68 y 68.
+  ninguna: son 69 y 69.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
@@ -56,6 +56,14 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
 
 ## Decisiones que conviene no reabrir a la ligera
 
+- **Una ficha sin `owner_id` es una ficha sembrada, y solo se reclama por
+  `aprobar_reclamo()`.** Las columnas `source` y `source_id` dicen de donde
+  salio (hoy solo `denue`) y su indice unico hace idempotente la importacion.
+  `ficha_duplicada()` evita sembrar encima de un local que ya esta. Las tres
+  funciones son security definer sin EXECUTE para anon/authenticated: las
+  llama el script con la llave de servicio, o la accion de reclamo cuando el
+  correo demuestra el dominio del sitio. La politica de insert de
+  `restaurant_claims` exige que la ficha no tenga dueno.
 - **El plan de una ficha lo escribe solo la llave de servicio.** El trigger
   `restaurants_plan_solo_desde_el_cobro` rechaza cualquier cambio de `plan` o
   `premium_until` que venga de `anon` o `authenticated`, y una ficha nueva

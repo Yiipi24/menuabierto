@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { buscarFichas, reclamarFicha } from "./actions";
 
 const busquedaInicial = { status: "idle", message: "", resultados: [] };
 const reclamoInicial = { status: "idle", message: "" };
 
-export default function ReclamarForm() {
+export default function ReclamarForm({ fichaInicial = null }) {
   const [busqueda, buscar, buscando] = useActionState(
     buscarFichas,
     busquedaInicial,
@@ -15,19 +16,25 @@ export default function ReclamarForm() {
     reclamarFicha,
     reclamoInicial,
   );
-  const [elegido, setElegido] = useState(null);
+  const [elegido, setElegido] = useState(fichaInicial);
 
   if (reclamo.status === "ok") {
     return (
       <div className="aviso">
         <h2>Listo</h2>
         <p>{reclamo.message}</p>
+        {reclamo.aprobado ? (
+          <Link className="btn" href="/panel">
+            Ir a mi panel
+          </Link>
+        ) : null}
       </div>
     );
   }
 
   return (
     <>
+      {fichaInicial && elegido?.id === fichaInicial.id ? null : (
       <form action={buscar} className="form-alta">
         <label className="campo">
           <span>Nombre del restaurante</span>
@@ -48,6 +55,7 @@ export default function ReclamarForm() {
           </p>
         ) : null}
       </form>
+      )}
 
       {busqueda.status === "ok" && busqueda.resultados.length === 0 ? (
         <div className="vacio">
