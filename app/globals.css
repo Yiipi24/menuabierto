@@ -1618,6 +1618,49 @@ section { scroll-margin-top: 84px; }
   border-radius: 999px;
 }
 
+/* La ficha sembrada del DENUE que su dueño no ha confirmado. Va donde iría
+   "Abierto ahora": es lo primero que hay que saber de esa tarjeta. */
+.insignia-sinverificar {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background: rgba(28, 25, 23, 0.82);
+  color: #fdfcfa;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+
+.insignia-abierto + .insignia-sinverificar { top: 40px; }
+
+.tarjeta-acciones > .btn-linea:only-child { grid-column: 1 / -1; }
+
+/* El aviso bajo el encabezado de una ficha no reclamada. */
+.ficha-noreclamada {
+  margin: 18px auto 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+
+.ficha-noreclamada-texto { flex: 1; min-width: 240px; }
+
+.ficha-noreclamada-texto strong { display: block; margin-bottom: 4px; }
+
+.ficha-noreclamada-texto p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.ficha-noreclamada-texto a { color: inherit; }
+
 .insignia-lejos {
   position: absolute;
   left: 10px;
@@ -2674,6 +2717,64 @@ section { scroll-margin-top: 84px; }
 
 .resena-texto { color: var(--ink-soft); font-size: 15.5px; white-space: pre-line; }
 
+.resena-sin-texto { font-style: italic; color: var(--ink-faint); }
+
+/* La respuesta del dueño, dentro de la reseña: sangrada y con su línea, como
+   una réplica y no como otra reseña. */
+.resena-respuesta {
+  margin-top: 12px;
+  padding: 10px 0 0 14px;
+  border-left: 3px solid var(--accent-soft);
+}
+
+.resena-respuesta-quien {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 650;
+  margin-bottom: 4px;
+}
+
+.resena-responder { margin-top: 12px; display: flex; gap: 12px; align-items: center; }
+
+.resena-respuesta-form { margin-top: 12px; }
+
+.resena-respuesta-form .campo textarea { min-height: 80px; }
+
+.resena-respuesta-acciones { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+
+.resena-en-revision {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: #b45309;
+}
+
+.resena-reportar {
+  display: inline-block;
+  margin-top: 10px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.resena-reportar:hover { color: var(--ink); }
+
+.resena-reportar-listo { margin-top: 10px; font-size: 13.5px; color: var(--verde); }
+
+.resena-reportar-form { margin-top: 12px; }
+
+.resena-reportar-form fieldset { border: 0; padding: 0; margin: 0 0 10px; }
+
+.resena-reportar-form legend { font-weight: 650; margin-bottom: 8px; }
+
+.resena-lista-panel { grid-template-columns: 1fr; max-width: 720px; }
+
+.aviso-media-estrella { display: grid; place-items: center; color: #f59e0b; font-size: 20px; }
+
 /* ---------- menús: panel ---------- */
 
 /* Los <select> no heredaban el estilo de los campos porque hasta ahora no
@@ -2863,6 +2964,99 @@ section { scroll-margin-top: 84px; }
 
 /* Un formulario de una línea: campo y botón lado a lado, y el mensaje debajo
    ocupando el ancho entero. */
+/* ---------- cargar la carta desde una foto ---------- */
+
+.importar-cta {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+}
+
+.importar-cta h2 { font-size: 17px; font-weight: 650; margin-bottom: 4px; }
+
+.importar-cta p { margin: 0; color: var(--ink-soft); font-size: 14.5px; max-width: 48em; }
+
+.campo-casilla {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.campo-casilla input { width: auto; }
+
+.revision { margin-top: 24px; }
+
+.revision-resumen { color: var(--ink-soft); margin-bottom: 18px; }
+
+.revision-seccion {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px 16px;
+  margin: 0 0 18px;
+}
+
+.revision-seccion-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 6px;
+}
+
+.revision-seccion-nombre {
+  font-weight: 650;
+  font-size: 16px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  min-width: 12em;
+}
+
+.revision-seccion-nombre:hover,
+.revision-seccion-nombre:focus { border-color: var(--line); background: var(--paper); }
+
+.revision-lista { list-style: none; margin: 8px 0 10px; padding: 0; }
+
+.revision-platillo {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 2fr) 110px minmax(160px, 3fr);
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+
+.revision-platillo.es-fuera input[type="text"] { opacity: 0.45; text-decoration: line-through; }
+
+.revision-platillo input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 14.5px;
+}
+
+.revision-precio.es-dudoso { border-color: #d97706; background: #fff7ed; }
+
+.revision-marca { display: flex; align-items: center; padding: 0 4px; }
+
+.revision-pie { margin-top: 24px; }
+
+.revision-acciones { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
+
+@media (max-width: 640px) {
+  .revision-platillo { grid-template-columns: auto 1fr 96px; }
+  .revision-descripcion { grid-column: 2 / -1; }
+}
+
 .form-linea {
   display: flex;
   flex-wrap: wrap;
@@ -7702,6 +7896,32 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 .pedido-barra-cuenta span { font-size: 14px; color: var(--ink-soft); }
 
 .pedido-barra-acciones { display: flex; align-items: center; gap: 12px; }
+
+/* Para aquí, para llevar, a domicilio: las opciones que la ficha ya declara. */
+.pedido-entrega {
+  max-width: var(--max);
+  margin: 0 auto 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pedido-entrega-opcion {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pedido-entrega-opcion.es-elegida {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
 
 .pedido-barra-nota {
   max-width: var(--max);

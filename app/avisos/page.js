@@ -24,7 +24,7 @@ export default async function Avisos() {
           <header className="feed-encabezado">
             <div>
               <h1>Tus avisos</h1>
-              <p>Cuando un restaurante que sigues publica una historia.</p>
+              <p>Historias de los que sigues, reseñas de tu restaurante y respuestas a las tuyas.</p>
             </div>
             <Link className="btn-linea" href="/novedades">
               Ver novedades

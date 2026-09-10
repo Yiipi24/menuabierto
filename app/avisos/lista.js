@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { marcarAvisosLeidos } from "../_social/actions";
 import { hace } from "../../lib/social";
+import { textoDeAviso } from "../../lib/resenas";
 import { IconoCampana, IconoDestello } from "../_social/iconos";
 
 // La bandeja. Los avisos se marcan como leídos al abrirla —estar aquí es
@@ -29,7 +30,8 @@ export default function ListaAvisos({ avisos }) {
         <h2>No tienes avisos</h2>
         <p>
           Enciende la campana en la ficha de un restaurante y te avisamos aquí
-          cuando publique una historia.
+          cuando publique una historia. Si tienes restaurante, aquí llegan sus
+          reseñas nuevas; si escribes reseñas, las respuestas del dueño.
         </p>
         <Link className="btn" href="/novedades">
           Ver tus novedades
@@ -40,7 +42,32 @@ export default function ListaAvisos({ avisos }) {
 
   return (
     <ul className="avisos">
-      {avisos.map((a) => (
+      {avisos.map((a) => {
+        // Una reseña nueva para el dueño, o la respuesta del dueño para quien
+        // escribió: dicen quién, cuántas estrellas y un pedazo del texto.
+        const resena = textoDeAviso(a);
+        if (resena) {
+          return (
+            <li key={a.id} className={a.read_at ? "aviso" : "aviso sin-leer"}>
+              <Link href={resena.href}>
+                <span className="aviso-media aviso-media-estrella" aria-hidden="true">
+                  ★
+                </span>
+                <span className="aviso-texto">
+                  <strong>{resena.titulo}</strong>
+                  {resena.detalle ? <em> “{resena.detalle}”</em> : null}
+                </span>
+                <span className="aviso-fecha">{hace(a.created_at)}</span>
+                {!a.read_at ? (
+                  <span className="aviso-punto" aria-label="Sin leer">
+                    <IconoCampana ancho={14} relleno />
+                  </span>
+                ) : null}
+              </Link>
+            </li>
+          );
+        }
+        return (
         <li key={a.id} className={a.read_at ? "aviso" : "aviso sin-leer"}>
           <Link href={`/${a.restaurant_slug}`}>
             <span className="aviso-media" aria-hidden="true">
@@ -60,7 +87,8 @@ export default function ListaAvisos({ avisos }) {
             ) : null}
           </Link>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

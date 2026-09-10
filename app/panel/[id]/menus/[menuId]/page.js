@@ -13,8 +13,9 @@ export const metadata = { title: "Editar menú — Menú Abierto" };
 
 const BUCKET_MENUS = "menus";
 
-export default async function EditarMenu({ params }) {
+export default async function EditarMenu({ params, searchParams }) {
   const { id, menuId } = await params;
+  const { importados } = await searchParams;
   const supabase = await supabaseSession();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth?.user) redirect("/entrar");
@@ -122,6 +123,24 @@ export default async function EditarMenu({ params }) {
           </div>
           <Link className="btn-linea" href={`/panel/${id}/qr`}>
             El QR del restaurante
+          </Link>
+        </section>
+
+        {importados ? (
+          <p className="form-msg ok" role="status">
+            Listo: {importados} {Number(importados) === 1 ? "platillo entró" : "platillos entraron"} al menú desde la foto. Revísalos abajo.
+          </p>
+        ) : null}
+
+        {/* Cargar la carta desde una foto: para un menú digital vacío o a
+            medias, y para uno de archivo, que así pasa a tener platillos. */}
+        <section className="importar-cta">
+          <div>
+            <h2>¿Tienes la carta en una foto o en PDF?</h2>
+            <p>La leemos y te la devolvemos en secciones y platillos con precio para que la revises. Es más rápido que capturarla a mano.</p>
+          </div>
+          <Link className="btn-linea" href={`/panel/${id}/menus/${menu.id}/importar`}>
+            Cargar desde una foto
           </Link>
         </section>
 

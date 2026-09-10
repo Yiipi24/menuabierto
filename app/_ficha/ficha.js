@@ -18,6 +18,7 @@ import Informacion from "./informacion";
 import BarraMovil from "./barra-movil";
 import Resenas from "./resenas";
 import Historias from "../_social/historias";
+import NoReclamada from "./no-reclamada";
 import { cargarSocial, recogerHistoriasViejas } from "../_social/datos";
 import { MedirVista } from "../medir";
 import { IconoEstrella, IconoFlechaAtras } from "./iconos";
@@ -101,6 +102,10 @@ export default async function Ficha({ slug }) {
   // el aviso al dueno.
   const usuario = await currentUser();
   const esDueno = Boolean(usuario && r.owner_id === usuario.id);
+  // Sin dueño es una ficha que sembramos nosotros (del DENUE del INEGI) y que
+  // el negocio todavía no confirmó. Se dice arriba, antes de que nadie lea la
+  // dirección como si la hubiera publicado el restaurante.
+  const noReclamada = r.owner_id === null;
 
   // Cuántas reseñas lleva quien está leyendo: es lo que convierte el formulario
   // en una meta ("te falta una para Catador") en vez de un cuadro de texto.
@@ -241,6 +246,8 @@ export default async function Ficha({ slug }) {
           social={social}
           volverA={volverAqui}
         />
+
+        {noReclamada ? <NoReclamada restauranteId={r.id} nombre={r.name} fuente={r.source} /> : null}
 
         {/* Las historias van justo bajo el encabezado: son el "qué hay hoy" y
             se miran de pasada. Si no hay ninguna, el componente no pinta nada. */}

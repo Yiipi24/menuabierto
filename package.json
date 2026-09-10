@@ -5,9 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --import ./tests/unitarias/_resolver.mjs --test 'tests/unitarias/**/*.test.mjs'",
+    "sembrar-denue": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/sembrar-denue.mjs",
+    "reclamos": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reclamos.mjs",
+    "reportes": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reportes.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "next": "^15.5.24",

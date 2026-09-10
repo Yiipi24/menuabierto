@@ -30,6 +30,10 @@ export function PedidoProvider({ pedidos, nombre, slug, url, children }) {
   // cantidad y lo que hay que escribir en el mensaje. Guardar el nombre y el
   // precio aquí evita tener que volver a recorrer la carta para armarlo.
   const [lineas, setLineas] = useState(() => new Map());
+  // Cómo lo quiere: para aquí, para llevar o a domicilio. Con una sola opción
+  // no hay nada que elegir y se manda esa; con varias, la primera va marcada
+  // para que quien tiene prisa no tenga que tocar nada más.
+  const [entrega, setEntrega] = useState(() => pedidos?.entregas?.[0]?.slug ?? null);
 
   const cambiar = useCallback((platillo, delta) => {
     setLineas((antes) => {
@@ -67,10 +71,13 @@ export function PedidoProvider({ pedidos, nombre, slug, url, children }) {
       // de verdad, y eso se lee como una promesa.
       totalCompleto: lista.length > 0 && lista.every((l) => l.precio != null),
       moneda: lista.find((l) => l.moneda)?.moneda ?? "MXN",
+      entrega,
+      entregas: pedidos.entregas ?? [],
+      elegirEntrega: setEntrega,
       cambiar,
       vaciar: () => setLineas(new Map()),
     };
-  }, [pedidos, nombre, slug, url, lineas, cambiar]);
+  }, [pedidos, nombre, slug, url, lineas, cambiar, entrega]);
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
@@ -136,16 +143,34 @@ export function BarraPedido() {
   const pedido = usarPedido();
   if (!pedido || !pedido.lista.length) return null;
 
-  const { piezas, total, totalCompleto, moneda } = pedido;
+  const { piezas, total, totalCompleto, moneda, entregas, entrega } = pedido;
   const mensaje = mensajeDePedido({
     nombre: pedido.nombre,
     url: pedido.url,
     lineas: pedido.lista,
     moneda,
+    entrega,
   });
 
   return (
     <div className="pedido-barra" role="region" aria-label="Tu pedido">
+      {entregas.length > 1 ? (
+        <div className="pedido-entrega" role="radiogroup" aria-label="¿Cómo lo quieres?">
+          {entregas.map((e) => (
+            <button
+              key={e.slug}
+              type="button"
+              role="radio"
+              aria-checked={entrega === e.slug}
+              className={entrega === e.slug ? "pedido-entrega-opcion es-elegida" : "pedido-entrega-opcion"}
+              onClick={() => pedido.elegirEntrega(e.slug)}
+            >
+              {e.nombre}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="pedido-barra-dentro">
         <div className="pedido-barra-cuenta">
           <strong>

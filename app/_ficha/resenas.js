@@ -1,5 +1,7 @@
 import Link from "next/link";
 import ResenaForm from "./resena-form";
+import RespuestaDueno from "./respuesta-dueno";
+import Reportar from "./reportar";
 import { rutaFicha } from "../../lib/slug";
 import { insigniaActual, progresoDe } from "../../lib/insignias";
 import { IconoInsignia } from "../insignias-iconos";
@@ -110,6 +112,32 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
                   </div>
                   <Estrellas valor={r.rating} />
                   {r.body ? <p className="resena-texto">{r.body}</p> : null}
+
+                  {/* La respuesta del dueño va dentro de la reseña, no como otra
+                      reseña: es la otra mitad de la misma conversación. */}
+                  {r.owner_reply ? (
+                    <div className="resena-respuesta">
+                      <span className="resena-respuesta-quien">
+                        Respuesta de {restaurante.name}
+                        {r.owner_reply_at ? <span className="resena-fecha"> · {fecha(r.owner_reply_at)}</span> : null}
+                      </span>
+                      <p className="resena-texto">{r.owner_reply}</p>
+                    </div>
+                  ) : null}
+
+                  {esDueno ? (
+                    <>
+                      {r.report_pending ? (
+                        <p className="resena-en-revision">Reportada: en revisión. Sigue visible hasta que se resuelva.</p>
+                      ) : null}
+                      <RespuestaDueno slug={slug} reviewId={r.id} respuesta={r.owner_reply} />
+                      {r.report_pending ? null : (
+                        <Reportar slug={slug} reviewId={r.id} usuarioId={usuarioId} volverA={volverAqui} />
+                      )}
+                    </>
+                  ) : (
+                    <Reportar slug={slug} reviewId={r.id} usuarioId={usuarioId} volverA={volverAqui} />
+                  )}
                 </li>
               ))}
             </ul>

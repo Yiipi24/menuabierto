@@ -13,6 +13,116 @@ npm install
 npm run dev
 ```
 
+## Pruebas
+
+```bash
+npm test   # unitarias, con node:test; no necesitan red ni llaves
+```
+
+Cubren la lógica que decide dinero y direcciones: `lib/precios`, el CSV del
+DENUE, los reclamos, la carta leída por visión, el pedido por WhatsApp y las
+reseñas. Viven en `tests/unitarias/` y corren con el `node --test` de Node 22,
+sin framework: el único truco es `_resolver.mjs`, que le agrega la extensión a
+los `import "./precios"` que Next resuelve solo.
+
+## Respuesta del dueño y reportes de reseñas
+
+Cualquiera con cuenta reseña, y ahora el dueño contesta: una respuesta por
+reseña, pública y editable, que se ve bajo la reseña en la ficha y se escribe
+desde `/panel/<id>/resenas` (o desde la propia ficha, si quien mira es el
+dueño). La escribe `responder_resena()`, una función que comprueba que quien
+responde es el dueño: la columna no se abre por RLS, cuya política de update
+sigue siendo solo del autor. Vaciar la respuesta la retira.
+
+Reportar una reseña lo puede hacer el dueño o cualquier comensal con cuenta
+—no el autor, que la borra— con un motivo (falsa, ofensiva, publicidad, otra)
+y un detalle opcional. Va a `review_reports` y queda **pendiente**: la reseña
+sigue visible, y solo el dueño ve la marca "en revisión". No hay moderación
+automática a propósito: la cola se resuelve a mano con `npm run reportes`
+(lista, `conservar <id>`, `retirar <id>`). Retirar borra la reseña, y el
+promedio se recalcula con el trigger de siempre.
+
+Los avisos reusan la bandeja de `/avisos`, que ya admitía más tipos: al dueño
+le llega `resena` cuando alguien califica su ficha (trigger
+`reviews_avisar_al_dueno`), y al autor `respuesta` cuando el dueño contesta.
+`mis_avisos` trae de qué reseña se trata para escribir "Ana te dejó 5
+estrellas" sin otra consulta.
+
+## Cargar la carta desde una foto
+
+Capturar sesenta platillos a mano es la fricción número uno del alta. Desde el
+editor de cada menú, "Cargar desde una foto" abre
+`/panel/<id>/menus/<menuId>/importar`: el dueño sube una foto o un PDF de su
+carta (o usa el archivo que el menú ya tiene), un modelo de visión la lee, y
+lo que leyó aparece en una **pantalla de revisión obligatoria**: cada sección y
+cada platillo se puede corregir, desmarcar o agregar, y nada entra al menú
+hasta que el dueño confirma. Lo que se guarda es lo que él dejó, no lo que
+devolvió el modelo.
+
+- **Modelo y salida.** `lib/vision.js` llama a `claude-opus-5` con esfuerzo
+  medio y salida estructurada contra el esquema JSON de `lib/extraccion.js`
+  (secciones → platillos con nombre, descripción y precio). Los precios viajan
+  como texto tal como están en la carta y pasan por `aCentavos`, así "1,250"
+  no se vuelve $1.25. Una carta ilegible vuelve como `legible=false` con el
+  motivo, no como platillos inventados. Los reintentos por negativa del
+  clasificador (`fallbacks: "default"`) están encendidos.
+- **Cupo y costo.** Cada lectura queda en `menu_extractions` con su modelo y
+  sus tokens, y `extracciones_del_mes()` la cuenta contra el cupo del plan:
+  3 al mes en Básico, 15 en Plus, 50 en Premium (`LECTURAS_POR_MES`). Una
+  lectura ilegible cuenta; un error nuestro o de la API no. No hay política
+  de borrado: el contador no se reinicia a mano.
+- **Entrada.** JPG, PNG, WebP, GIF o PDF hasta 10 MB. AVIF no lo acepta la
+  API y se rechaza antes de gastar la petición. La página declara
+  `maxDuration = 120` porque una foto grande tarda más de los quince segundos
+  que Vercel da por defecto.
+- **Un menú de archivo** que se importa pasa a ser digital; el archivo se
+  queda guardado. Las secciones nuevas van después de las que ya había.
+
+Necesita `ANTHROPIC_API_KEY` en el servidor; sin ella el botón se deshabilita
+y lo dice. La lógica que no habla con la API (esquema, limpieza, cupos,
+lectura de la revisión) tiene pruebas en `tests/unitarias/extraccion.test.mjs`.
+
+## Fichas sembradas del DENUE (no reclamadas)
+
+Un buscador sin restaurantes no sirve, y ningún dueño publica donde no hay
+comensales. Para arrancar, el directorio se siembra con fichas del **DENUE del
+INEGI**, el directorio público de negocios de México: nombre, dirección,
+colonia, municipio, coordenadas, teléfono y clase de actividad. Nada más: una
+ficha sembrada no tiene menú, ni precios, ni horarios, y no se inventan.
+
+```bash
+# El CSV se descarga de https://www.inegi.org.mx/app/descarga/?ti=6 (por entidad).
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
+  npm run sembrar-denue -- --archivo denue_19.csv --municipio Monterrey --simular
+# Sin --simular escribe. --limite N corta; --codificacion latin1 si el CSV no es UTF-8.
+```
+
+- **Idempotente.** Cada ficha lleva `source = 'denue'` y `source_id` (el id
+  del INEGI) con índice único: correr el script dos veces no crea dos fichas.
+  Además, `ficha_duplicada()` busca un nombre parecido (trigramas, sin acentos)
+  a menos de 150 m antes de insertar: si el DENUE trae el mismo local con dos
+  razones sociales, o si su dueño ya lo publicó, gana la ficha que ya está.
+- **Se distinguen a la vista.** En las tarjetas llevan la insignia "Sin
+  verificar" y no ofrecen "Ver menú"; la ficha abre con un aviso que dice de
+  dónde salieron los datos y enlaza a `/reclamar?ficha=<id>`. En relevancia,
+  la búsqueda pone las reclamadas antes que las sembradas.
+- **Reclamar.** El flujo de `/reclamar` es el mismo. Si el correo de la cuenta
+  es del dominio del sitio web que la ficha tiene registrado
+  (`pedro@tacoselgordo.mx` para `tacoselgordo.mx`), se aprueba al instante:
+  `aprobar_reclamo()` asigna `owner_id` sin tocar el id, el slug, el QR ni las
+  reseñas, así que la URL y el historial se conservan. Los demás quedan
+  pendientes y se resuelven con `npm run reclamos` (lista,
+  `aprobar <id>`, `rechazar <id>`). Los correos de proveedores públicos nunca
+  cuentan como prueba.
+- **Quién escribe.** El script y la aprobación usan la llave de servicio:
+  ninguna de las dos es una acción de un usuario. La política de reclamos solo
+  deja abrir solicitudes sobre fichas sin dueño.
+
+La traducción del CSV (nombres en mayúsculas, la cola "SA DE CV", la
+vialidad abreviada, la cocina a partir del nombre y de la clase SCIAN) vive en
+`lib/denue.js` y tiene pruebas. El mapa del INEGI y su API no son alcanzables
+desde el entorno de Claude, así que el script parte del archivo descargado.
+
 ## Lista de espera
 
 El formulario hace `POST /api/waitlist`. Hoy la ruta valida el correo y lo
@@ -114,7 +224,12 @@ chat, y preguntarlo es donde se cae un pedido.
 Con eso, la ficha enseña un botón junto a "Abierto ahora" y la carta se vuelve
 tocable: cada platillo tiene su `+`, abajo aparece una barra con la cuenta, y
 "Enviar por WhatsApp" abre el chat con el mensaje ya escrito —los platillos,
-sus cantidades, el total y el enlace de la carta—. Una carta de archivo (un PDF
+sus cantidades, el total y el enlace de la carta—. La barra pregunta también
+cómo lo quiere: para comer aquí, para llevar o a domicilio. Esas opciones no
+se inventan: salen del modo de servicio y del servicio a domicilio que la
+ficha ya declara (`opcionesDeEntrega` en `lib/whatsapp.js`), así que un local
+que solo vende para llevar nunca ofrece mesa, y la respuesta va en el mensaje
+para que el dueño no tenga que preguntarla. Una carta de archivo (un PDF
 o una foto) no se puede tocar platillo por platillo, así que ahí el botón abre
 el chat a secas.
 
