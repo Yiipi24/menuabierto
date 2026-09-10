@@ -38,9 +38,17 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   correcciones que se habían metido dentro de `programar_publicaciones`, que
   ya estaba aplicada: ese archivo queda con el contenido final de los tres,
   igual que el cuarteto de la ubicación, así que reaplicar de cero da el
-  mismo esquema pasando dos veces por lo mismo. Hoy cada archivo del
-  directorio coincide con una versión registrada, y no sobra ninguna: son 62
-  y 62.
+  mismo esquema pasando dos veces por lo mismo. Volvió a pasar una cuarta
+  vez con los cupones y las fotos, y se corrigió igual: `eventos_de_cupon`
+  (20260908120000 → 20260908050932), `horarios_cupones_y_sucursales`
+  (20260908120100 → 20260908051041), `metricas_de_cupones_y_comunidad`
+  (20260908120200 → 20260908051158), `permisos_de_lo_nuevo`
+  (20260908120300 → 20260908231429) y `nombres_de_platillo_en_fotos`
+  (20260909120000 → 20260909024219). La forma de no repetirlo: aplicar
+  primero con `apply_migration`, leer la versión que quedó registrada en
+  `supabase_migrations.schema_migrations` y nombrar el archivo con esa. Hoy
+  cada archivo del directorio coincide con una versión registrada, y no sobra
+  ninguna.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
