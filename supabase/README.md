@@ -48,7 +48,11 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   primero con `apply_migration`, leer la versión que quedó registrada en
   `supabase_migrations.schema_migrations` y nombrar el archivo con esa. Hoy
   cada archivo del directorio coincide con una versión registrada, y no sobra
-  ninguna.
+  ninguna: son 70 archivos. La base registra 74: las cuatro que faltan aquí
+  (`suscripciones_y_candado_del_plan`, `push_y_preferencias_de_avisos`,
+  `resenas_verificadas_por_qr` e `inteligencia_de_precios`) están aplicadas y
+  sus archivos viven en la rama `claude/cobro-planes-ops-calidad-iobad1`, con
+  los pasos del plan que todavía no se traen a main.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
