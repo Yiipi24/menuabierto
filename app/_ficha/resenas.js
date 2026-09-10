@@ -1,21 +1,9 @@
 import Link from "next/link";
 import ResenaForm from "./resena-form";
-import RespuestaDueno from "./respuesta-dueno";
-import Reportar from "./reportar";
+import ListaResenas from "./lista-resenas";
 import { rutaFicha } from "../../lib/slug";
-import { insigniaActual, progresoDe } from "../../lib/insignias";
+import { progresoDe } from "../../lib/insignias";
 import { IconoInsignia } from "../insignias-iconos";
-
-const FECHA = new Intl.DateTimeFormat("es-MX", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
-
-function fecha(iso) {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : FECHA.format(d);
-}
 
 // Las estrellas son decorativas: el número al lado ya dice la calificación, y
 // repetirla cinco veces en el lector de pantalla solo estorba.
@@ -45,19 +33,6 @@ function reparto(resenas) {
       porcentaje: total ? Math.round((cuantas / total) * 100) : 0,
     };
   });
-}
-
-// La insignia de quien firma va junto al nombre y no en una fila aparte: es
-// parte de quién es esa persona, igual que la fecha dice cuándo comió ahí.
-function Insignia({ resenas }) {
-  const insignia = insigniaActual(resenas);
-  if (!insignia) return null;
-  return (
-    <span className="resena-insignia" title={`${insignia.nombre} · ${insignia.lema}`}>
-      <IconoInsignia slug={insignia.slug} ancho={15} />
-      {insignia.nombre}
-    </span>
-  );
 }
 
 export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno, misResenas }) {
@@ -100,47 +75,14 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
           </div>
 
           {deOtros.length ? (
-            <ul className="resena-lista">
-              {deOtros.map((r) => (
-                <li className="resena" key={r.id}>
-                  <div className="resena-cabeza">
-                    <span className="resena-autor">
-                      {r.author_name}
-                      <Insignia resenas={r.author_reviews} />
-                    </span>
-                    <span className="resena-fecha">{fecha(r.created_at)}</span>
-                  </div>
-                  <Estrellas valor={r.rating} />
-                  {r.body ? <p className="resena-texto">{r.body}</p> : null}
-
-                  {/* La respuesta del dueño va dentro de la reseña, no como otra
-                      reseña: es la otra mitad de la misma conversación. */}
-                  {r.owner_reply ? (
-                    <div className="resena-respuesta">
-                      <span className="resena-respuesta-quien">
-                        Respuesta de {restaurante.name}
-                        {r.owner_reply_at ? <span className="resena-fecha"> · {fecha(r.owner_reply_at)}</span> : null}
-                      </span>
-                      <p className="resena-texto">{r.owner_reply}</p>
-                    </div>
-                  ) : null}
-
-                  {esDueno ? (
-                    <>
-                      {r.report_pending ? (
-                        <p className="resena-en-revision">Reportada: en revisión. Sigue visible hasta que se resuelva.</p>
-                      ) : null}
-                      <RespuestaDueno slug={slug} reviewId={r.id} respuesta={r.owner_reply} />
-                      {r.report_pending ? null : (
-                        <Reportar slug={slug} reviewId={r.id} usuarioId={usuarioId} volverA={volverAqui} />
-                      )}
-                    </>
-                  ) : (
-                    <Reportar slug={slug} reviewId={r.id} usuarioId={usuarioId} volverA={volverAqui} />
-                  )}
-                </li>
-              ))}
-            </ul>
+            <ListaResenas
+              slug={slug}
+              restaurante={{ name: restaurante.name }}
+              resenas={deOtros}
+              usuarioId={usuarioId}
+              esDueno={esDueno}
+              volverA={volverAqui}
+            />
           ) : null}
         </div>
       ) : (
@@ -172,6 +114,8 @@ export default function Resenas({ slug, restaurante, resenas, usuarioId, esDueno
             <p>
               De paso, cada reseña que escribes te acerca a una insignia:
               Catador a las tres, Explorador a las cinco, y así hasta Leyenda.
+              Y si escaneas el QR de la mesa antes de escribirla, queda marcada
+              como verificada: la prueba de que estuviste ahí.
             </p>
             <div className="resena-puerta-botones">
               <Link className="btn" href={`/registro?next=${encodeURIComponent(volverAqui)}`}>

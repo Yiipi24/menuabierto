@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { alternarSeguir, alternarAlerta } from "./actions";
-import { usarPuerta, useAccionPendiente, AvisoPuerta } from "./puerta";
+import { usePuerta, useAccionPendiente, AvisoPuerta } from "./puerta";
 import { conteo, plural } from "../../lib/social";
 import {
   IconoCampana,
@@ -33,7 +33,7 @@ export default function Seguir({
   const [conAlerta, setConAlerta] = useState(alerta);
   const [cuantos, setCuantos] = useState(seguidores);
   const [pendiente, empezar] = useTransition();
-  const { aviso, pedirCuenta, limpiar } = usarPuerta(volverA);
+  const { aviso, pedirCuenta, limpiar } = usePuerta(volverA);
 
   function seguirAhora(valor) {
     setSiguiendo(valor);

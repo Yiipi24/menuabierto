@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/push/repartir", "schedule": "*/5 * * * *" }
+  ]
+}

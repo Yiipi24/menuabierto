@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { publicar } from "./actions";
 import {
@@ -583,9 +584,9 @@ export default function Nuevo({ restaurantes, conexiones = [] }) {
         </div>
 
         <div className="post-barra">
-          <a className="btn-linea" href="/panel">
+          <Link className="btn-linea" href="/panel">
             Cancelar
-          </a>
+          </Link>
           <button className="btn btn-grande" type="submit" disabled={pending || !listo}>
             {cuando === "programar" ? <IconoReloj ancho={18} /> : <IconoAvion ancho={18} />}
             {pending

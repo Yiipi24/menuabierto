@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { repartirPushDeAventon } from "../../../lib/push";
 import { invalidarFicha } from "../../../lib/cache";
 import { supabaseSession } from "../../../lib/supabase";
 import { repartirProgramadas } from "../../_social/datos";
@@ -191,6 +192,8 @@ export async function publicar(_prevState, formData) {
   }
 
   revalidatePath("/panel/publicaciones");
+  // Los avisos de la historia los crea el trigger; el push sale de aventón.
+  repartirPushDeAventon();
   await revalidarFichas(supabase, validos);
 
   const cuantos = validos.length;

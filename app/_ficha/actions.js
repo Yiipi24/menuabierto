@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { invalidarFicha } from "../../lib/cache";
 import { supabaseSession } from "../../lib/supabase";
@@ -9,6 +10,8 @@ import { supabaseSession } from "../../lib/supabase";
 import { rutaFicha, uuidValido } from "../../lib/slug";
 import { conteoDe, insigniaAlLlegar } from "../../lib/insignias";
 import { MAX_DETALLE, leerRespuesta, motivoValido } from "../../lib/resenas";
+import { repartirPushDeAventon } from "../../lib/push";
+import { COOKIE_VISITANTE } from "../../lib/eventos";
 
 const MAX_TEXTO = 1500;
 
@@ -61,15 +64,19 @@ export async function guardarResena(_prevState, formData) {
 
   // Upsert y no insert: la tabla tiene un único por (restaurante, autor), así
   // que volver a enviar el formulario corrige la reseña en vez de fallar.
-  const { error } = await supabase.from("reviews").upsert(
-    {
-      restaurant_id: restaurantId,
-      author_id: user.id,
-      rating,
-      body: texto || null,
-    },
-    { onConflict: "restaurant_id,author_id" },
-  );
+  const { data: guardada, error } = await supabase
+    .from("reviews")
+    .upsert(
+      {
+        restaurant_id: restaurantId,
+        author_id: user.id,
+        rating,
+        body: texto || null,
+      },
+      { onConflict: "restaurant_id,author_id" },
+    )
+    .select("id")
+    .single();
 
   if (error) {
     const traducido = mensajeDeRls(error);
@@ -80,6 +87,11 @@ export async function guardarResena(_prevState, formData) {
       message: "No pudimos guardar tu reseña. Inténtalo otra vez.",
     };
   }
+
+  // Si esta persona escaneó el QR del local hace menos de una semana —desde
+  // este navegador o con esta cuenta— la reseña queda verificada. Sin pase se
+  // guarda igual: la marca distingue, no bloquea.
+  const verificada = await canjearPase(supabase, guardada?.id);
 
   // La reseña mueve la calificación y la lista que la ficha enseña, y las dos
   // salen de lo guardado: sin esto, quien acaba de escribirla recargaría y no
@@ -92,14 +104,40 @@ export async function guardarResena(_prevState, formData) {
   const despues = await resenasEscritas(supabase, user.id);
   const ganada = despues > antes ? insigniaAlLlegar(despues) : null;
 
+  // La insignia también es un aviso: queda en la bandeja y, si tiene push,
+  // llega al teléfono. La política solo deja insertar el propio.
+  if (ganada) {
+    await supabase
+      .from("notifications")
+      .insert({ profile_id: user.id, kind: "insignia", badge_slug: ganada.slug, restaurant_id: restaurantId });
+  }
+  // El aviso al dueño lo creó el trigger; el push sale de aventón.
+  repartirPushDeAventon();
+
+  const marca = verificada ? " Como escaneaste el QR del local, queda como reseña verificada." : "";
   if (ganada) {
     return {
       status: "ok",
-      message: `Listo, tu reseña ya está publicada. Y ganaste la insignia "${ganada.nombre}": ${ganada.lema.toLowerCase()}.`,
+      message: `Listo, tu reseña ya está publicada.${marca} Y ganaste la insignia "${ganada.nombre}": ${ganada.lema.toLowerCase()}.`,
     };
   }
 
-  return { status: "ok", message: "Listo, tu reseña ya está publicada." };
+  return { status: "ok", message: `Listo, tu reseña ya está publicada.${marca}` };
+}
+
+// El canje del pase de visita. La función de la base comprueba que la reseña
+// es de quien llama y que el pase es suyo, del mismo local, vigente y sin
+// usar; aquí solo se le pasa la cookie. Un fallo no puede tumbar la reseña.
+async function canjearPase(supabase, reviewId) {
+  if (!reviewId) return false;
+  try {
+    const visitante = (await cookies()).get(COOKIE_VISITANTE)?.value ?? null;
+    const { data } = await supabase.rpc("canjear_pase", { p_review: reviewId, p_visitante: visitante });
+    return data === true;
+  } catch (error) {
+    console.error("canjear pase", error?.message);
+    return false;
+  }
 }
 
 // Cuántas reseñas lleva escritas quien está firmado. La RLS de profiles solo
@@ -174,6 +212,7 @@ export async function responderResena(_prevState, formData) {
 
   invalidarFicha(slug);
   revalidatePath(`/panel`);
+  if (texto) repartirPushDeAventon();
   return { status: "ok", message: texto ? "Respuesta publicada." : "Respuesta retirada." };
 }
 

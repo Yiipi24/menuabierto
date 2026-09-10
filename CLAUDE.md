@@ -60,17 +60,26 @@ app cannot reach the same project.
 ### Variables that only the server has
 
 `SUPABASE_SERVICE_ROLE_KEY` is read by `supabaseServicio()` in `lib/supabase.js`
-and used only where no user is acting: approving a claim on a seeded listing,
-and the `sembrar-denue`, `reclamos` and `reportes` scripts. It bypasses RLS, so
-it never goes to the middleware or the browser. `ANTHROPIC_API_KEY` is read only
-by `lib/vision.js`, which turns a photo of a menu into sections and dishes for
-the owner to review; without it the import page says so instead of failing.
+and used only where no user is acting: the Mercado Pago webhook and the plan
+sync. It bypasses RLS, so it never goes to the middleware or the browser.
+`MP_ACCESS_TOKEN` and `MP_WEBHOOK_SECRET` are the payment gateway's.
+`ANTHROPIC_API_KEY` is read only by `lib/vision.js`, which turns a photo of a
+menu into sections and dishes for the owner to review. `VAPID_PRIVATE_KEY`
+(with `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_SUBJECT`) signs
+web push sends in `lib/push.js`; `CRON_SECRET` guards `/api/push/repartir`. The plan
+of a restaurant can only change through that key: a trigger rejects it from
+`anon` and `authenticated`, so "just update the column" from the panel fails
+by design.
 
-## Tests
+## Tests and CI
 
-`npm test` runs the unit tests (node:test, no network). They live in
-`tests/unitarias/`; `_resolver.mjs` adds the extension to the bare relative
-imports that Next resolves on its own.
+`npm test` runs the unit tests (node:test, no network), `npm run lint` runs
+eslint, `npm run test:e2e` runs Playwright against a built site and needs the
+Supabase variables. `.github/workflows/ci.yml` runs the first two plus the
+build on every push; end-to-end runs only when the repo has `SUPABASE_URL` and
+`SUPABASE_PUBLISHABLE_KEY` as secrets. Production errors go through
+`lib/errores.js`; set `ERRORES_WEBHOOK_URL` to a Slack or Discord webhook to
+have them delivered somewhere someone reads.
 
 ## A panel route answers 200 to an anonymous request
 

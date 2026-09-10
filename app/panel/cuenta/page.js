@@ -10,6 +10,8 @@ import { conteoDe, insigniaActual } from "../../../lib/insignias";
 import { fotoDeCuenta } from "../../../lib/avatar";
 import { IconoInsignia } from "../../insignias-iconos";
 import { redesDeLaCuenta } from "./actions";
+import AvisosDeCuenta from "./avisos";
+import { prefsDe } from "../../../lib/avisos";
 
 export const metadata = { title: "Tu cuenta — Menú Abierto" };
 
@@ -22,7 +24,7 @@ export default async function Cuenta() {
   // contar de ella además del correo, y la puerta a la página de insignias.
   const { data: perfil } = await supabase
     .from("profiles")
-    .select("reviews_count")
+    .select("reviews_count, push_prefs")
     .eq("id", auth.user.id)
     .maybeSingle();
 
@@ -61,6 +63,19 @@ export default async function Cuenta() {
           <span className="dato-etiqueta">Reseñas escritas</span>
           <strong>{resenas}</strong>
         </div>
+
+        <h2 className="sub" id="avisos">Tus avisos</h2>
+        <p className="panel-lead">
+          Historias de los que sigues, reseñas de tu restaurante, respuestas a las
+          tuyas e insignias: llegan a <Link href="/avisos">tu bandeja</Link> y, si los
+          enciendes, a tu teléfono. <Link href="/instalar">Instala la aplicación</Link>{" "}
+          para tenerlos también en iPhone.
+        </p>
+        <AvisosDeCuenta
+          prefs={prefsDe(perfil?.push_prefs)}
+          llavePublica={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""}
+          habilitado={Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY)}
+        />
 
         <h2 className="sub">Tus insignias</h2>
         <p className="panel-lead">

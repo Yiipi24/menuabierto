@@ -447,6 +447,25 @@ section { scroll-margin-top: 84px; }
 
 .fila-plan-nombre { flex: 1; min-width: 0; font-weight: 600; }
 
+.fila-plan-detalle {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+/* Contratar, cambiar y cancelar: una fila propia debajo, para que en un
+   telefono no se peleen con el nombre por el mismo renglon. */
+.fila-plan-acciones {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
 .plan-note {
   margin-top: 24px;
   font-size: 14.5px;
@@ -2719,6 +2738,39 @@ section { scroll-margin-top: 84px; }
 
 .resena-sin-texto { font-style: italic; color: var(--ink-faint); }
 
+/* "Estuve ahí": la marca de la reseña escrita tras escanear el QR de la mesa. */
+.resena-verificada {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.resena.es-verificada { border-color: var(--accent-soft); }
+
+.resenas-verificadas-controles {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.resenas-verificadas-resumen { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+
+.resenas-verificadas-botones { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.resenas-filtro { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+
 /* La respuesta del dueño, dentro de la reseña: sangrada y con su línea, como
    una réplica y no como otra reseña. */
 .resena-respuesta {
@@ -2772,6 +2824,86 @@ section { scroll-margin-top: 84px; }
 .resena-reportar-form legend { font-weight: 650; margin-bottom: 8px; }
 
 .resena-lista-panel { grid-template-columns: 1fr; max-width: 720px; }
+
+.instalar-pasos { padding-left: 22px; color: var(--ink-soft); line-height: 1.7; }
+
+.avisos-cuenta { margin-bottom: 8px; }
+
+.avisos-cuenta-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.avisos-cuenta-fila .ayuda { margin: 2px 0 0; }
+
+.avisos-cuenta-tipos { list-style: none; margin: 0; padding: 0; }
+
+/* ---------- inteligencia de precios ---------- */
+
+.portada-precios { margin: 10px 0 0; font-size: 14.5px; }
+
+.portada-precios a { color: var(--ink-soft); }
+
+.form-precios {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 8px 0 26px;
+}
+
+.form-precios .campo { margin-bottom: 0; }
+
+.form-precios-acciones { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+.precios-zona {
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin-bottom: 22px;
+}
+
+.precios-zona h2 { font-size: 19px; font-weight: 600; margin-bottom: 6px; }
+
+.precios-zona p { margin: 0; color: var(--ink-soft); }
+
+.precios-lista { list-style: none; margin: 0; padding: 0; counter-reset: precio; }
+
+.precios-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.precios-fila-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.precios-fila-platillo { font-weight: 650; font-size: 16px; color: var(--ink); }
+
+.precios-fila-donde { font-size: 14px; color: var(--ink-soft); }
+
+.precios-fila-donde a { color: inherit; }
+
+.precios-fila-precio { font-size: 18px; white-space: nowrap; }
+
+.precios-nota { margin-top: 26px; }
+
+.bloque-precio.es-aviso { border-color: #d97706; }
+
+.bloque-precio-lista { margin: 8px 0 0; padding-left: 18px; color: var(--ink-soft); font-size: 14.5px; }
+
+.bloque-precio-lista li.es-aviso { color: #b45309; font-weight: 600; }
+
+.bloque-precio-aviso { margin: 10px 0 0; color: #b45309; font-size: 14.5px; }
+
+.bloque-precio-nota { margin-top: 8px; font-size: 13px; }
 
 .aviso-media-estrella { display: grid; place-items: center; color: #f59e0b; font-size: 20px; }
 

@@ -13,17 +13,129 @@ npm install
 npm run dev
 ```
 
-## Pruebas
+## Pruebas, CI y monitoreo
 
 ```bash
-npm test   # unitarias, con node:test; no necesitan red ni llaves
+npm test          # unitarias, con node:test; no necesitan red ni llaves
+npm run lint      # eslint con las reglas de Next y de React
+npm run test:e2e  # Playwright contra el sitio construido (npm run build antes)
 ```
 
-Cubren la lógica que decide dinero y direcciones: `lib/precios`, el CSV del
-DENUE, los reclamos, la carta leída por visión, el pedido por WhatsApp y las
-reseñas. Viven en `tests/unitarias/` y corren con el `node --test` de Node 22,
-sin framework: el único truco es `_resolver.mjs`, que le agrega la extensión a
-los `import "./precios"` que Next resuelve solo.
+Las unitarias cubren la lógica que decide dinero y direcciones: `lib/precios`,
+`lib/slug`, `lib/planes`, `lib/cobro`, `lib/cupones`, `lib/whatsapp`, los
+catálogos y las métricas. Viven en `tests/unitarias/` y corren con el `node
+--test` de Node 22, sin framework: el único truco es `_resolver.mjs`, que le
+agrega la extensión a los `import "./precios"` que Next resuelve solo.
+
+Las de extremo a extremo (`tests/e2e/`) visitan lo que no puede romperse:
+portada y búsqueda, una ficha publicada tomada del sitemap y su carta, el
+panel mandando a `/entrar`, las páginas de `/comida`, y que el webhook de cobro
+rechace lo que no viene firmado. Necesitan `SUPABASE_URL` y
+`SUPABASE_PUBLISHABLE_KEY` porque las fichas son reales; con `BASE_URL` apuntan
+a un despliegue en vez de levantar uno.
+
+El workflow `ci.yml` corre lint, unitarias y build en cada push y pull request.
+Las de extremo a extremo corren después, solo si el repo tiene esas dos llaves
+como secretos; si no, el job avisa y se salta en vez de fallar.
+
+Los errores de producción salen por `instrumentation.js` (`onRequestError`,
+todo lo que revienta en el servidor) y por `app/error.js` (lo que revienta en
+el navegador, vía `POST /api/errores`). Los dos pasan por `lib/errores.js`, que
+los deja en el log de Vercel y, si existe `ERRORES_WEBHOOK_URL`, los manda a
+un webhook de Slack o Discord, que es el lugar donde alguien los lee. Del lado
+del comensal, `@vercel/analytics` en el layout cuenta páginas y orígenes sin
+cookies; hay que encender Web Analytics en el proyecto de Vercel para que
+empiece a guardar.
+
+## Inteligencia de precios
+
+Guardamos precios estructurados por platillo, en centavos. Nadie más tiene ese
+dato —Google Maps guarda el menú como PDF— y hasta ahora no se usaba para
+nada. La migración `inteligencia_de_precios` lo convierte en tres cosas:
+
+- **Historial.** `menu_item_price_history` guarda cada cambio de precio con
+  su fecha (trigger `menu_items_registrar_precio`); lo que ya existía entró
+  como primer punto. El dueño ve el suyo.
+- **Para el comensal**, `/precios`: quién vende qué, a cuánto y a qué
+  distancia (`platillos_cerca`, un platillo por restaurante, con tope de
+  precio opcional y "cerca de mí"), y cuánto cuesta comer en una zona
+  (`precios_de_zona`: la mediana de las medianas por restaurante, con su
+  rango típico). Aquí sí salen nombres: son los precios que cada carta ya
+  publica.
+- **Para el dueño, dentro de Premium**, la tarjeta "Tu posición de precio"
+  del tablero (`posicion_de_precio`): la mediana de su carta contra la de su
+  colonia (o su ciudad, si la colonia no llega) y contra la de su cocina en la
+  ciudad, y un aviso cuando queda a más de un cuarto por encima o por debajo
+  (`UMBRAL_AVISO` en `lib/inteligencia-precios.js`). Solo cifras agregadas:
+  nunca el precio de un competidor con nombre.
+
+Ninguna agregación sale con menos de tres restaurantes detrás
+(`minimo_para_agregar()`): con menos, "la mediana de la colonia" es el precio
+de alguien identificable. No hay rankings de restaurantes más caros o más
+baratos por nombre, a propósito. `precios` es un segmento reservado.
+
+## Reseñas verificadas por escaneo del QR
+
+Contra Google no se gana por volumen de reseñas sino por confianza, y el QR de
+la mesa es la única prueba de visita que tenemos: nadie la copia sin pegar un
+QR en cada mesa. Al escanear, `/q/<codigo>` —ahora una ruta y no una página,
+porque tiene que poder poner la cookie del visitante— registra un **pase de
+visita** (`visit_passes`) ligado a esa cookie y, si había sesión, a la
+cuenta. Dura siete días (`dias_de_pase()`); volver a escanear renueva el
+pase libre en vez de acumular otro.
+
+Al guardar una reseña, `canjear_pase()` busca un pase vigente, sin usar y del
+mismo local que sea de esa cookie o de esa cuenta; si lo hay, la reseña queda
+con `verified_at` y el pase con `used_review_id`: un pase, una reseña. Sin
+pase la reseña se guarda igual, solo sin marca. Editarla no se la quita, y
+borrarla libera el pase mientras no haya caducado. Un trigger impide que el
+autor ponga `verified_at` desde su propia política de update: la marca solo la
+escribe la función.
+
+En la ficha, las verificadas llevan la marca "✓ Verificada" junto al nombre, y
+si hay alguna aparece su promedio aparte y dos controles: "Solo verificadas" y
+"Verificadas primero" (`lib/pases.js`, con pruebas). Las no verificadas se
+muestran siempre: se distinguen, no se bloquean. Los pases viejos se barren
+con `limpiar_pases()`.
+
+## Aplicación instalable y avisos por push
+
+Historias de 24 horas, seguir y una bandeja de avisos son mecánicas de
+aplicación, y ahora el sitio se instala como una: `app/manifest.js` genera el
+manifest, `public/iconos/` trae los PNG (se regeneran desde `app/icon.svg` con
+`node scripts/generar-iconos.mjs`), el layout lleva las etiquetas que iOS
+exige, y `public/sw.js` es el service worker. Ese worker hace dos cosas y
+nada más: enseña los avisos que llegan por push y guarda `/sin-conexion` para
+cuando no hay red. No cachea fichas ni cartas a propósito: un precio viejo
+servido desde caché es peor que un "sin conexión" honesto.
+
+`/instalar` es la pantalla de instalación: en Android dispara el evento del
+navegador con un botón; en iPhone explica los tres toques de Safari, porque
+ahí no hay evento que disparar.
+
+Los avisos por push reusan la bandeja: cada fila de `notifications` que aún no
+salió (`pushed_at` nulo) se manda a las suscripciones de esa persona
+(`push_subscriptions`, una por navegador) si su `profiles.push_prefs` no tiene
+ese tipo apagado. Lo hace `repartirPush()` en `lib/push.js` con `web-push` y
+llaves VAPID; se llama de aventón desde las acciones que crean avisos
+(reseña nueva, respuesta del dueño, historia publicada, reparto de
+programadas) y, como red de seguridad, desde `/api/push/repartir` cada cinco
+minutos por el cron de `vercel.json`, protegido con `CRON_SECRET`. Un envío
+que responde 404 o 410 borra esa suscripción.
+
+Tipos: `historia`, `resena`, `respuesta` e `insignia` (nuevo: ganar una al
+reseñar deja aviso). Las preferencias por tipo y el interruptor del
+dispositivo viven en `/panel/cuenta#avisos`. Apagar el interruptor borra la
+suscripción: no guardamos a dónde mandar nada, que es lo que "desactivar"
+tiene que significar.
+
+Variables: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+(`mailto:`), `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (la misma pública, para el
+navegador) y `CRON_SECRET`. Se generan una vez con `npx web-push
+generate-vapid-keys`. Sin ellas la cuenta lo dice y no ofrece encender nada.
+
+iOS solo entrega push a una aplicación instalada y con iOS 16.4 o más nuevo;
+la pantalla de cuenta lo explica cuando el navegador no lo admite.
 
 ## Respuesta del dueño y reportes de reseñas
 
@@ -122,6 +234,49 @@ La traducción del CSV (nombres en mayúsculas, la cola "SA DE CV", la
 vialidad abreviada, la cocina a partir del nombre y de la clase SCIAN) vive en
 `lib/denue.js` y tiene pruebas. El mapa del INEGI y su API no son alcanzables
 desde el entorno de Claude, así que el script parte del archivo descargado.
+
+## Cobro de los planes
+
+Plus y Premium se cobran con **Mercado Pago**, por suscripción mensual y por
+restaurante, no por cuenta. Se eligió por cobertura en México —tarjeta, OXXO y
+SPEI—; Stripe queda como alternativa y por eso `subscriptions.provider` existe
+como columna.
+
+El flujo:
+
+1. En `/panel/planes` el dueño toca "Contratar Plus". La acción
+   (`app/panel/planes/actions.js`) crea la suscripción en Mercado Pago
+   (`/preapproval`) con `external_reference = <restaurante>:<plan>`, guarda la
+   fila en `subscriptions` como pendiente y lo manda al `init_point` a pagar.
+2. Al pagar vuelve a `/panel/planes/volver?preapproval_id=…`, que sincroniza en
+   el momento para que vea su plan sin esperar al webhook.
+3. Mercado Pago avisa por webhook a `POST /api/cobro/webhook` cada vez que la
+   suscripción cambia (`subscription_preapproval`,
+   `subscription_authorized_payment`). Se verifica la firma `x-signature`
+   (HMAC-SHA256 sobre `id:…;request-id:…;ts:…;`, con tolerancia de cinco
+   minutos), y el aviso solo sirve de timbre: el estado se le pide a la API y
+   se escribe con `lib/suscripciones.js`. Procesarlo dos veces deja la base
+   igual que una.
+4. La regla del plan está en `estadoDesdeSuscripcion` (`lib/cobro.js`) y tiene
+   pruebas: `authorized` sube el plan hasta el siguiente cobro más siete días
+   de gracia; `paused` (cobro rechazado) conserva la vigencia que ya había y
+   la base degrada sola al vencer; `cancelled` respeta lo pagado y nada más.
+   Nunca se borra nada: los menús de más quedan guardados y ocultos.
+
+El plan solo lo escribe la llave de servicio. Un trigger
+(`plan_solo_desde_el_cobro`) rechaza cualquier cambio de `plan` o
+`premium_until` que venga de `anon` o `authenticated`: antes bastaba un PATCH
+con la llave publicable para ponerse Premium.
+
+Variables de entorno: `MP_ACCESS_TOKEN` (de la aplicación de Mercado Pago; el
+de prueba sirve para el sandbox), `MP_WEBHOOK_SECRET` (el secreto que da el
+panel de webhooks al registrar la URL), `SUPABASE_SERVICE_ROLE_KEY` (solo en el
+servidor), y opcionalmente `PRECIO_PLUS_MXN` y `PRECIO_PREMIUM_MXN` para mover
+los precios sin desplegar (por defecto 199 y 399). Sin `MP_ACCESS_TOKEN` la
+página de planes enseña los botones deshabilitados y no se puede contratar.
+
+Queda fuera, a propósito: la factura fiscal (CFDI), que Mercado Pago no emite
+por nosotros, y un panel de cobranza propio. La página lo dice.
 
 ## Lista de espera
 

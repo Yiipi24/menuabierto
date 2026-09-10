@@ -48,11 +48,7 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   primero con `apply_migration`, leer la versión que quedó registrada en
   `supabase_migrations.schema_migrations` y nombrar el archivo con esa. Hoy
   cada archivo del directorio coincide con una versión registrada, y no sobra
-  ninguna: son 70 archivos. La base registra 74: las cuatro que faltan aquí
-  (`suscripciones_y_candado_del_plan`, `push_y_preferencias_de_avisos`,
-  `resenas_verificadas_por_qr` e `inteligencia_de_precios`) están aplicadas y
-  sus archivos viven en la rama `claude/cobro-planes-ops-calidad-iobad1`, con
-  los pasos del plan que todavía no se traen a main.
+  ninguna: son 74 y 74.
 - Toda tabla nueva nace con RLS activo y sus políticas en la misma migración.
   Una tabla sin políticas queda invisible, que es el fallo seguro correcto.
 - Después de cambiar el esquema, revisa los advisors de seguridad y
@@ -68,6 +64,16 @@ proyecto de Supabase (`bpvtydaoiscvxpidwmif`). Cada archivo ya fue aplicado.
   llama el script con la llave de servicio, o la accion de reclamo cuando el
   correo demuestra el dominio del sitio. La politica de insert de
   `restaurant_claims` exige que la ficha no tenga dueno.
+- **El plan de una ficha lo escribe solo la llave de servicio.** El trigger
+  `restaurants_plan_solo_desde_el_cobro` rechaza cualquier cambio de `plan` o
+  `premium_until` que venga de `anon` o `authenticated`, y una ficha nueva
+  nace en `basico` siempre. La politica de update del dueno cubre todas las
+  columnas y un privilegio por columna no la acota (el GRANT de tabla lo
+  tapa), asi que el candado es el trigger. Quien mueve el plan es
+  `lib/suscripciones.js` con lo que Mercado Pago confirma; la fila de la
+  pasarela vive en `subscriptions`, una por restaurante, que el dueno puede
+  leer y nadie mas que el servicio escribe.
+
 - **La direccion de una ficha es su nombre pegado, y la reparte la base.**
   `slug` guarda la ruta completa (`jcsmokehouse`, o `jcsmokehouse/centro`
   cuando el nombre ya estaba tomado), no un tramo suelto: lo unico que tiene

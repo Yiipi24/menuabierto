@@ -167,6 +167,9 @@ export async function repartirProgramadas(cliente = null) {
   try {
     const supabase = cliente ?? (await supabaseSession());
     await supabase.rpc("repartir_avisos_programados");
+    // Lo que acaba de repartirse a la bandeja sale también por push.
+    const { repartirPushDeAventon } = await import("../../lib/push");
+    repartirPushDeAventon();
   } catch {
     // Un fallo aquí retrasa un aviso hasta la siguiente visita, nada más.
   }

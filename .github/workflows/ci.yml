@@ -1,0 +1,74 @@
+name: CI
+
+# Lo que tiene que estar en verde antes de que algo llegue a main: el lint, las
+# pruebas unitarias y el build. Las de extremo a extremo corren aparte y solo
+# si el repo tiene las llaves de Supabase como secretos, porque visitan fichas
+# reales.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Lint, pruebas y build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      # El build no necesita las llaves: las páginas que las usan son dinámicas
+      # y las piden al servir, no al construir.
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  extremo-a-extremo:
+    name: Extremo a extremo
+    runs-on: ubuntu-latest
+    needs: verificar
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - id: llaves
+        run: |
+          if [ -n "${{ secrets.SUPABASE_URL }}" ] && [ -n "${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" ]; then
+            echo "hay=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Sin SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en los secretos del repo; las pruebas de extremo a extremo se saltan."
+          fi
+      - if: steps.llaves.outputs.hay == 'true'
+        run: npm ci
+      - if: steps.llaves.outputs.hay == 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.llaves.outputs.hay == 'true'
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - if: steps.llaves.outputs.hay == 'true'
+        run: npm run test:e2e
+        env:
+          CI: "true"
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - if: always() && steps.llaves.outputs.hay == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

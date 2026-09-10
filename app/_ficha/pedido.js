@@ -82,7 +82,7 @@ export function PedidoProvider({ pedidos, nombre, slug, url, children }) {
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
 
-export function usarPedido() {
+export function usePedido() {
   return useContext(Contexto);
 }
 
@@ -94,7 +94,7 @@ export function usarPedido() {
  * `menu-render` lo puede poner siempre sin preguntar nada.
  */
 export function BotonAgregar({ platillo }) {
-  const pedido = usarPedido();
+  const pedido = usePedido();
   // Un platillo agotado no se puede pedir. Enseñar su botón sería ofrecer algo
   // que la cocina ya dijo que no tiene.
   if (!pedido || platillo?.is_available === false) return null;
@@ -140,7 +140,7 @@ export function BotonAgregar({ platillo }) {
  * vacía flotando sobre la carta le quita a la carta el espacio que necesita.
  */
 export function BarraPedido() {
-  const pedido = usarPedido();
+  const pedido = usePedido();
   if (!pedido || !pedido.lista.length) return null;
 
   const { piezas, total, totalCompleto, moneda, entregas, entrega } = pedido;
@@ -210,7 +210,7 @@ export function BarraPedido() {
  * que alguien descubra el primer "+" por accidente.
  */
 export function AvisoPedido({ conPlatillos = true }) {
-  const pedido = usarPedido();
+  const pedido = usePedido();
   if (!pedido) return null;
 
   return (
