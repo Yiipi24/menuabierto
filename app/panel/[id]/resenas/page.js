@@ -5,6 +5,8 @@ import { rutaFicha } from "../../../../lib/slug";
 import CabeceraPanel from "../../cabecera";
 import RespuestaDueno from "../../../_ficha/respuesta-dueno";
 import Reportar from "../../../_ficha/reportar";
+import { MarcaVerificada } from "../../../_ficha/lista-resenas";
+import { resumenVerificadas } from "../../../../lib/pases";
 
 export const metadata = { title: "Reseñas — Menú Abierto" };
 
@@ -44,6 +46,7 @@ export default async function ResenasDelPanel({ params }) {
   const lista = resenas ?? [];
   const sinResponder = lista.filter((r) => !r.owner_reply).length;
   const reportadas = lista.filter((r) => r.report_pending).length;
+  const verificadas = resumenVerificadas(lista);
   const volverA = `/panel/${id}/resenas`;
 
   return (
@@ -54,7 +57,7 @@ export default async function ResenasDelPanel({ params }) {
         <h1>Reseñas de {restaurante.name}</h1>
         <p className="panel-lead">
           {lista.length
-            ? `${lista.length} ${lista.length === 1 ? "reseña" : "reseñas"}, promedio ${restaurante.rating_avg ?? "—"}.${sinResponder ? ` ${sinResponder} sin responder.` : " Todas respondidas."}${reportadas ? ` ${reportadas} en revisión.` : ""}`
+            ? `${lista.length} ${lista.length === 1 ? "reseña" : "reseñas"}, promedio ${restaurante.rating_avg ?? "—"}.${sinResponder ? ` ${sinResponder} sin responder.` : " Todas respondidas."}${reportadas ? ` ${reportadas} en revisión.` : ""}${verificadas.verificadas ? ` ${verificadas.verificadas} ${verificadas.verificadas === 1 ? "verificada" : "verificadas"} por escaneo del QR (promedio ${verificadas.promedioVerificadas}).` : ""}`
             : restaurante.status === "publicado"
               ? "Todavía no tienes reseñas. Llegan cuando un comensal registrado califica tu ficha."
               : "Tu ficha no está publicada, así que nadie puede reseñarla todavía."}
@@ -71,7 +74,10 @@ export default async function ResenasDelPanel({ params }) {
             {lista.map((r) => (
               <li className="resena" key={r.id}>
                 <div className="resena-cabeza">
-                  <span className="resena-autor">{r.author_name}</span>
+                  <span className="resena-autor">
+                    {r.author_name}
+                    {r.verified_at ? <MarcaVerificada /> : null}
+                  </span>
                   <span className="resena-fecha">{FECHA.format(new Date(r.created_at))}</span>
                 </div>
                 <Estrellas valor={r.rating} />

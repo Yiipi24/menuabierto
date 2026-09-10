@@ -268,6 +268,9 @@ export default async function Home({ searchParams }) {
           <Buscador q={q} lugar={lugar} conUbicacion={Boolean(conUbicacion)}>
             {vistas}
           </Buscador>
+          <p className="portada-precios">
+            <Link href="/precios">¿Buscas por precio? Quién vende qué, y a cuánto, cerca de ti</Link>
+          </p>
         </div>
       </header>
 

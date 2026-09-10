@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "eslint .",
     "test": "node --import ./tests/unitarias/_resolver.mjs --test 'tests/unitarias/**/*.test.mjs'",
+    "test:e2e": "playwright test",
     "sembrar-denue": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/sembrar-denue.mjs",
     "reclamos": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reclamos.mjs",
     "reportes": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reportes.mjs"
@@ -15,9 +17,16 @@
     "@anthropic-ai/sdk": "^0.124.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
+    "@vercel/analytics": "^2.0.1",
     "next": "^15.5.24",
     "qrcode-generator": "^2.0.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.4"
   }
 }

@@ -7,6 +7,7 @@ import { catalogoDePagos } from "../../../lib/pagos";
 import EditarForm from "./form";
 import Fotos from "./fotos";
 import CabeceraPanel from "../cabecera";
+import PosicionDePrecio from "./posicion-precio";
 import { cambiarEstado } from "../actions";
 import BorrarRestaurante from "../borrar";
 
@@ -194,6 +195,9 @@ export default async function Editar({ params }) {
               {cupones ? "Administrar los cupones" : "Crear un cupón"}
             </Link>
           </section>
+
+          {/* El foso: lo que la carta estructurada permite y ningún PDF. */}
+          <PosicionDePrecio supabase={supabase} restaurante={restaurante} />
 
           {/* Las reseñas son la segunda razón por la que se abre una ficha, y
               la respuesta del dueño es lo que las vuelve una conversación en

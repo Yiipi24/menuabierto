@@ -45,7 +45,7 @@ function recoger() {
  *  - `AvisoPuerta`: el cartelito, ya listo para pintar.
  *  - `alVolver(fn)`: se llama sola, una vez, con la nota que quedó apuntada.
  */
-export function usarPuerta(volverA) {
+export function usePuerta(volverA) {
   const [aviso, setAviso] = useState(null);
 
   const pedirCuenta = useCallback((nota) => {

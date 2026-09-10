@@ -279,8 +279,8 @@ export default function EditarForm({
             Lo que te distingue <em>(hasta {MAX_DESTACADOS} frases con icono)</em>
           </legend>
           <p className="ayuda">
-            Salen junto al nombre en tu ficha. Escríbelas cortas: "Ahumados al
-            estilo BBQ", "Cocción lenta 14+ horas".
+            Salen junto al nombre en tu ficha. Escríbelas cortas: &ldquo;Ahumados al
+            estilo BBQ&rdquo;, &ldquo;Cocción lenta 14+ horas&rdquo;.
           </p>
           <div className="destacados-edicion">
             {destacados.map((d, i) => (
