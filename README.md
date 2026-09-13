@@ -230,10 +230,23 @@ SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
   ninguna de las dos es una acción de un usuario. La política de reclamos solo
   deja abrir solicitudes sobre fichas sin dueño.
 
-La traducción del CSV (nombres en mayúsculas, la cola "SA DE CV", la
-vialidad abreviada, la cocina a partir del nombre y de la clase SCIAN) vive en
-`lib/denue.js` y tiene pruebas. El mapa del INEGI y su API no son alcanzables
-desde el entorno de Claude, así que el script parte del archivo descargado.
+- **No todo lo que el INEGI llama restaurante lo es.** En las clases 7225xx
+  caen la bodega y el estacionamiento de otro negocio, el club de nutrición que
+  vende batidos de multinivel y la cooperativa de una escuela. `lib/denue.js`
+  las deja fuera por el nombre y la corrida dice cuántas y por qué. El patrón
+  va anclado al principio: "La Bodega" es un bar, "Bodega de Tacos El Cuate" es
+  una bodega. Un nombre ambiguo pasa: es peor esconder un local real que dejar
+  una ficha de más.
+- **Las cadenas traen el número de sucursal delante.** "38224 STARBUCKS
+  REVOLUCION" se siembra como "Starbucks Revolucion". Hacen falta cuatro
+  dígitos o más y que queden al menos dos palabras, para no romper los nombres
+  que sí empiezan con un número ("100 Montaditos", "1000 Sabores").
+
+La traducción del CSV (nombres en mayúsculas, la cola "SA DE CV", el número de
+sucursal, la vialidad abreviada, la cocina a partir del nombre y de la clase
+SCIAN, y qué se descarta) vive en `lib/denue.js` y tiene pruebas. El mapa del
+INEGI y su API no son alcanzables desde el entorno de Claude, así que el script
+parte del archivo descargado.
 
 ## Cobro de los planes
 

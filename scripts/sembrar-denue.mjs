@@ -16,7 +16,7 @@
 
 import { readFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
-import { fichaDesdeFila, leerCsv } from "../lib/denue.js";
+import { descarteDeFila, fichaDesdeFila, leerCsv } from "../lib/denue.js";
 import { slugDisponible } from "../lib/slug.js";
 
 function argumentos(argv) {
@@ -59,12 +59,33 @@ async function main() {
   const filas = leerCsv(texto);
   console.log(`Filas en el CSV: ${filas.length}`);
 
-  let fichas = filas.map(fichaDesdeFila).filter(Boolean);
+  // El DENUE clasifica en 7225xx cosas donde no come nadie: la bodega de otro
+  // restaurante, el club de nutrición de multinivel, la cooperativa de una
+  // escuela. `lib/denue.js` las deja fuera; aquí se cuentan para que la
+  // corrida diga cuántas y por qué, en vez de descartarlas en silencio.
+  const descartes = new Map();
+  const fichasCrudas = [];
+  for (const fila of filas) {
+    const motivo = descarteDeFila(fila);
+    if (motivo) {
+      descartes.set(motivo, (descartes.get(motivo) ?? 0) + 1);
+      continue;
+    }
+    const ficha = fichaDesdeFila(fila);
+    if (ficha) fichasCrudas.push(ficha);
+  }
+
+  let fichas = fichasCrudas;
   if (opciones.municipio) {
     const buscado = normal(opciones.municipio);
     fichas = fichas.filter((f) => normal(f.city) === buscado);
   }
   console.log(`Restaurantes que pasan el filtro: ${fichas.length}`);
+  if (descartes.size) {
+    const detalle = [...descartes].map(([motivo, n]) => `${motivo}: ${n}`).join(" · ");
+    // Sin municipio el conteo es de todo el archivo, no solo del que se siembra.
+    console.log(`Descartadas por el nombre en todo el CSV — ${detalle}`);
+  }
 
   const supabase = opciones.simular
     ? null
