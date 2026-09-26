@@ -60,6 +60,9 @@ export default function EditarForm({
   // aparece en el formulario sin desplegar.
   catalogoServicios,
   catalogoPagos,
+  // El número del asistente de WhatsApp, si hay uno conectado: es a donde
+  // tienen que ir los pedidos de la carta para que los atienda.
+  numeroAsistente = null,
   children,
 }) {
   const [state, action, pending] = useActionState(guardarRestaurante, inicial);
@@ -470,9 +473,16 @@ export default function EditarForm({
                     descubrirlo cuando ya nadie le contesta es tarde. */}
                 {pedidos.telefono.trim() === ""
                   ? "Puede ser distinto al teléfono de arriba: casi siempre es el celular de quien contesta."
-                  : telefonoPedidos
-                    ? `Los pedidos van a llegar a ${telefonoLegible(telefonoPedidos)}.`
-                    : "Ese número no se entiende. Escríbelo con lada, así: 81 1234 5678."}
+                  : !telefonoPedidos
+                    ? "Ese número no se entiende. Escríbelo con lada, así: 81 1234 5678."
+                    : numeroAsistente && telefonoPedidos !== numeroAsistente
+                      ? /* La carta manda el pedido a este número; si no es el
+                           del asistente, el pedido se salta la pantalla de
+                           pedidos y llega como un mensaje suelto. */
+                        `Tu asistente de WhatsApp está en el ${telefonoLegible(numeroAsistente)}. Con este otro número, los pedidos de tu carta no pasan por él ni llegan a tu pantalla de pedidos.`
+                      : numeroAsistente
+                        ? `Los pedidos de tu carta van a tu asistente, en el ${telefonoLegible(telefonoPedidos)}.`
+                        : `Los pedidos van a llegar a ${telefonoLegible(telefonoPedidos)}.`}
               </p>
 
               <label className="campo">

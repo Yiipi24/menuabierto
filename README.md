@@ -23,7 +23,8 @@ npm run test:e2e  # Playwright contra el sitio construido (npm run build antes)
 
 Las unitarias cubren la lógica que decide dinero y direcciones: `lib/precios`,
 `lib/slug`, `lib/planes`, `lib/cobro`, `lib/cupones`, `lib/whatsapp`, los
-catálogos y las métricas. Viven en `tests/unitarias/` y corren con el `node
+catálogos y las métricas, y la conversación entera del asistente de WhatsApp
+(`lib/asistente`, `lib/pedidos`, `lib/whatsapp-cloud`). Viven en `tests/unitarias/` y corren con el `node
 --test` de Node 22, sin framework: el único truco es `_resolver.mjs`, que le
 agrega la extensión a los `import "./precios"` que Next resuelve solo.
 
@@ -401,13 +402,14 @@ para que el dueño no tenga que preguntarla. Una carta de archivo (un PDF
 o una foto) no se puede tocar platillo por platillo, así que ahí el botón abre
 el chat a secas.
 
-**Aquí no se cobra nada.** No hay carrito guardado, ni pedido en la base, ni
-pasarela: lo que sale es texto, y quien confirma, prepara y cobra sigue siendo
-el restaurante. El total viaja diciendo que es aproximado, porque los precios
-de la carta pueden ir hasta una hora por detrás de la cocina y un número que el
-local no confirmó no puede presentarse como la cuenta. El pedido a medias que
-nadie contestó no queda "pendiente" en ningún lado, porque no existe en ningún
-lado.
+**Aquí no se cobra nada.** No hay carrito guardado ni pasarela: lo que sale es
+texto, y quien confirma, prepara y cobra sigue siendo el restaurante. El total
+viaja diciendo que es aproximado, porque los precios de la carta pueden ir hasta
+una hora por detrás de la cocina y un número que el local no confirmó no puede
+presentarse como la cuenta. Sin asistente, el pedido a medias que nadie
+contestó no queda "pendiente" en ningún lado, porque no existe en ningún lado.
+Con el asistente conectado (abajo), ese mismo mensaje lo lee el asistente, y el
+pedido sí queda guardado y llega al panel.
 
 El tablero cuenta dos cosas distintas: `whatsapp_click`, tocar el botón, y
 `whatsapp_order`, mandar el pedido armado desde la carta. La distancia entre
@@ -420,6 +422,141 @@ el enlace y la carta arma el mensaje. Diez dígitos son mexicanos y se les pone
 el 52; el `1` viejo de los celulares se quita solo. Apagar el interruptor no
 borra el número: apagarlo un martes no debería costar volver a teclearlo el
 miércoles.
+
+## Asistente de WhatsApp
+
+"Pedir por WhatsApp" terminaba en el chat del restaurante, y ahí nadie contesta
+el horario a las once de la noche. Con el número del restaurante conectado a
+la **Cloud API de WhatsApp**, el sitio contesta solo, con lo que la ficha ya
+publica:
+
+- **"¿A qué hora abren?"** — la semana de `restaurant_hours` dicha corta
+  ("Lunes a sábado: 1 pm a 11 pm") y si está abierto ahora, en la hora del
+  local, con el mismo `restaurant_abierto` de la ficha.
+- **"¿Tienen página?"** — su sitio, su ficha en Menú Abierto y sus redes.
+- **"Me pasas el menú"** — el enlace de la carta digital (con fotos, precios y
+  el botón de pedir) y, si la carta es un PDF o una foto, el archivo tal cual.
+- **"¿Dónde están?", "¿aceptan tarjeta?", "¿tienen servicio a domicilio?",
+  "¿cuánto cuestan los de pastor?"** — dirección con mapa, formas de pago,
+  domicilio con la letra chica del dueño, y precios de la carta.
+- **"Quiero 2 de trompo y una coca"** — un pedido.
+
+Contesta con reglas y los datos de la ficha, **sin un modelo de lenguaje**: una
+hora de cierre inventada manda a alguien a un local cerrado, y un precio
+inventado es una promesa que el restaurante no hizo. Lo que no entiende lo
+dice y ofrece las opciones. Toda la conversación es una función pura
+(`responder` en `lib/asistente.js`) con pruebas de principio a fin.
+
+### El pedido
+
+Se arma de tres maneras, y las tres terminan en la misma confirmación:
+
+1. **En el chat**, con las listas de WhatsApp: sección, platillo, cantidad.
+   Las listas se paginan dentro del tope de diez filas de la API.
+2. **Escrito de corrido**: `interpretarPedido` en `lib/pedidos.js` entiende
+   cantidades ("2", "dos", "media docena", "x3"), plurales, acentos y una
+   letra de más o de menos, y compara contra la carta de ahora. Si un trozo
+   puede ser dos platillos ("2 de pastor": taco o gringa), pregunta cuál con
+   una lista; lo que no está en la carta lo dice, no lo inventa.
+3. **Desde la carta de la ficha**: el botón "Enviar por WhatsApp" manda el
+   mensaje ya escrito al número del restaurante, que ahora es el asistente.
+   El asistente lo lee renglón por renglón (`leerMensajeDeLaCarta`) y va
+   directo a la confirmación.
+
+Luego pregunta cómo lo quiere —las opciones de `opcionesDeEntrega`, las
+mismas de la carta—, la dirección si es a domicilio (escrita o con la
+ubicación del clip), y enseña el pedido con su total aproximado y la letra
+chica del dueño. Lo que el cliente escribe en ese paso es la nota ("sin
+cebolla"). Al confirmar, el pedido se guarda en `orders` con los precios del
+momento y un código corto sin letras que se confundan ("K7M2").
+
+No se toma pedido si la ficha tiene los pedidos apagados, si el local está
+cerrado según su horario, ni de una carta que no se sirve a esa hora. Un
+restaurante con la carta solo en PDF recibe el pedido como texto libre.
+
+### Del lado del dueño
+
+- **`/panel/<id>/pedidos`**: los pedidos abiertos del más viejo al más nuevo,
+  con el cliente (y un enlace a su chat), la entrega, el mapa, los platillos y
+  la nota. Se refresca sola cada veinte segundos y pone la cuenta de nuevos en
+  la pestaña: está pensada para quedarse abierta en el mostrador.
+- **Aceptar, "Ya está listo", Entregado, Cancelar.** Cada cambio pasa por
+  `cambiar_estado_pedido()` —solo el dueño, solo hacia adelante— y le escribe
+  al cliente en el mismo chat ("Aceptamos tu pedido K7M2…", "ya va en
+  camino"). Entregado no escribe nada. Si pasaron más de 24 horas desde el
+  último mensaje del cliente, WhatsApp ya no deja escribirle sin plantilla, y
+  la pantalla lo dice.
+- **El aviso**: un pedido nuevo deja una fila `pedido` en la bandeja (trigger
+  `avisar_de_pedido`) y sale por push en ese momento, urgente y con una hora
+  de vida. Se apaga en `/panel/cuenta#avisos` como los demás.
+
+### Cómo funciona por dentro
+
+- `POST /api/whatsapp` comprueba la firma `X-Hub-Signature-256` sobre el
+  cuerpo tal cual llegó y contesta 200 de inmediato; el mensaje se atiende
+  después, con `after()` (`app/api/whatsapp/atender.js`). `GET` es la
+  verificación del webhook con `WHATSAPP_VERIFY_TOKEN`.
+- **Qué número es de qué ficha** lo dice `whatsapp_lines`, que solo escribe la
+  llave de servicio: quien pudiera apuntar un número a su ficha podría
+  quedarse con los mensajes de otro.
+- **Meta reintenta**, así que cada mensaje se registra en `whatsapp_inbound`
+  (`whatsapp_mensaje_nuevo()`) y el repetido no se atiende: un "Confirmar"
+  atendido dos veces serían dos pedidos. Las filas se barren solas a los siete
+  días.
+- **El estado del chat** (paso, carrito, entrega) vive en `whatsapp_chats` y
+  caduca a las tres horas. Los mensajes de un aviso se atienden en orden y de
+  uno en uno.
+- **Si alguien del restaurante contesta a mano** desde la app de WhatsApp
+  Business (coexistencia), Meta manda un eco (`smb_message_echoes`) y el
+  asistente se calla dos horas en ese chat. "Hablar con alguien" hace lo mismo,
+  pero solo si el restaurante contesta en la app (`answers_in_app`); si no,
+  da el teléfono de la ficha en vez de dejar al cliente hablándole a la pared.
+- **El cliente se identifica por su teléfono y por su BSUID**, el id que
+  WhatsApp da desde 2026 y que es lo único que llega de quien esconde su
+  número. Se contesta al teléfono cuando se tiene.
+- **Un mensaje por mensaje.** La respuesta y sus botones van juntos: desde el 1
+  de octubre de 2026 Meta cobra las respuestas pasadas las primeras mil del mes
+  por número, a la tarifa de utilidad del país.
+
+### Conectar un restaurante
+
+Una vez, para el sitio:
+
+1. Una app de Meta con el producto WhatsApp, en el portafolio de negocio de
+   Menú Abierto, y un usuario del sistema con token permanente y los permisos
+   `whatsapp_business_messaging` y `whatsapp_business_management`.
+2. El webhook de la app apuntando a `https://menuabierto.com/api/whatsapp`, con
+   el token de verificación, suscrito a `messages` (y a `smb_message_echoes`
+   si hay restaurantes en coexistencia).
+3. Las variables en Vercel: `WHATSAPP_TOKEN` (el del usuario del sistema),
+   `WHATSAPP_APP_SECRET` (el secreto de la app, para la firma),
+   `WHATSAPP_VERIFY_TOKEN` (cualquier cadena larga, la misma del paso 2) y,
+   opcional, `WHATSAPP_GRAPH_VERSION` (por defecto `v24.0`).
+4. Un método de pago en la cuenta de WhatsApp: sin él, desde octubre de 2026
+   Meta deja de entregar las respuestas.
+
+Por restaurante: su número entra a la Cloud API —con el registro insertado
+(Embedded Signup) y coexistencia, sigue usando su app de WhatsApp Business en
+el mismo número— y se conecta con
+
+```bash
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… WHATSAPP_TOKEN=… \
+  npm run whatsapp -- conectar <slug> <phone_number_id> <número> --waba <id> [--app]
+# npm run whatsapp            lista los conectados
+# npm run whatsapp -- pausar|reanudar|desconectar <slug>
+```
+
+El script comprueba el id contra Meta, suscribe la app a esa cuenta y pone el
+número como el de pedidos de la ficha, para que la carta mande ahí. El dueño
+prende "Recibir pedidos por WhatsApp" en su panel, como siempre; sin eso el
+asistente contesta preguntas pero no toma pedidos.
+
+**Queda fuera, a propósito:** cobrar por el chat, escribirle al cliente fuera
+de las 24 horas (necesita plantillas aprobadas), avisarle al dueño por
+WhatsApp en vez de por push (también plantilla, y se paga), un solo número
+para varias sucursales, y entender audios o fotos: a esos contesta que por
+ahora solo lee texto. Los pedidos guardan teléfono y dirección del cliente:
+el aviso de privacidad del restaurante tiene que decirlo.
 
 ## Datos estructurados y enlaces compartidos
 

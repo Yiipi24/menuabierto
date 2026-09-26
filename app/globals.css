@@ -10070,3 +10070,113 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
 .barra-movil .btn,
 .barra-movil .btn-linea { white-space: nowrap; font-size: 14.5px; }
+
+/* ---------- pedidos del asistente de WhatsApp ---------- */
+
+/* La pantalla se deja abierta en el mostrador: cada pedido es una tarjeta que
+   se lee de lejos, con el código grande porque es lo que se grita a la cocina
+   y lo que dice el cliente al llegar. */
+.pedidos-aviso {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid #d97706;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 22px;
+}
+
+.pedidos-aviso p { margin: 6px 0 0; color: var(--ink-soft); font-size: 15px; }
+
+.pedidos-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.pedido-tarjeta {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Lo que nadie ha visto todavía salta a la vista; lo cerrado se apaga. */
+.pedido-tarjeta.es-nuevo { border: 2px solid var(--accent); box-shadow: 0 6px 20px rgba(217, 74, 38, 0.12); }
+
+.pedido-tarjeta.es-entregado,
+.pedido-tarjeta.es-cancelado { opacity: 0.62; }
+
+.pedido-cabeza { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.pedido-codigo {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pedido-estado.es-nuevo { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pedido-estado.es-aceptado { background: #fef3c7; border-color: #fde68a; color: #92400e; }
+.pedido-estado.es-listo { background: #dcfce7; border-color: #bbf7d0; color: #166534; }
+.pedido-estado.es-cancelado { text-decoration: line-through; }
+
+.pedido-hace { margin-left: auto; font-size: 13.5px; color: var(--ink-faint); }
+
+.pedido-cliente { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.pedido-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+
+.pedido-entrega { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+
+.pedido-entrega strong { color: var(--ink); }
+
+.pedido-platillos {
+  margin: 0;
+  padding: 10px 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.pedido-libre { margin: 0; font-size: 15.5px; font-style: italic; }
+
+.pedido-total { margin: 0; font-size: 15px; }
+
+.pedido-total span { color: var(--ink-faint); font-size: 13.5px; }
+
+.pedido-nota {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fef9c3;
+  font-size: 14.5px;
+}
+
+.pedido-acciones { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+
+.pedido-tarjeta .form-msg { margin: 0; font-size: 14px; }
+
+/* Hecho, pero al cliente no le llegó el aviso: ámbar, no rojo. */
+.form-msg.aviso { color: #b45309; font-weight: 600; }
+
+.aviso-media-pedido { display: grid; place-items: center; background: #eafaf0; color: #25d366; }
+
+@media (max-width: 520px) {
+  .pedidos-lista { grid-template-columns: 1fr; }
+  .pedido-tarjeta { padding: 16px; }
+}

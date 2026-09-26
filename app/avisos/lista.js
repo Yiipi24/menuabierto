@@ -5,7 +5,9 @@ import { useEffect, useState, useTransition } from "react";
 import { marcarAvisosLeidos } from "../_social/actions";
 import { hace } from "../../lib/social";
 import { textoDeAviso } from "../../lib/resenas";
+import { textoDeAvisoDePedido } from "../../lib/avisos";
 import { IconoCampana, IconoDestello } from "../_social/iconos";
+import { IconoRed } from "../redes-iconos";
 
 // La bandeja. Los avisos se marcan como leídos al abrirla —estar aquí es
 // haberlos visto— pero se siguen enseñando: una bandeja que se vacía sola al
@@ -43,6 +45,29 @@ export default function ListaAvisos({ avisos }) {
   return (
     <ul className="avisos">
       {avisos.map((a) => {
+        // Un pedido que llegó por el asistente de WhatsApp: lleva a la
+        // pantalla donde se acepta.
+        if (a.kind === "pedido") {
+          const pedido = textoDeAvisoDePedido(a);
+          return (
+            <li key={a.id} className={a.read_at ? "aviso" : "aviso sin-leer"}>
+              <Link href={pedido.href}>
+                <span className="aviso-media aviso-media-pedido" aria-hidden="true">
+                  <IconoRed slug="whatsapp" ancho={22} />
+                </span>
+                <span className="aviso-texto">
+                  <strong>{pedido.titulo}.</strong> <em>{pedido.detalle}</em>
+                </span>
+                <span className="aviso-fecha">{hace(a.created_at)}</span>
+                {!a.read_at ? (
+                  <span className="aviso-punto" aria-label="Sin leer">
+                    <IconoCampana ancho={14} relleno />
+                  </span>
+                ) : null}
+              </Link>
+            </li>
+          );
+        }
         // Una reseña nueva para el dueño, o la respuesta del dueño para quien
         // escribió: dicen quién, cuántas estrellas y un pedazo del texto.
         const resena = textoDeAviso(a);

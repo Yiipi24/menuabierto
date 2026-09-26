@@ -37,6 +37,10 @@ so smoke-test the apex. Vercel's own `web_fetch_vercel_url` reaches a
 deployment without going through the proxy at all, and is the way around this
 when the domain cannot be added.
 
+Meta's developer docs (`developers.facebook.com`) are not on the list either,
+and WebFetch goes through the same proxy. Web search still answers, so the
+WhatsApp Cloud API's payloads and pricing are read from search results.
+
 ### Running the app against the real database
 
 `npm run dev` needs the Supabase project host (`<ref>.supabase.co`) on the same
@@ -60,9 +64,13 @@ app cannot reach the same project.
 ### Variables that only the server has
 
 `SUPABASE_SERVICE_ROLE_KEY` is read by `supabaseServicio()` in `lib/supabase.js`
-and used only where no user is acting: the Mercado Pago webhook and the plan
-sync. It bypasses RLS, so it never goes to the middleware or the browser.
+and used only where no user is acting: the Mercado Pago webhook, the plan
+sync and the WhatsApp webhook. It bypasses RLS, so it never goes to the
+middleware or the browser.
 `MP_ACCESS_TOKEN` and `MP_WEBHOOK_SECRET` are the payment gateway's.
+`WHATSAPP_TOKEN`, `WHATSAPP_APP_SECRET` and `WHATSAPP_VERIFY_TOKEN` are the
+WhatsApp assistant's (`/api/whatsapp`, `lib/meta.js`); the README's "Asistente
+de WhatsApp" section says how a number gets connected.
 `ANTHROPIC_API_KEY` is read only by `lib/vision.js`, which turns a photo of a
 menu into sections and dishes for the owner to review. `VAPID_PRIVATE_KEY`
 (with `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_SUBJECT`) signs

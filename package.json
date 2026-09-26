@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "sembrar-denue": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/sembrar-denue.mjs",
     "reclamos": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reclamos.mjs",
-    "reportes": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reportes.mjs"
+    "reportes": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/reportes.mjs",
+    "whatsapp": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/whatsapp.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
