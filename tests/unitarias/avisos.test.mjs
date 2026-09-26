@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { prefsDe, prefsParaGuardar, pushPermitido, textoDePush, suscripcionValida } from "../../lib/avisos.js";
 
 test("las preferencias: lo que falta está encendido, solo false apaga", () => {
-  assert.deepEqual(prefsDe(null), { historia: true, resena: true, respuesta: true, insignia: true });
+  assert.deepEqual(prefsDe(null), { historia: true, resena: true, respuesta: true, insignia: true, pedido: true });
   assert.equal(prefsDe({ historia: false, otra: false }).historia, false);
   assert.equal(prefsDe({ historia: "no" }).historia, true);
   assert.deepEqual(prefsParaGuardar({ historia: false, resena: true, insignia: false }), { historia: false, insignia: false });
@@ -22,6 +22,9 @@ test("cada tipo de aviso tiene su texto y su destino", () => {
   const r = textoDePush({ kind: "resena", review_author: "Ana", review_rating: 5, restaurant_name: "Tacos", restaurant_id: "r1", review_excerpt: "Rico" });
   assert.equal(r.url, "/panel/r1/resenas");
   assert.equal(r.cuerpo, "“Rico”");
+  const p = textoDePush({ kind: "pedido", restaurant_name: "Tacos", restaurant_id: "r1", order_id: "o1" });
+  assert.deepEqual(p, { titulo: "Nuevo pedido por WhatsApp", cuerpo: "Tacos. Ábrelo para aceptarlo.", url: "/panel/r1/pedidos", tag: "pedido-o1" });
+  assert.equal(pushPermitido({ pedido: false }, "pedido"), false);
   assert.equal(textoDePush({ kind: "x" }), null);
 });
 

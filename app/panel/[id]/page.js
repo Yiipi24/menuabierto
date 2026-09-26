@@ -10,6 +10,7 @@ import CabeceraPanel from "../cabecera";
 import PosicionDePrecio from "./posicion-precio";
 import { cambiarEstado } from "../actions";
 import BorrarRestaurante from "../borrar";
+import { telefonoLegible } from "../../../lib/whatsapp";
 
 export const metadata = { title: "Editar restaurante — Menú Abierto" };
 
@@ -43,6 +44,8 @@ export default async function Editar({ params }) {
     { data: catalogoServicios },
     { data: catalogoPagos },
     { count: cupones },
+    { data: lineaWhatsapp },
+    { count: pedidosNuevos },
   ] = await Promise.all([
     supabase.from("cuisines").select("slug, name").order("name"),
     supabase
@@ -88,6 +91,14 @@ export default async function Editar({ params }) {
       .select("id", { count: "exact", head: true })
       .eq("restaurant_id", id)
       .eq("is_active", true),
+    // El asistente de WhatsApp, si está conectado, y cuántos pedidos esperan
+    // a que alguien los acepte.
+    supabase.from("whatsapp_lines").select("display_phone, is_active").eq("restaurant_id", id).maybeSingle(),
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", id)
+      .eq("status", "nuevo"),
   ]);
 
   const conUrl = (fotos ?? []).map((f) => ({
@@ -139,7 +150,30 @@ export default async function Editar({ params }) {
           coords={coords?.[0] ?? null}
           catalogoServicios={catalogoDeServicios(catalogoServicios ?? [])}
           catalogoPagos={catalogoDePagos(catalogoPagos ?? [])}
+          numeroAsistente={lineaWhatsapp?.is_active ? lineaWhatsapp.display_phone : null}
         >
+
+          {/* Los pedidos van primero cuando hay asistente: es lo único de esta
+              pantalla que no puede esperar. Sin asistente no se enseña nada:
+              un bloque de algo que no tienes es un anuncio. */}
+          {lineaWhatsapp || pedidosNuevos ? (
+            <section className="bloque-qr">
+              <div className="bloque-qr-texto">
+                <h2 className="sub">Pedidos por WhatsApp</h2>
+                <p className="ayuda">
+                  {lineaWhatsapp?.is_active
+                    ? `Tu asistente contesta el ${telefonoLegible(lineaWhatsapp.display_phone)}: horario, menú y pedidos.`
+                    : "Tu asistente de WhatsApp está pausado."}
+                  {pedidosNuevos
+                    ? ` Tienes ${pedidosNuevos} ${pedidosNuevos === 1 ? "pedido nuevo" : "pedidos nuevos"} por aceptar.`
+                    : ""}
+                </p>
+              </div>
+              <Link className="btn" href={`/panel/${restaurante.id}/pedidos`}>
+                {pedidosNuevos ? "Atender los pedidos" : "Ver los pedidos"}
+              </Link>
+            </section>
+          ) : null}
 
           <section className="bloque-menu">
             <div className="bloque-menu-cabeza">

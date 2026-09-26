@@ -58,3 +58,17 @@ test("el webhook de cobro rechaza lo que no viene firmado", async ({ request }) 
   // 401 sin firma; 503 si el despliegue no tiene el secreto. Nunca 200.
   expect([401, 503]).toContain(respuesta.status());
 });
+
+test("el webhook de WhatsApp rechaza lo que no viene firmado y no se deja verificar con cualquier token", async ({ request }) => {
+  const respuesta = await request.post("/api/whatsapp", {
+    data: { object: "whatsapp_business_account", entry: [] },
+  });
+  // 401 sin firma; 503 si el despliegue no tiene el secreto. Nunca 200: un
+  // mensaje falso atendido puede ser un pedido falso.
+  expect([401, 503]).toContain(respuesta.status());
+
+  const verificacion = await request.get(
+    "/api/whatsapp?hub.mode=subscribe&hub.verify_token=inventado&hub.challenge=123",
+  );
+  expect(verificacion.status()).toBe(403);
+});
