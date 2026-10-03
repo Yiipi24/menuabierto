@@ -39,6 +39,14 @@ export default function robots() {
         // que un rastreador pasando por aquí infla las métricas del dueño con
         // escaneos que nadie hizo. La ficha ya está en el sitemap.
         "/q/",
+        // La portada con filtros. Cada filtro es un enlace a `/?…`, y siete
+        // filtros combinables son una cantidad sin fondo de URLs que dicen lo
+        // mismo que las páginas de zona (/comida/tacos/coyoacan), que son las
+        // que se indexan. Un rastreador que las recorría todas renderizaba la
+        // portada unas 110 000 veces al día, cada una con sus consultas: casi
+        // todo el consumo del proyecto en Vercel. `/?` tapa solo la portada
+        // con query; `/` a secas y las fichas siguen abiertas.
+        "/?",
         ...PRIVADAS.flatMap((ruta) => [`${ruta}$`, `${ruta}/`, `${ruta}?`]),
       ],
     },

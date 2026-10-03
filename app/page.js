@@ -26,8 +26,12 @@ const DESCRIPCION =
 // herramienta, con su mapa, su orden y sus siete filtros combinables, y sus
 // combinaciones no son miles de páginas que un buscador deba recorrer.
 //
-// `follow` va puesto: no se indexa la búsqueda filtrada, pero sí se siguen sus
-// enlaces, que llevan a las fichas.
+// Además robots.txt cierra `/?` y cada enlace de filtro lleva `nofollow`: un
+// rastreador que recorría las combinaciones renderizaba la portada unas
+// 110 000 veces al día. La contrapartida es que quien ya tenía una URL
+// filtrada no llega a leer este `noindex`, y puede enseñarla sin descripción.
+// Las fichas no dependen de ella para descubrirse: están en el sitemap. El
+// `follow` queda para quien llegue de todos modos.
 export async function generateMetadata({ searchParams }) {
   const sp = await searchParams;
   const filtrada = Object.entries(sp ?? {}).some(
@@ -216,6 +220,7 @@ export default async function Home({ searchParams }) {
     <div className="vistas">
       <Link
         className={mapa ? "vista" : "vista vista-on"}
+        rel="nofollow"
         href={hrefCon(params, { vista: null })}
       >
         <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -225,6 +230,7 @@ export default async function Home({ searchParams }) {
       </Link>
       <Link
         className={mapa ? "vista vista-on" : "vista"}
+        rel="nofollow"
         href={hrefCon(params, { vista: "mapa" })}
       >
         <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -278,6 +284,7 @@ export default async function Home({ searchParams }) {
         <div className="wrap wrap-ancho chips">
           <Link
             className={abierto ? "chip chip-on" : "chip"}
+            rel="nofollow"
             href={hrefCon(params, { abierto: abierto ? null : "1" })}
           >
             <span className="chip-punto" aria-hidden="true" />
@@ -290,6 +297,7 @@ export default async function Home({ searchParams }) {
               <Link
                 key={s.slug}
                 className={puesto ? "chip chip-on" : "chip"}
+                rel="nofollow"
                 href={hrefCon(params, {
                   servicios: puesto
                     ? servicios.filter((x) => x !== s.slug).join(",")
@@ -305,6 +313,7 @@ export default async function Home({ searchParams }) {
             <Link
               key={c.slug}
               className={c.slug === cocina ? "chip chip-on" : "chip"}
+              rel="nofollow"
               href={hrefCon(params, { cocina: c.slug === cocina ? null : c.slug })}
             >
               <span aria-hidden="true">{iconoCocina(c.slug)}</span>
@@ -316,6 +325,7 @@ export default async function Home({ searchParams }) {
             <Link
               key={p}
               className={precio === p ? "chip chip-precio chip-on" : "chip chip-precio"}
+              rel="nofollow"
               href={hrefCon(params, { precio: precio === p ? null : String(p) })}
               title={`${PRECIO[p]} o menos`}
             >
@@ -349,6 +359,7 @@ export default async function Home({ searchParams }) {
                       ? rutaCocina(c.slug)
                       : hrefCon(params, { cocina: c.slug })
                   }
+                  rel={!hayFiltros && conPagina.has(c.slug) ? undefined : "nofollow"}
                   style={{ "--categoria-tono": tonoCocina(c.slug) }}
                 >
                   <span className="categoria-foto">

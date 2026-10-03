@@ -57,6 +57,9 @@ function Opcion({ href, activa, children }) {
     <Link
       className={activa ? "filtro-opcion filtro-opcion-on" : "filtro-opcion"}
       href={href}
+      // Un filtro no es una página: robots.txt ya cierra `/?`, y esto se lo
+      // dice también a quien rastrea sin leerlo.
+      rel="nofollow"
       // El enlace hace de casilla, así que también tiene que sonar como una:
       // sin esto, un lector de pantalla anuncia "enlace, Tacos" y no dice si
       // el filtro está puesto.
@@ -111,6 +114,7 @@ export default function Filtros({
                 key={signo}
                 className={precio === nivel ? "filtro-precio-on" : undefined}
                 href={hrefCon(params, { precio: precio === nivel ? null : String(nivel) })}
+                rel="nofollow"
                 title={`${signo} o menos`}
               >
                 {signo}
