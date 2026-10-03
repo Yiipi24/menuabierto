@@ -332,7 +332,7 @@ export default async function Listado({ cocina: cocinaSlug, zona: zonaSlug = nul
         )}
 
         <p className="listado-afinar">
-          <Link href={rutaBusqueda(cocina.slug, combo?.zonaNombre ?? null)}>
+          <Link href={rutaBusqueda(cocina.slug, combo?.zonaNombre ?? null)} rel="nofollow">
             Afinar esta búsqueda con mapa, precio y servicios →
           </Link>
         </p>
