@@ -251,12 +251,17 @@ parte del archivo descargado.
 
 ## Cobro de los planes
 
-Plus y Premium se cobran con **Mercado Pago**, por suscripción mensual y por
-restaurante, no por cuenta. Se eligió por cobertura en México —tarjeta, OXXO y
-SPEI—; Stripe queda como alternativa y por eso `subscriptions.provider` existe
-como columna.
+Plus y Premium se cobran con **Mercado Pago**, por restaurante y no por
+cuenta, de dos maneras: una **suscripción mensual**, que se cobra sola pero
+solo a tarjeta de crédito o de débito, y el **pago por adelantado**, de uno a
+doce meses en un solo pago, que acepta OXXO, SPEI, saldo de Mercado Pago y
+tarjeta. Se eligió Mercado Pago por eso: muchos de los restaurantes a los que
+va esto no tienen tarjeta, y en México Mercado Pago no cobra en automático ni
+a OXXO ni a SPEI, pero sí acepta los dos en un pago suelto. Stripe queda como
+alternativa y por eso `subscriptions.provider` y `payments.provider` existen
+como columnas.
 
-El flujo:
+El flujo de la suscripción:
 
 1. En `/panel/planes` el dueño toca "Contratar Plus". La acción
    (`app/panel/planes/actions.js`) crea la suscripción en Mercado Pago
@@ -276,6 +281,57 @@ El flujo:
    de gracia; `paused` (cobro rechazado) conserva la vigencia que ya había y
    la base degrada sola al vencer; `cancelled` respeta lo pagado y nada más.
    Nunca se borra nada: los menús de más quedan guardados y ocultos.
+
+### Pago por adelantado (OXXO y SPEI)
+
+1. En `/panel/planes` el dueño elige plan y meses en un solo `<select>`
+   ("Plus · 3 meses · $597") y toca "Pagar por adelantado". La acción
+   (`pagarPorAdelantado` en `app/panel/planes/actions.js`) crea una preferencia
+   de Checkout Pro por el total, con `external_reference =
+   adelanto:<restaurante>:<plan>:<meses>`, y lo manda a pagar. El prefijo
+   existe porque los cargos de las suscripciones también llegan como `payment`.
+2. Con tarjeta o saldo vuelve aprobado a `/panel/planes/volver?payment_id=…`.
+   Con OXXO o SPEI vuelve pendiente: el plan sube cuando paga en la tienda o
+   en su banco, y de eso solo avisa el webhook.
+3. `POST /api/cobro/webhook` recibe el aviso `payment`, le pide el pago a la
+   API (`lib/adelantos.js`) y llama a `registrar_pago_por_adelantado()`, que
+   en una transacción guarda el pago en `payments` y, si está aprobado y no
+   se había aplicado, suma los meses. Los meses corren desde que se aprobó el
+   pago, al final del plan si ya tenía ese mismo vigente. Mercado Pago avisa
+   varias veces del mismo pago; se aplica una sola. Si sincronizar un pago
+   falla, el webhook contesta 500 para que Mercado Pago reintente: el aviso
+   del pago en OXXO es el único que llega.
+
+Las dos maneras no se juntan, porque juntas cobrarían dos veces el mismo mes:
+con la suscripción cobrando no se ofrece el adelanto, y con meses pagados por
+adelantado, o con una ficha de OXXO por pagar, no se ofrece la suscripción.
+Con un plan vigente, o con una ficha de OXXO por pagar, solo se pagan más
+meses de ese mismo plan.
+
+Los dos caminos escriben el plan de la ficha, y lo hacen en la base con la
+fila de la ficha bloqueada: `registrar_pago_por_adelantado()` y
+`aplicar_plan_de_suscripcion()`. El segundo es el que usa ahora la
+sincronización de la suscripción en vez de un `update` directo, y es donde se
+respeta lo pagado por adelantado: un aviso tardío de una suscripción ya
+cancelada no recorta esos meses.
+
+Red de seguridad: al abrir `/panel/planes` se vuelven a pedir a la pasarela
+los pagos del dueño que siguen pendientes (a lo más cada diez minutos por
+pago, y solo los del último mes), por si el aviso de un pago en OXXO se
+perdió. Lo que no cubre: si se pierde el primer aviso de un pago, no queda
+fila que revisar. Si un dueño pagó y su plan no sube, el pago está en el panel
+de Mercado Pago con su referencia `adelanto:…`, y se registra llamando a
+`registrar_pago_por_adelantado()` con la llave de servicio.
+
+Lo pagado por adelantado no se renueva solo: al vencer, la ficha vuelve a
+Básico como cualquier plan vencido. Todavía no hay un aviso antes de que
+venza. Una devolución o un contracargo quedan registrados en `payments`, ya no
+bloquean el cobro automático y dejan un aviso en el log, pero no le quitan los
+meses a la ficha: eso se decide a mano.
+
+En Mercado Pago, el webhook de la aplicación tiene que tener encendido el
+tema **Pagos** (`payment`), además de los de suscripciones; sin él, un pago en
+OXXO nunca llega.
 
 El plan solo lo escribe la llave de servicio. Un trigger
 (`plan_solo_desde_el_cobro`) rechaza cualquier cambio de `plan` o

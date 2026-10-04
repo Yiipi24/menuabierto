@@ -65,8 +65,11 @@ app cannot reach the same project.
 
 `SUPABASE_SERVICE_ROLE_KEY` is read by `supabaseServicio()` in `lib/supabase.js`
 and used only where no user is acting: the Mercado Pago webhook, the plan
-sync and the WhatsApp webhook. It bypasses RLS, so it never goes to the
-middleware or the browser.
+sync and the WhatsApp webhook. The plan sync also runs when an owner is
+present — the checkout return, the plan actions, and `/panel/planes` itself,
+which re-checks that owner's pending OXXO/SPEI payments on load — but it only
+ever writes what Mercado Pago's API reports, never what the request says.
+It bypasses RLS, so it never goes to the middleware or the browser.
 `MP_ACCESS_TOKEN` and `MP_WEBHOOK_SECRET` are the payment gateway's.
 `WHATSAPP_TOKEN`, `WHATSAPP_APP_SECRET` and `WHATSAPP_VERIFY_TOKEN` are the
 WhatsApp assistant's (`/api/whatsapp`, `lib/meta.js`); the README's "Asistente

@@ -2,11 +2,24 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
 import { PLANES, menusIncluidos, nombreDelPlan, planVigente } from "../../../lib/planes";
-import { MONEDA, estadoLegible, precioDe } from "../../../lib/cobro";
+import {
+  MESES_POR_ADELANTADO,
+  MONEDA,
+  adelantoVigente,
+  cobroAutomaticoActivo,
+  estadoLegible,
+  medioLegible,
+  mesesLegibles,
+  opcionDeAdelanto,
+  pagoPorCobrar,
+  precioDe,
+  totalPorAdelantado,
+} from "../../../lib/cobro";
 import { cobroConfigurado } from "../../../lib/mercadopago";
+import { confirmarPendientes, pagosVigentes } from "../../../lib/adelantos";
 import { pesos } from "../../../lib/precios";
 import CabeceraPanel from "../cabecera";
-import { cancelarPlan, contratarPlan } from "./actions";
+import { cancelarPlan, contratarPlan, pagarPorAdelantado } from "./actions";
 
 export const metadata = { title: "Planes — Menú Abierto" };
 
@@ -26,6 +39,16 @@ const AVISOS = {
     texto: "Suscripción cancelada. Tu plan sigue hasta el fin del periodo que ya pagaste.",
   },
   ya: { clase: "ok", texto: "Esa ficha ya tiene ese plan." },
+  "adelanto-activo": { clase: "ok", texto: "Listo: recibimos tu pago y tu plan ya está activo." },
+  "adelanto-pendiente": {
+    clase: "ok",
+    texto:
+      "Tu pago quedó pendiente. Si elegiste OXXO o SPEI, el plan sube solo en cuanto Mercado Pago confirme que pagaste.",
+  },
+  "adelanto-rechazado": {
+    clase: "err",
+    texto: "El pago no pasó. Puedes intentarlo otra vez, con el mismo medio o con otro.",
+  },
 };
 
 const ERRORES = {
@@ -33,7 +56,30 @@ const ERRORES = {
   ficha: "Ese restaurante no es tuyo.",
   cobro: "El cobro todavía no está habilitado. Escríbenos y te avisamos cuando lo esté.",
   pasarela: "La pasarela de pago no respondió. Inténtalo otra vez en un momento.",
+  adelanto:
+    "Ya pagaste meses por adelantado. El cobro automático se puede activar cuando venzan.",
+  "por-cobrar":
+    "Tienes un pago en OXXO o SPEI por hacer. Págalo, o espera a que venza, antes de activar el cobro automático.",
+  suscripcion:
+    "Tienes el cobro automático activo. Para pagar por adelantado, cancélalo primero: lo que ya pagaste se respeta.",
+  cambio:
+    "Para cambiar de plan, espera a que venza el que tienes. Mientras, puedes pagar más meses del mismo.",
+  "otro-por-cobrar":
+    "Tienes un pago en OXXO o SPEI por hacer de otro plan. Págalo, o espera a que venza, antes de pagar este.",
 };
+
+// Las opciones del pago por adelantado de una ficha: plan y meses juntos, con
+// su total, para que el <select> diga cuánto es sin JavaScript. Con un plan
+// vigente, o con una ficha de OXXO por pagar, solo se ofrecen meses de ese
+// mismo plan.
+function opcionesDeAdelanto(soloPlan) {
+  return PLANES.filter((p) => p.slug !== "basico" && (!soloPlan || p.slug === soloPlan)).flatMap((p) =>
+    MESES_POR_ADELANTADO.map((m) => ({
+      valor: opcionDeAdelanto(p.slug, m),
+      texto: `${p.nombre} · ${mesesLegibles(m)} · ${pesos(totalPorAdelantado(p.slug, m), MONEDA)}`,
+    })),
+  );
+}
 
 function precioLegible(slug) {
   const centavos = precioDe(slug);
@@ -57,6 +103,16 @@ export default async function Planes({ searchParams }) {
   const error = ERRORES[params?.error] ?? null;
   const cobroActivo = cobroConfigurado();
 
+  // Antes de leer los planes: si un pago en OXXO o SPEI se aprobó y su aviso
+  // no llegó, aquí sube el plan y la página ya lo enseña.
+  if (cobroActivo) {
+    try {
+      await confirmarPendientes(supabase);
+    } catch (error) {
+      console.error("cobro: no se pudieron revisar los pagos pendientes", error?.message);
+    }
+  }
+
   const { data: restaurantes } = await supabase
     .from("restaurants")
     .select("id, name, plan, premium_until")
@@ -76,6 +132,15 @@ export default async function Planes({ searchParams }) {
 
   const suscripcionDe = new Map((suscripciones ?? []).map((s) => [s.restaurant_id, s]));
 
+  // Si los pagos no se pueden leer, la página se enseña igual, sin ellos: el
+  // candado de verdad está en las acciones, que sí fallan cerrado.
+  let pagos = [];
+  try {
+    pagos = await pagosVigentes(supabase, ids);
+  } catch (error) {
+    console.error("cobro: no se pudieron leer los pagos por adelantado", error?.message);
+  }
+
   return (
     <div className="panel-wrap">
       <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} atras="/panel" />
@@ -85,8 +150,8 @@ export default async function Planes({ searchParams }) {
         <p className="panel-lead">
           Tres planes, sin letras chiquitas. Publicar tu restaurante con su
           menú no cuesta; los de paga son para cuando necesites más menús y
-          quieras destacar. Se cobran por restaurante, cada mes, y se cancelan
-          cuando quieras.
+          quieras destacar. Se cobran por restaurante: cada mes con tarjeta, o
+          por adelantado en OXXO o por SPEI. Y se cancelan cuando quieras.
         </p>
 
         {aviso ? (
@@ -126,8 +191,12 @@ export default async function Planes({ searchParams }) {
         </div>
 
         <p className="plan-note">
-          Se paga con tarjeta, y en México también en OXXO o por SPEI, a través
-          de Mercado Pago. Quien esté en la lista de espera conserva el precio
+          Hay dos formas de pagar, las dos con Mercado Pago: cada mes en
+          automático, con tarjeta de crédito o de débito, o por adelantado —de
+          uno a doce meses en un solo pago— en OXXO, por SPEI, con saldo de
+          Mercado Pago o con tarjeta. Lo que pagas por adelantado no se renueva
+          solo: al vencer, pagas otros meses o activas el cobro automático.
+          Quien esté en la lista de espera conserva el precio
           de lanzamiento el primer año. Un plan de paga que se cancela o deja
           de pagarse vuelve a Básico al vencer: los menús de más siguen
           guardados, pero dejan de verse hasta que renueves o borres los que
@@ -144,16 +213,35 @@ export default async function Planes({ searchParams }) {
                 const suscripcion = suscripcionDe.get(r.id) ?? null;
                 const viva = suscripcion && suscripcion.status !== "cancelled";
                 const estado = suscripcion ? estadoLegible(suscripcion.status) : null;
+                const pagosDeEsta = pagos.filter((p) => p.restaurant_id === r.id);
+                const adelanto = adelantoVigente(pagosDeEsta);
+                const porCobrar = pagosDeEsta.find((p) => pagoPorCobrar(p)) ?? null;
+                // Las dos formas de pagar no se juntan: con una corriendo, la
+                // otra cobraría dos veces el mismo mes.
+                const puedeSuscribirse = !adelanto && !porCobrar;
+                const soloPlan = vigente !== "basico" ? vigente : (porCobrar?.plan ?? null);
+                const opciones = cobroAutomaticoActivo(suscripcion) ? [] : opcionesDeAdelanto(soloPlan);
                 return (
                   <li className="fila-plan" key={r.id}>
                     <div className="fila-plan-nombre">
                       {r.name}
-                      {suscripcion ? (
+                      {adelanto ? (
+                        <small className="fila-plan-detalle">
+                          Pagado por adelantado
+                          {r.premium_until ? ` · vigente hasta el ${fechaCorta(r.premium_until)}` : ""}
+                        </small>
+                      ) : suscripcion ? (
                         <small className="fila-plan-detalle">
                           {estado.nombre}
                           {vigente !== "basico" && r.premium_until
                             ? ` · ${suscripcion.status === "cancelled" ? "hasta" : "vigente hasta"} el ${fechaCorta(r.premium_until)}`
                             : ""}
+                        </small>
+                      ) : null}
+                      {porCobrar ? (
+                        <small className="fila-plan-detalle">
+                          Pago pendiente{medioLegible(porCobrar.method) ? ` ${medioLegible(porCobrar.method)}` : ""}
+                          {porCobrar.expires_at ? ` · tienes hasta el ${fechaCorta(porCobrar.expires_at)}` : ""}
                         </small>
                       ) : null}
                     </div>
@@ -168,7 +256,7 @@ export default async function Planes({ searchParams }) {
                     </Link>
 
                     <div className="fila-plan-acciones">
-                      {PLANES.filter((p) => p.slug !== "basico" && p.slug !== (viva ? suscripcion.plan : vigente)).map(
+                      {!puedeSuscribirse ? null : PLANES.filter((p) => p.slug !== "basico" && p.slug !== (viva ? suscripcion.plan : vigente)).map(
                         (p) => (
                           <form action={contratarPlan} key={p.slug}>
                             <input type="hidden" name="restaurante" value={r.id} />
@@ -184,6 +272,26 @@ export default async function Planes({ searchParams }) {
                           </form>
                         ),
                       )}
+                      {opciones.length ? (
+                        <form action={pagarPorAdelantado} className="form-adelanto">
+                          <input type="hidden" name="restaurante" value={r.id} />
+                          <select name="opcion" aria-label={`Pagar por adelantado: ${r.name}`}>
+                            {opciones.map((o) => (
+                              <option key={o.valor} value={o.valor}>
+                                {o.texto}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="btn-linea btn-sm"
+                            type="submit"
+                            disabled={!cobroActivo}
+                            title={cobroActivo ? undefined : "El cobro aún no está habilitado"}
+                          >
+                            {vigente === "basico" ? "Pagar por adelantado" : "Pagar más meses"}
+                          </button>
+                        </form>
+                      ) : null}
                       {viva ? (
                         <form action={cancelarPlan}>
                           <input type="hidden" name="restaurante" value={r.id} />
