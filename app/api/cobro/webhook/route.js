@@ -1,15 +1,17 @@
-import { firmaValida, idDeSuscripcionEnAviso } from "../../../../lib/cobro";
+import { firmaValida, idDePagoEnAviso, idDeSuscripcionEnAviso } from "../../../../lib/cobro";
 import { suscripcionDeCobro } from "../../../../lib/mercadopago";
 import { sincronizarSuscripcion } from "../../../../lib/suscripciones";
+import { sincronizarPago } from "../../../../lib/adelantos";
 
 // Los avisos de Mercado Pago. Aquí no se cree nada del cuerpo: se comprueba la
-// firma, se saca el id de la suscripción y se le pregunta a la pasarela cómo
-// está. El aviso es un timbre, no el dato.
+// firma, se saca el id de la suscripción o del pago y se le pregunta a la
+// pasarela cómo está. El aviso es un timbre, no el dato.
 //
-// Se contesta 200 en cuanto la firma pasa, incluso si sincronizar falla por
-// algo nuestro: Mercado Pago reintenta lo que no recibe 200, y un fallo de
-// nuestra base no debería convertirse en una ráfaga de reintentos. El error
-// queda en los logs, que es donde se lee.
+// Con una suscripción se contesta 200 en cuanto la firma pasa, incluso si
+// sincronizar falla por algo nuestro: Mercado Pago reintenta lo que no recibe
+// 200, y la suscripción se vuelve a sincronizar sola con su siguiente aviso. El
+// error queda en los logs, que es donde se lee. Con un pago es al revés, y
+// abajo se dice por qué.
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
@@ -39,7 +41,25 @@ export async function POST(request) {
   if (!valida) return new Response(null, { status: 401 });
 
   const objetivo = idDeSuscripcionEnAviso(aviso);
-  if (!objetivo) return Response.json({ ok: true, ignorado: true });
+  // Un `payment` es un pago por adelantado o el cargo de una suscripción;
+  // `sincronizarPago` lee su referencia y deja pasar los segundos.
+  const pago = objetivo ? null : idDePagoEnAviso(aviso);
+  if (!objetivo && !pago) return Response.json({ ok: true, ignorado: true });
+
+  // Un pago por adelantado es la excepción al 200 de siempre: el aviso de que
+  // alguien pagó su ficha de OXXO es el único que llega —quien paga en la
+  // tienda no vuelve al checkout—, y si se pierde, el dinero entró y el plan
+  // no subió. Con un 500 Mercado Pago lo reintenta, y registrar el mismo pago
+  // dos veces deja la base igual que una.
+  if (pago) {
+    try {
+      await sincronizarPago(pago);
+    } catch (error) {
+      console.error("cobro: pago sin sincronizar; Mercado Pago lo reintentará", pago, error?.message);
+      return new Response(null, { status: 500 });
+    }
+    return Response.json({ ok: true });
+  }
 
   try {
     const id =

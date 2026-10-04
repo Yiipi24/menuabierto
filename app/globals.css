@@ -466,6 +466,27 @@ section { scroll-margin-top: 84px; }
   margin-top: 6px;
 }
 
+/* Pagar por adelantado: un solo <select> con plan, meses y total, y su
+   boton. En un telefono el select toma el renglon y el boton baja. */
+.form-adelanto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.form-adelanto select {
+  max-width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
 .plan-note {
   margin-top: 24px;
   font-size: 14.5px;
