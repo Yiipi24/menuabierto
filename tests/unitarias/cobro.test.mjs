@@ -12,6 +12,8 @@ import {
   precioDe,
   DIAS_DE_GRACIA,
   DIAS_PARA_PAGAR,
+  TOPE_OXXO_CENTAVOS,
+  admiteOxxo,
   MESES_POR_ADELANTADO,
   adelantoVigente,
   cobroAutomaticoActivo,
@@ -37,6 +39,8 @@ test("solo plus y premium se cobran, y con precio", () => {
   assert.equal(planDePagaValido("basico"), false);
   assert.ok(precioDe("plus") > 0);
   assert.ok(precioDe("premium") > precioDe("plus"));
+  assert.equal(precioDe("pedidos"), 220000);
+  assert.equal(planDePagaValido("pedidos"), true);
   assert.equal(precioDe("basico"), null);
 });
 
@@ -246,4 +250,15 @@ test("el medio de pago se dice como lo diría el dueño", () => {
   assert.equal(medioLegible(null), "");
   assert.equal(mesesLegibles(1), "1 mes");
   assert.equal(mesesLegibles(6), "6 meses");
+});
+
+test("OXXO llega hasta su tope: 1 y 3 meses de Pedidos sí, 6 y 12 no", () => {
+  assert.equal(TOPE_OXXO_CENTAVOS, 1000000);
+  assert.equal(admiteOxxo(totalPorAdelantado("pedidos", 1)), true);
+  assert.equal(admiteOxxo(totalPorAdelantado("pedidos", 3)), true);
+  assert.equal(admiteOxxo(totalPorAdelantado("pedidos", 6)), false);
+  assert.equal(admiteOxxo(totalPorAdelantado("pedidos", 12)), false);
+  assert.equal(admiteOxxo(totalPorAdelantado("premium", 12)), true);
+  assert.equal(admiteOxxo(TOPE_OXXO_CENTAVOS), true);
+  assert.equal(admiteOxxo(null), false);
 });

@@ -2,7 +2,7 @@
 // Conectar el número de WhatsApp de un restaurante a su asistente.
 //
 //   npm run whatsapp                                        # lista los números conectados
-//   npm run whatsapp -- conectar <slug> <phone_number_id> <número> [--waba <id>] [--app]
+//   npm run whatsapp -- conectar <slug> <phone_number_id> <número> [--waba <id>] [--app] [--sin-plan]
 //   npm run whatsapp -- pausar <slug>
 //   npm run whatsapp -- reanudar <slug>
 //   npm run whatsapp -- desconectar <slug>
@@ -11,7 +11,10 @@
 // WhatsApp › Configuración de la API, una vez que el número del restaurante
 // está en la Cloud API. `--app` marca que el restaurante sigue contestando
 // desde la app de WhatsApp Business en el mismo número (coexistencia): solo
-// entonces "hablar con alguien" calla al asistente.
+// entonces "hablar con alguien" calla al asistente. El asistente es del plan
+// Pedidos: sin el plan vigente no se conecta, porque la carta mandaría los
+// pedidos a un número que el webhook ignora. `--sin-plan` lo conecta igual,
+// para probar.
 //
 // Necesita SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY: la tabla de números solo
 // la escribe la llave de servicio, porque quien pudiera apuntar un número a su
@@ -20,6 +23,7 @@
 // los mensajes de esa cuenta.
 
 import { createClient } from "@supabase/supabase-js";
+import { asistenteIncluido } from "../lib/planes.js";
 
 const url = process.env.SUPABASE_URL;
 const llave = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -63,7 +67,7 @@ async function graph(ruta, metodo = "GET") {
 async function restaurante(s) {
   const { data, error } = await supabase
     .from("restaurants")
-    .select("id, name, slug, status, whatsapp_orders, whatsapp_phone")
+    .select("id, name, slug, status, whatsapp_orders, whatsapp_phone, plan, premium_until")
     .eq("slug", String(s ?? ""))
     .maybeSingle();
   if (error) throw error;
@@ -77,7 +81,7 @@ async function restaurante(s) {
 if (!accion) {
   const { data, error } = await supabase
     .from("whatsapp_lines")
-    .select("phone_number_id, display_phone, is_active, answers_in_app, created_at, restaurants (name, slug)")
+    .select("phone_number_id, display_phone, is_active, answers_in_app, created_at, restaurants (name, slug, plan, premium_until)")
     .order("created_at");
   if (error) throw error;
   if (!data?.length) {
@@ -87,7 +91,8 @@ if (!accion) {
   for (const l of data) {
     console.log(
       `${l.restaurants?.slug} · ${l.restaurants?.name} · +${l.display_phone} · id ${l.phone_number_id}` +
-        `${l.is_active ? "" : " · PAUSADO"}${l.answers_in_app ? " · contestan en la app" : ""}`,
+        `${l.is_active ? "" : " · PAUSADO"}${asistenteIncluido(l.restaurants) ? "" : " · SIN PLAN PEDIDOS (no contesta)"}` +
+        `${l.answers_in_app ? " · contestan en la app" : ""}`,
     );
   }
   process.exit(0);
@@ -107,6 +112,15 @@ if (accion === "conectar") {
   const r = await restaurante(slug);
   if (r.status !== "publicado") {
     console.warn(`Aviso: la ficha está en "${r.status}". El asistente no contesta hasta que se publique.`);
+  }
+  if (!asistenteIncluido(r)) {
+    if (!args.includes("--sin-plan")) {
+      console.error(
+        `${r.name} no tiene el plan Pedidos vigente: el asistente no contestaría y la carta mandaría los pedidos a un número que nadie atiende. Conéctalo cuando tenga el plan, o usa --sin-plan para probar.`,
+      );
+      process.exit(1);
+    }
+    console.warn("Aviso: se conecta sin el plan Pedidos vigente (--sin-plan). El asistente no contesta hasta que lo tenga.");
   }
 
   // Con el token, el número se comprueba contra Meta antes de guardarlo: un

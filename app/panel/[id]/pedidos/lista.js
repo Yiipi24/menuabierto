@@ -169,7 +169,7 @@ function TarjetaPedido({ id, pedido }) {
  * propósito: la tarjeta de un pedido que cambia de estado se queda donde está
  * montada, y con ella el mensaje de si al cliente le llegó el aviso.
  */
-export function ListaPedidos({ id, pedidos, conectado }) {
+export function ListaPedidos({ id, pedidos, conectado, sinPlan = false }) {
   const nuevos = pedidos.filter((p) => p.status === "nuevo").length;
   useRefresco();
   useTitulo(nuevos);
@@ -181,7 +181,9 @@ export function ListaPedidos({ id, pedidos, conectado }) {
         <p>
           {conectado
             ? "Cuando alguien pida por WhatsApp, su pedido aparece aquí sin recargar la página. Déjala abierta en el mostrador."
-            : "Cuando el asistente esté conectado, los pedidos aparecen aquí."}
+            : sinPlan
+              ? "Con el plan Pedidos vigente, los pedidos vuelven a llegar aquí."
+              : "Cuando el asistente esté conectado, los pedidos aparecen aquí."}
         </p>
       </div>
     );

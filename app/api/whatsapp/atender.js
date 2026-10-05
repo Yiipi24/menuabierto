@@ -3,6 +3,7 @@ import { confirmacionDePedido, errorAlGuardar, responder, PAUSA_MINUTOS } from "
 import { reportarError } from "../../../lib/errores";
 import { enviarMensajes, marcarLeido } from "../../../lib/meta";
 import { codigoDePedido, filaDePedido } from "../../../lib/pedidos";
+import { asistenteIncluido } from "../../../lib/planes";
 import { repartirPush } from "../../../lib/push";
 import { conEsquema } from "../../../lib/redes";
 import { urlDelSitio } from "../../../lib/sitio";
@@ -24,15 +25,19 @@ import { fueraDeTiempo, leerAviso } from "../../../lib/whatsapp-cloud";
 
 // Qué número es de qué restaurante. Un número que no está conectado —o que se
 // desactivó— no se atiende: puede ser de otra aplicación en la misma cuenta.
+// Tampoco el de un restaurante sin el plan Pedidos vigente: el asistente es de
+// ese plan, y con el plan vencido el número queda como pausado.
 async function lineasActivas(supabase, ids) {
   if (!ids.length) return new Map();
   const { data, error } = await supabase
     .from("whatsapp_lines")
-    .select("phone_number_id, restaurant_id, answers_in_app, restaurants (slug)")
+    .select("phone_number_id, restaurant_id, answers_in_app, restaurants (slug, plan, premium_until)")
     .in("phone_number_id", ids)
     .eq("is_active", true);
   if (error) throw error;
-  return new Map((data ?? []).map((l) => [l.phone_number_id, l]));
+  return new Map(
+    (data ?? []).filter((l) => asistenteIncluido(l.restaurants)).map((l) => [l.phone_number_id, l]),
+  );
 }
 
 // Lo que el asistente sabe del restaurante, sacado de lo que la ficha ya
