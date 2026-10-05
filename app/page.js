@@ -84,6 +84,13 @@ const OWNER = [
       <path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z" />
     ),
   },
+  {
+    title: "Pedidos por WhatsApp",
+    body: "Con el plan Pedidos, un asistente contesta tu WhatsApp con tu menú, toma los pedidos y te los manda al panel. Sin comisión.",
+    dibujo: (
+      <path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.1A8 8 0 1 1 20 11.5z" />
+    ),
+  },
 ];
 
 const STEPS = [

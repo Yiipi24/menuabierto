@@ -235,7 +235,9 @@ section { scroll-margin-top: 84px; }
 
 .section-head p { color: var(--ink-soft); font-size: 17px; }
 
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+
+@media (max-width: 1080px) { .cards { grid-template-columns: repeat(2, 1fr); } }
 
 .card {
   background: #fff;
