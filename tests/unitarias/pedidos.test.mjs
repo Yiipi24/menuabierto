@@ -221,6 +221,13 @@ test("los estados del pedido y lo que se le avisa al cliente", () => {
   assert.match(avisoDeEstado({ status: "listo", codigo: "K7M2", entrega: "llevar" }), /pasar por él/);
   assert.match(avisoDeEstado({ status: "cancelado", codigo: "K7M2", telefono: "81 1234 5678" }), /llámanos al 81 1234 5678/);
   assert.equal(avisoDeEstado({ status: "entregado", codigo: "K7M2" }), null);
+  // Al entregar se pide la reseña, con el enlace que deja el pase del QR.
+  const enlace = "https://menuabierto.com/q/abcd1234?de=pedido";
+  assert.equal(
+    avisoDeEstado({ status: "entregado", codigo: "K7M2", resena: enlace }),
+    `¡Gracias por tu pedido K7M2! Si te gustó, tu reseña nos ayuda mucho: ${enlace}`,
+  );
+  assert.equal(avisoDeEstado({ status: "nuevo", codigo: "K7M2", resena: enlace }), null);
 });
 
 test("el código: corto, sin letras que se confunden", () => {

@@ -69,7 +69,12 @@ export async function GET(request, { params }) {
 
   // `src=qr` es lo único que separa en el tablero un escaneo en la mesa de una
   // visita cualquiera. Viaja en la redirección porque el QR ya no lo lleva.
-  const respuesta = NextResponse.redirect(new URL(`${rutaFicha(slug)}?src=qr`, request.url), 307);
+  // El enlace que el asistente manda al entregar un pedido (`de=pedido`) deja
+  // el mismo pase, pero no es un escaneo en el local: va directo a las reseñas
+  // y no se cuenta como QR.
+  const dePedido = new URL(request.url).searchParams.get("de") === "pedido";
+  const destino = dePedido ? `${rutaFicha(slug)}?src=pedido#resenas` : `${rutaFicha(slug)}?src=qr`;
+  const respuesta = NextResponse.redirect(new URL(destino, request.url), 307);
   if (nueva) {
     respuesta.cookies.set(COOKIE_VISITANTE, visitante, {
       httpOnly: true,

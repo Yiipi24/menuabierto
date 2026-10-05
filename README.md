@@ -78,7 +78,8 @@ baratos por nombre, a propósito. `precios` es un segmento reservado.
 ## Reseñas verificadas por escaneo del QR
 
 Contra Google no se gana por volumen de reseñas sino por confianza, y el QR de
-la mesa es la única prueba de visita que tenemos: nadie la copia sin pegar un
+la mesa es la única prueba de visita que tenemos (el asistente de WhatsApp manda
+el mismo enlace a quien recibió su pedido, que es la prueba de compra): nadie la copia sin pegar un
 QR en cada mesa. Al escanear, `/q/<codigo>` —ahora una ruta y no una página,
 porque tiene que poder poner la cookie del visitante— registra un **pase de
 visita** (`visit_passes`) ligado a esa cookie y, si había sesión, a la
@@ -546,7 +547,10 @@ restaurante con la carta solo en PDF recibe el pedido como texto libre.
 - **Aceptar, "Ya está listo", Entregado, Cancelar.** Cada cambio pasa por
   `cambiar_estado_pedido()` —solo el dueño, solo hacia adelante— y le escribe
   al cliente en el mismo chat ("Aceptamos tu pedido K7M2…", "ya va en
-  camino"). Entregado no escribe nada. Si pasaron más de 24 horas desde el
+  camino"). Entregado le pide la reseña con un enlace al QR de la mesa
+  (`/q/<código>?de=pedido`): le deja el mismo pase de visita, así que su reseña
+  sale verificada, lo lleva directo a las reseñas de la ficha y no cuenta como
+  escaneo en el local. Si pasaron más de 24 horas desde el
   último mensaje del cliente, WhatsApp ya no deja escribirle sin plantilla, y
   la pantalla lo dice.
 - **El aviso**: un pedido nuevo deja una fila `pedido` en la bandeja (trigger

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { enviarMensajes, esFueraDeVentana, whatsappConfigurado } from "../../../../lib/meta";
 import { avisoDeEstado, estadoDePedido } from "../../../../lib/pedidos";
+import { urlDelSitio } from "../../../../lib/sitio";
+import { qrCodigoValido } from "../../../../lib/slug";
 import { supabaseSession } from "../../../../lib/supabase";
 
 const NO_ES_TUYO = { status: "error", message: "Ese restaurante no es tuyo." };
@@ -20,7 +22,15 @@ const AVISADO = {
   aceptado: "Le avisamos al cliente que ya lo están preparando.",
   listo: "Le avisamos al cliente que está listo.",
   cancelado: "Le avisamos al cliente que no se pudo tomar.",
+  entregado: "Le pedimos su reseña por WhatsApp.",
 };
+
+// El enlace de la reseña es el del QR de la mesa: le deja al cliente el mismo
+// pase de visita, y con él su reseña sale verificada. `de=pedido` lo manda a
+// las reseñas de la ficha sin contarlo como un escaneo en el local.
+function enlaceDeResena(qrCode) {
+  return qrCodigoValido(qrCode) ? urlDelSitio(`/q/${qrCode}?de=pedido`) : null;
+}
 
 /**
  * Mover un pedido: aceptarlo, marcarlo listo, entregado o cancelado.
@@ -46,7 +56,7 @@ export async function cambiarEstadoPedido(_prevState, formData) {
 
   const { data: restaurante } = await supabase
     .from("restaurants")
-    .select("id, phone")
+    .select("id, phone, qr_code")
     .eq("id", id)
     .eq("owner_id", auth.user.id)
     .maybeSingle();
@@ -82,6 +92,7 @@ export async function cambiarEstadoPedido(_prevState, formData) {
     codigo: fila.code,
     entrega: fila.delivery,
     telefono: String(restaurante.phone ?? "").trim() || null,
+    resena: enlaceDeResena(restaurante.qr_code),
   });
   if (!texto) return { status: "ok", message: hecho };
 
