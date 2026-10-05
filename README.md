@@ -630,6 +630,14 @@ Premium en las dos funciones que preguntaban por él con nombre
 cualquier plan de paga. En la app, lo que preguntaba "¿es Premium?" pregunta
 `premiumIncluido()`.
 
+**Estadísticas de pedidos** (`/panel/<id>/pedidos/estadisticas`): pedidos,
+lo vendido y el ticket promedio (de referencia, sin cancelados), lo que más se
+pide, a qué hora y cómo, en 7, 30 o 90 días. Las cuenta
+`estadisticas_de_pedidos()` en la base —PostgREST corta en mil filas y un local
+con movimiento las pasa en un trimestre—, con `security invoker` para que la
+RLS de `orders` deje ver solo los propios. Las horas van en la zona del
+restaurante.
+
 En OXXO se paga hasta $10,000 de una vez (`TOPE_OXXO_CENTAVOS`): 6 y 12 meses
 de Pedidos por adelantado salen marcados "sin OXXO" y se pagan por SPEI, con
 saldo o con tarjeta.

@@ -285,3 +285,17 @@ test("la fila respeta lo que la base va a comprobar", () => {
   assert.deepEqual(lineasGuardadas(fila.items), [{ id: "p-pastor", nombre: "Tacos de pastor", cantidad: 2, precio: 2500 }]);
   assert.deepEqual(lineasGuardadas("x"), []);
 });
+
+test("estadísticas: el periodo es 7, 30 o 90 días, y la hora se dice como franja", async () => {
+  const { periodoDeEstadisticas, franjaHoraria } = await import("../../lib/pedidos.js");
+  assert.equal(periodoDeEstadisticas("7"), 7);
+  assert.equal(periodoDeEstadisticas(90), 90);
+  assert.equal(periodoDeEstadisticas("15"), 30);
+  assert.equal(periodoDeEstadisticas(undefined), 30);
+  assert.equal(franjaHoraria(14), "2 pm a 3 pm");
+  assert.equal(franjaHoraria(0), "12 am a 1 am");
+  assert.equal(franjaHoraria(11), "11 am a 12 pm");
+  assert.equal(franjaHoraria(23), "11 pm a 12 am");
+  assert.equal(franjaHoraria(24), "");
+  assert.equal(franjaHoraria(null), "");
+});

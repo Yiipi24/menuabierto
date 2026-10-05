@@ -79,6 +79,9 @@ export default async function Pedidos({ params }) {
                 : "Aquí llegan los pedidos que toma el asistente de WhatsApp de tu restaurante."}
             </p>
           </div>
+          <Link className="btn-linea btn-sm" href={`/panel/${id}/pedidos/estadisticas`}>
+            Estadísticas
+          </Link>
         </div>
 
         {!linea && !conPlan ? (
