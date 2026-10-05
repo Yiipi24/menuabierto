@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
-import { PLANES, menusIncluidos, nombreDelPlan, planVigente, subeOMantiene } from "../../../lib/planes";
+import {
+  PLANES,
+  menusIncluidos,
+  nombreDelPlan,
+  ordenDePlan,
+  planVigente,
+  subeOMantiene,
+} from "../../../lib/planes";
 import {
   MESES_POR_ADELANTADO,
   MONEDA,
@@ -232,10 +239,14 @@ export default async function Planes({ searchParams }) {
                 const opciones = cobroAutomaticoActivo(suscripcion)
                   ? []
                   : opcionesDeAdelanto(vigente, porCobrar?.plan ?? null);
-                // Si entre las opciones hay un plan más alto, se dice qué
-                // pasa con lo que queda del actual antes de pagar.
+                // Con meses pagados por adelantado y un plan más alto a la
+                // mano, se dice qué pasa con lo que queda antes de pagar. Lo
+                // que viene de la suscripción no se convierte: no hay pago
+                // por adelantado del que salga el valor.
                 const puedeSubir =
-                  vigente !== "basico" && opciones.some((o) => !o.valor.startsWith(`${vigente}:`));
+                  Boolean(adelanto) &&
+                  !porCobrar &&
+                  PLANES.some((p) => ordenDePlan(p.slug) > ordenDePlan(vigente));
                 return (
                   <li className="fila-plan" key={r.id}>
                     <div className="fila-plan-nombre">
@@ -309,8 +320,8 @@ export default async function Planes({ searchParams }) {
                       ) : null}
                       {opciones.length && puedeSubir ? (
                         <small className="fila-plan-detalle">
-                          Si subes de plan, lo que te queda de {nombreDelPlan(r)} se convierte en días del
-                          nuevo, a su precio.
+                          Si subes de plan, lo que te queda de lo que pagaste por {nombreDelPlan(r)} se
+                          convierte en días del nuevo.
                         </small>
                       ) : null}
                       {viva ? (

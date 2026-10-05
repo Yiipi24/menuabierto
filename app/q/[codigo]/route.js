@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { supabaseServer, supabaseSession } from "../../../lib/supabase";
 import { TAG_RUTAS, VIGENCIA_RUTAS } from "../../../lib/cache";
 import { qrCodigoValido, rutaFicha } from "../../../lib/slug";
-import { COOKIE_VISITANTE, DIAS_COOKIE } from "../../../lib/eventos";
+import { ponerVisitante, visitanteDe } from "../visitante";
 
 // Aquí aterriza quien escanea el QR de la mesa. Es lo único que hay detrás
 // del código impreso: traducirlo a la dirección de la ficha, dejar el pase de
@@ -51,10 +51,7 @@ export async function GET(request, { params }) {
 
   // El visitante: la misma cookie anónima que identifica los eventos. Si no
   // la trae, se le pone aquí; el middleware no pasa por /q.
-  const galletas = await cookies();
-  let visitante = galletas.get(COOKIE_VISITANTE)?.value;
-  const nueva = !visitante || visitante.length < 8 || visitante.length > 64;
-  if (nueva) visitante = crypto.randomUUID();
+  const { visitante, nueva } = visitanteDe(await cookies());
 
   // El pase de visita: el escaneo es la única prueba de que alguien estuvo en
   // el local, y es lo que vuelve verificada la reseña que escriba después. Va
@@ -69,20 +66,7 @@ export async function GET(request, { params }) {
 
   // `src=qr` es lo único que separa en el tablero un escaneo en la mesa de una
   // visita cualquiera. Viaja en la redirección porque el QR ya no lo lleva.
-  // El enlace que el asistente manda al entregar un pedido (`de=pedido`) deja
-  // el mismo pase, pero no es un escaneo en el local: va directo a las reseñas
-  // y no se cuenta como QR.
-  const dePedido = new URL(request.url).searchParams.get("de") === "pedido";
-  const destino = dePedido ? `${rutaFicha(slug)}?src=pedido#resenas` : `${rutaFicha(slug)}?src=qr`;
-  const respuesta = NextResponse.redirect(new URL(destino, request.url), 307);
-  if (nueva) {
-    respuesta.cookies.set(COOKIE_VISITANTE, visitante, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: DIAS_COOKIE * 24 * 60 * 60,
-    });
-  }
+  const respuesta = NextResponse.redirect(new URL(`${rutaFicha(slug)}?src=qr`, request.url), 307);
+  if (nueva) ponerVisitante(respuesta, visitante);
   return respuesta;
 }

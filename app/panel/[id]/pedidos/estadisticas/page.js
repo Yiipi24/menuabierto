@@ -24,18 +24,24 @@ export default async function EstadisticasDePedidos({ params, searchParams }) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth?.user) redirect("/entrar");
 
-  const { data: restaurante } = await supabase
-    .from("restaurants")
-    .select("id, name, plan, premium_until")
-    .eq("id", id)
-    .eq("owner_id", auth.user.id)
-    .maybeSingle();
+  // Las dos van juntas: la RLS ya deja la función en ceros para una ficha
+  // ajena, y si no es suya la página no pasa del `notFound`.
+  const [{ data: restaurante }, { data: datos, error }] = await Promise.all([
+    supabase
+      .from("restaurants")
+      .select("id, name, plan, premium_until")
+      .eq("id", id)
+      .eq("owner_id", auth.user.id)
+      .maybeSingle(),
+    supabase.rpc("estadisticas_de_pedidos", { rid: id, dias }),
+  ]);
   if (!restaurante) notFound();
-
-  const { data: datos, error } = await supabase.rpc("estadisticas_de_pedidos", { rid: id, dias });
   if (error) console.error("pedidos: no se pudieron leer las estadísticas", error.message);
 
   const hay = Number(datos?.pedidos ?? 0) > 0;
+  // Los cancelados no entran en platillos, horas ni entregas: si todos lo
+  // fueron, esas listas salen vacías y no por falta de pedidos.
+  const validos = Number(datos?.pedidos ?? 0) - Number(datos?.cancelados ?? 0);
   const entregas = Object.entries(datos?.entregas ?? {}).sort((a, b) => b[1] - a[1]);
 
   return (
@@ -121,49 +127,58 @@ export default async function EstadisticasDePedidos({ params, searchParams }) {
               </li>
             </ul>
 
-            <div className="estadisticas-listas">
-              <section className="estadistica">
-                <h2>Lo que más piden</h2>
-                {datos.platillos.length ? (
+            {validos > 0 ? (
+              <div className="estadisticas-listas">
+                <section className="estadistica">
+                  <h2>Lo que más piden</h2>
+                  {datos.platillos.length ? (
+                    <ol>
+                      {datos.platillos.map((p) => (
+                        <li key={p.nombre}>
+                          <span>{p.nombre}</span>
+                          <strong>{NUMERO.format(p.cantidad)}</strong>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="kpi-nota">Los pedidos de estos días son de texto libre.</p>
+                  )}
+                </section>
+
+                <section className="estadistica">
+                  <h2>A qué hora piden</h2>
                   <ol>
-                    {datos.platillos.map((p) => (
-                      <li key={p.nombre}>
-                        <span>{p.nombre}</span>
-                        <strong>{NUMERO.format(p.cantidad)}</strong>
+                    {datos.horas.map((h) => (
+                      <li key={h.hora}>
+                        <span>{franjaHoraria(h.hora)}</span>
+                        <strong>
+                          {NUMERO.format(h.pedidos)} {h.pedidos === 1 ? "pedido" : "pedidos"}
+                        </strong>
                       </li>
                     ))}
                   </ol>
-                ) : (
-                  <p className="kpi-nota">Los pedidos de estos días son de texto libre.</p>
-                )}
-              </section>
+                </section>
 
-              <section className="estadistica">
-                <h2>A qué hora piden</h2>
-                <ol>
-                  {datos.horas.map((h) => (
-                    <li key={h.hora}>
-                      <span>{franjaHoraria(h.hora)}</span>
-                      <strong>
-                        {NUMERO.format(h.pedidos)} {h.pedidos === 1 ? "pedido" : "pedidos"}
-                      </strong>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-
-              <section className="estadistica">
-                <h2>Cómo los piden</h2>
-                <ul>
-                  {entregas.map(([slug, n]) => (
-                    <li key={slug}>
-                      <span>{entregaDe(slug)?.nombre ?? "Sin decir"}</span>
-                      <strong>{NUMERO.format(n)}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            </div>
+                <section className="estadistica">
+                  <h2>Cómo los piden</h2>
+                  <ul>
+                    {entregas.map(([slug, n]) => (
+                      <li key={slug}>
+                        <span>{entregaDe(slug)?.nombre ?? "Sin decir"}</span>
+                        <strong>{NUMERO.format(n)}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+            ) : (
+              <p className="kpi-nota">
+                {datos.pedidos === 1
+                  ? "El único pedido de estos días se canceló"
+                  : `Los ${NUMERO.format(datos.pedidos)} pedidos de estos días se cancelaron`}
+                : no hay platillos, horas ni entregas que contar.
+              </p>
+            )}
           </>
         )}
       </main>

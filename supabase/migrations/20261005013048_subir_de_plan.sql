@@ -3,21 +3,26 @@
 -- Hasta aqui, pagar por adelantado un plan distinto del vigente lo empezaba
 -- de cero y lo que quedaba del otro se perdia; por eso el panel no lo
 -- ofrecia, y quien pago Premium por adelantado no podia pasar a Pedidos hasta
--- que le venciera. Ahora lo que queda del plan vigente se convierte en dias
--- del plan nuevo, a su precio: diez dias de Premium a $399 son un poco menos
--- de dos de Pedidos a $2,200. Los pagos del plan anterior quedan cerrados en
--- ese momento, para que no sigan contando como vigentes.
+-- que le venciera. Ahora lo que queda de los pagos del plan anterior se
+-- convierte en dias del plan nuevo.
 --
--- Los precios los manda quien llama (`p_precios`, los mismos de
--- lib/cobro.js), porque viven en variables de entorno y no en la base. Sin
--- ellos el cambio de plan empieza de cero, como antes: el codigo que ya esta
--- desplegado llama sin ese argumento y sigue funcionando igual.
+-- El valor de lo que queda sale de lo que el dueno pago de verdad —la parte
+-- sin usar de cada pago aplicado y no devuelto—, no de la vigencia de la ficha
+-- ni de los precios de hoy: un pago devuelto no se convierte en dias, y un
+-- precio de lanzamiento no se revalua. Ese valor se vuelve dias al precio por
+-- dia del pago nuevo, se guarda en `credit_cents` del pago nuevo —para que una
+-- devolucion posterior se pueda revisar a mano sabiendo que se movio— y los
+-- pagos del plan anterior quedan cerrados en ese momento.
+--
+-- La firma de la funcion no cambia: el codigo desplegado la llama igual.
 
-drop function public.registrar_pago_por_adelantado(
-  text, uuid, public.plan_tier, integer, text, text, integer, text, timestamptz, timestamptz
-);
+alter table public.payments
+  add column credit_cents integer not null default 0 check (credit_cents >= 0);
 
-create function public.registrar_pago_por_adelantado(
+comment on column public.payments.credit_cents is
+  'Al subir de plan: el valor sin usar de los pagos del plan anterior que se convirtio en dias de este pago.';
+
+create or replace function public.registrar_pago_por_adelantado(
   p_provider_id text,
   p_restaurant uuid,
   p_plan public.plan_tier,
@@ -27,8 +32,7 @@ create function public.registrar_pago_por_adelantado(
   p_amount_cents integer,
   p_currency text,
   p_expires_at timestamptz,
-  p_approved_at timestamptz,
-  p_precios jsonb default null
+  p_approved_at timestamptz
 )
 returns table (status text, plan public.plan_tier, premium_until timestamptz, aplicado boolean)
 language plpgsql
@@ -42,8 +46,8 @@ declare
   base timestamptz;
   desde timestamptz;
   hasta timestamptz;
-  precio_actual numeric;
-  precio_nuevo numeric;
+  credito numeric := 0;
+  segundos_pagados numeric;
 begin
   insert into public.payments as p (
     provider, provider_id, restaurant_id, plan, months, status, method,
@@ -87,18 +91,34 @@ begin
     hasta := base + make_interval(months => pago.months);
 
     if plan_actual <> 'basico' and hasta_actual > base then
-      -- Cambio de plan con otro vigente: lo que quedaba se vuelve dias del
-      -- nuevo, a su precio.
-      precio_actual := (p_precios ->> plan_actual::text)::numeric;
-      precio_nuevo := (p_precios ->> pago.plan::text)::numeric;
-      if precio_actual > 0 and precio_nuevo > 0 then
-        hasta := hasta + (hasta_actual - base) * (precio_actual / precio_nuevo)::double precision;
+      -- Cambio de plan con otro vigente. Lo que queda de cada pago del plan
+      -- anterior, a lo que se pago por el (incluido lo que ese pago traia de
+      -- antes), en proporcion a lo que le falta por correr.
+      select coalesce(sum(
+        (p.amount_cents + p.credit_cents)
+          * extract(epoch from (p.period_end - greatest(p.period_start, base)))
+          / nullif(extract(epoch from (p.period_end - p.period_start)), 0)
+      ), 0)
+      into credito
+      from public.payments p
+      where p.restaurant_id = pago.restaurant_id
+        and p.id <> pago.id
+        and p.applied_at is not null
+        and p.plan <> pago.plan
+        and p.status not in ('refunded', 'charged_back')
+        and p.period_end > base;
+
+      -- Ese valor, en dias del plan nuevo a su precio por dia.
+      segundos_pagados := extract(epoch from (hasta - desde));
+      if credito > 0 and pago.amount_cents > 0 and segundos_pagados > 0 then
+        hasta := hasta + make_interval(secs => credito * segundos_pagados / pago.amount_cents);
       end if;
 
       -- Los pagos del plan anterior ya no cubren nada desde aqui.
       update public.payments p
       set period_end = base, period_start = least(p.period_start, base)
       where p.restaurant_id = pago.restaurant_id
+        and p.id <> pago.id
         and p.applied_at is not null
         and p.plan <> pago.plan
         and p.period_end > base;
@@ -110,7 +130,7 @@ begin
   where r.id = pago.restaurant_id;
 
   update public.payments p
-  set applied_at = now(), period_start = desde, period_end = hasta
+  set applied_at = now(), period_start = desde, period_end = hasta, credit_cents = round(credito)
   where p.id = pago.id;
 
   return query select pago.status, pago.plan, hasta, true;
@@ -118,5 +138,5 @@ end;
 $$;
 
 revoke execute on function public.registrar_pago_por_adelantado(
-  text, uuid, public.plan_tier, integer, text, text, integer, text, timestamptz, timestamptz, jsonb
+  text, uuid, public.plan_tier, integer, text, text, integer, text, timestamptz, timestamptz
 ) from public, anon, authenticated;

@@ -124,6 +124,9 @@ test("los mensajes del asistente, dentro de los límites de la API", () => {
 
   const [t] = aPayloads(destino, { tipo: "texto", texto: "Hola" });
   assert.deepEqual(t, { messaging_product: "whatsapp", recipient_type: "individual", to: "5218111111111", type: "text", text: { body: "Hola", preview_url: true } });
+  // El enlace de la reseña va sin vista previa: el robot no debe gastarlo.
+  const [sin] = aPayloads(destino, { tipo: "texto", texto: "Tu reseña: https://x/q/pedido/abc", sinVistaPrevia: true });
+  assert.equal(sin.text.preview_url, false);
 
   const [b] = aPayloads(destino, {
     tipo: "botones",

@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { enviarMensajes, esFueraDeVentana, whatsappConfigurado } from "../../../../lib/meta";
 import { avisoDeEstado, estadoDePedido } from "../../../../lib/pedidos";
 import { urlDelSitio } from "../../../../lib/sitio";
-import { qrCodigoValido } from "../../../../lib/slug";
 import { supabaseSession } from "../../../../lib/supabase";
 
 const NO_ES_TUYO = { status: "error", message: "Ese restaurante no es tuyo." };
@@ -25,11 +24,16 @@ const AVISADO = {
   entregado: "Le pedimos su reseña por WhatsApp.",
 };
 
-// El enlace de la reseña es el del QR de la mesa: le deja al cliente el mismo
-// pase de visita, y con él su reseña sale verificada. `de=pedido` lo manda a
-// las reseñas de la ficha sin contarlo como un escaneo en el local.
-function enlaceDeResena(qrCode) {
-  return qrCodigoValido(qrCode) ? urlDelSitio(`/q/${qrCode}?de=pedido`) : null;
+// El enlace de la reseña: uno por pedido y de un solo uso (`token_de_resena`).
+// Abrirlo le deja al cliente un pase de visita, como el QR de la mesa, y con
+// él su reseña sale verificada. Si no se puede sacar, no se manda nada.
+async function enlaceDeResena(supabase, pedidoId) {
+  const { data: token, error } = await supabase.rpc("token_de_resena", { p_order: pedidoId });
+  if (error) {
+    console.error("token de reseña", error.message);
+    return null;
+  }
+  return token ? urlDelSitio(`/q/pedido/${token}`) : null;
 }
 
 /**
@@ -56,7 +60,7 @@ export async function cambiarEstadoPedido(_prevState, formData) {
 
   const { data: restaurante } = await supabase
     .from("restaurants")
-    .select("id, phone, qr_code")
+    .select("id, phone")
     .eq("id", id)
     .eq("owner_id", auth.user.id)
     .maybeSingle();
@@ -92,9 +96,13 @@ export async function cambiarEstadoPedido(_prevState, formData) {
     codigo: fila.code,
     entrega: fila.delivery,
     telefono: String(restaurante.phone ?? "").trim() || null,
-    resena: enlaceDeResena(restaurante.qr_code),
+    resena: fila.status === "entregado" ? await enlaceDeResena(supabase, fila.id) : null,
   });
   if (!texto) return { status: "ok", message: hecho };
+
+  // Pedir la reseña es un extra: si no sale, el dueño no tiene que avisarle
+  // nada al cliente, que ya tiene su comida.
+  const opcional = fila.status === "entregado";
 
   const { data: linea } = await supabase
     .from("whatsapp_lines")
@@ -102,6 +110,7 @@ export async function cambiarEstadoPedido(_prevState, formData) {
     .eq("restaurant_id", restaurante.id)
     .maybeSingle();
   if (!linea?.is_active || !whatsappConfigurado()) {
+    if (opcional) return { status: "ok", message: hecho };
     return { status: "ok", message: `${hecho} Avísale tú al cliente: el asistente no está conectado.` };
   }
 
@@ -109,11 +118,12 @@ export async function cambiarEstadoPedido(_prevState, formData) {
     await enviarMensajes(
       linea.phone_number_id,
       { telefono: fila.customer_phone, usuario: fila.customer_user_id },
-      [{ tipo: "texto", texto }],
+      [{ tipo: "texto", texto, sinVistaPrevia: opcional }],
     );
     return { status: "ok", message: `${hecho} ${AVISADO[fila.status]}` };
   } catch (fallo) {
     console.error("aviso al cliente", fallo?.message);
+    if (opcional) return { status: "ok", message: hecho };
     return {
       status: "aviso",
       message: esFueraDeVentana(fallo)

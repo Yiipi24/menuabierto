@@ -17,9 +17,14 @@ stable
 security invoker
 set search_path = ''
 as $$
+  -- Una zona vacia o mal escrita haria fallar la consulta entera; se queda
+  -- la del centro, como en el resto de la ficha.
   with zona as (
     select coalesce(
-      (select r.timezone from public.restaurants r where r.id = rid),
+      (select r.timezone
+       from public.restaurants r
+       join pg_catalog.pg_timezone_names z on z.name = r.timezone
+       where r.id = rid),
       'America/Mexico_City'
     ) as tz
   ),
@@ -33,11 +38,22 @@ as $$
     select * from pedidos where status <> 'cancelado'
   ),
   platillos as (
+    -- Se lee cada renglon como lo pinta el panel (`lineasGuardadas`): sin
+    -- nombre no cuenta, y una cantidad que no es un numero positivo vale 1.
+    -- Un renglon raro no debe tumbar las estadisticas de todo el periodo.
     select
-      coalesce(nullif(btrim(i ->> 'name'), ''), 'Sin nombre') as nombre,
-      sum(greatest(coalesce((i ->> 'quantity')::numeric, 0), 0)) as cantidad
+      btrim(i ->> 'name') as nombre,
+      -- El `::numeric` va dentro de un `then`, que solo se evalua si su
+      -- `when` se cumple; dentro de un `and` el orden no esta garantizado.
+      sum(case
+            when jsonb_typeof(i -> 'quantity') = 'number'
+              or (i ->> 'quantity') ~ '^[0-9]{1,6}(\.[0-9]{1,6})?$'
+              then case when (i ->> 'quantity')::numeric > 0 then (i ->> 'quantity')::numeric else 1 end
+            else 1
+          end) as cantidad
     from validos v
     cross join lateral jsonb_array_elements(v.items) as i
+    where nullif(btrim(i ->> 'name'), '') is not null
     group by 1
     order by 2 desc, 1
     limit 5
