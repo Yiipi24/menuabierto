@@ -63,7 +63,7 @@ nada. La migración `inteligencia_de_precios` lo convierte en tres cosas:
   (`precios_de_zona`: la mediana de las medianas por restaurante, con su
   rango típico). Aquí sí salen nombres: son los precios que cada carta ya
   publica.
-- **Para el dueño, dentro de Premium**, la tarjeta "Tu posición de precio"
+- **Para el dueño, dentro de Premium (y de Pedidos)**, la tarjeta "Tu posición de precio"
   del tablero (`posicion_de_precio`): la mediana de su carta contra la de su
   colonia (o su ciudad, si la colonia no llega) y contra la de su cocina en la
   ciudad, y un aviso cuando queda a más de un cuarto por encima o por debajo
@@ -181,7 +181,7 @@ devolvió el modelo.
   clasificador (`fallbacks: "default"`) están encendidos.
 - **Cupo y costo.** Cada lectura queda en `menu_extractions` con su modelo y
   sus tokens, y `extracciones_del_mes()` la cuenta contra el cupo del plan:
-  3 al mes en Básico, 15 en Plus, 50 en Premium (`LECTURAS_POR_MES`). Una
+  3 al mes en Básico, 15 en Plus, 50 en Premium, 200 en Pedidos (`LECTURAS_POR_MES`). Una
   lectura ilegible cuenta; un error nuestro o de la API no. No hay política
   de borrado: el contador no se reinicia a mano.
 - **Entrada.** JPG, PNG, WebP, GIF o PDF hasta 10 MB. AVIF no lo acepta la
@@ -251,7 +251,7 @@ parte del archivo descargado.
 
 ## Cobro de los planes
 
-Plus y Premium se cobran con **Mercado Pago**, por restaurante y no por
+Plus, Premium y Pedidos se cobran con **Mercado Pago**, por restaurante y no por
 cuenta, de dos maneras: una **suscripción mensual**, que se cobra sola pero
 solo a tarjeta de crédito o de débito, y el **pago por adelantado**, de uno a
 doce meses en un solo pago, que acepta OXXO, SPEI, saldo de Mercado Pago y
@@ -341,8 +341,9 @@ con la llave publicable para ponerse Premium.
 Variables de entorno: `MP_ACCESS_TOKEN` (de la aplicación de Mercado Pago; el
 de prueba sirve para el sandbox), `MP_WEBHOOK_SECRET` (el secreto que da el
 panel de webhooks al registrar la URL), `SUPABASE_SERVICE_ROLE_KEY` (solo en el
-servidor), y opcionalmente `PRECIO_PLUS_MXN` y `PRECIO_PREMIUM_MXN` para mover
-los precios sin desplegar (por defecto 199 y 399). Sin `MP_ACCESS_TOKEN` la
+servidor), y opcionalmente `PRECIO_PLUS_MXN`, `PRECIO_PREMIUM_MXN` y
+`PRECIO_PEDIDOS_MXN` para mover los precios sin desplegar (por defecto 199, 399
+y 2,200). Sin `MP_ACCESS_TOKEN` la
 página de planes enseña los botones deshabilitados y no se puede contratar.
 
 Queda fuera, a propósito: la factura fiscal (CFDI), que Mercado Pago no emite
@@ -606,6 +607,26 @@ El script comprueba el id contra Meta, suscribe la app a esa cuenta y pone el
 número como el de pedidos de la ficha, para que la carta mande ahí. El dueño
 prende "Recibir pedidos por WhatsApp" en su panel, como siempre; sin eso el
 asistente contesta preguntas pero no toma pedidos.
+
+**El asistente es del plan Pedidos** ($2,200 al mes): Premium más el asistente,
+100 menús, 200 lecturas de carta por foto y la alta asistida, que es esta
+conexión hecha con el dueño. Sin el plan vigente, el número conectado se trata
+como pausado (`asistenteIncluido` en `lib/planes.js`, que filtra
+`lineasActivas` en `app/api/whatsapp/atender.js`): no contesta ni toma
+pedidos, y el panel le dice al dueño por qué. Los pedidos que ya tenía los
+sigue atendiendo. El script avisa si se conecta una ficha sin el plan. Los
+demás planes conservan el botón "Pedir por WhatsApp", que deja el mensaje en el
+chat del restaurante.
+
+En la base, `pedidos` va después de `premium` en `plan_tier`, y hereda lo de
+Premium en las dos funciones que preguntaban por él con nombre
+(`menus_incluidos` y `posicion_de_precio`). La búsqueda destacada ya tomaba
+cualquier plan de paga. En la app, lo que preguntaba "¿es Premium?" pregunta
+`premiumIncluido()`.
+
+En OXXO se paga hasta $10,000 de una vez (`TOPE_OXXO_CENTAVOS`): 6 y 12 meses
+de Pedidos por adelantado salen marcados "sin OXXO" y se pagan por SPEI, con
+saldo o con tarjeta.
 
 **Queda fuera, a propósito:** cobrar por el chat, escribirle al cliente fuera
 de las 24 horas (necesita plantillas aprobadas), avisarle al dueño por

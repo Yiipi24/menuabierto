@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { pesos } from "../../../lib/precios";
 import { leerPosicion } from "../../../lib/inteligencia-precios";
-import { planVigente } from "../../../lib/planes";
+import { premiumIncluido } from "../../../lib/planes";
 
 // La tarjeta de posición de precio del tablero, dentro de Premium: cómo está
 // la mediana de la carta contra la de la zona y la de la cocina, y el aviso
@@ -9,7 +9,7 @@ import { planVigente } from "../../../lib/planes";
 // base nunca devuelve el precio de un competidor con nombre, y calla cuando
 // hay menos de tres detrás.
 export default async function PosicionDePrecio({ supabase, restaurante }) {
-  const premium = planVigente(restaurante) === "premium";
+  const premium = premiumIncluido(restaurante);
 
   let posicion = null;
   if (premium) {

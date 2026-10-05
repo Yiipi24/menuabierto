@@ -15,6 +15,7 @@ const manana = new Date(Date.now() + 86400000).toISOString();
 test("el cupo de lecturas sigue al plan vigente", () => {
   assert.equal(lecturasIncluidas({ plan: "basico" }), 3);
   assert.equal(lecturasIncluidas({ plan: "premium", premium_until: manana }), 50);
+  assert.equal(lecturasIncluidas({ plan: "pedidos", premium_until: manana }), 200);
   assert.equal(lecturasIncluidas({ plan: "premium", premium_until: "2020-01-01" }), 3);
 });
 

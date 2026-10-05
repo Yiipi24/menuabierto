@@ -5,7 +5,9 @@ import { PLANES, menusIncluidos, nombreDelPlan, planVigente } from "../../../lib
 import {
   MESES_POR_ADELANTADO,
   MONEDA,
+  TOPE_OXXO_CENTAVOS,
   adelantoVigente,
+  admiteOxxo,
   cobroAutomaticoActivo,
   estadoLegible,
   medioLegible,
@@ -71,13 +73,16 @@ const ERRORES = {
 // Las opciones del pago por adelantado de una ficha: plan y meses juntos, con
 // su total, para que el <select> diga cuánto es sin JavaScript. Con un plan
 // vigente, o con una ficha de OXXO por pagar, solo se ofrecen meses de ese
-// mismo plan.
+// mismo plan. Lo que pasa del tope de OXXO lo dice ahí mismo.
 function opcionesDeAdelanto(soloPlan) {
   return PLANES.filter((p) => p.slug !== "basico" && (!soloPlan || p.slug === soloPlan)).flatMap((p) =>
-    MESES_POR_ADELANTADO.map((m) => ({
-      valor: opcionDeAdelanto(p.slug, m),
-      texto: `${p.nombre} · ${mesesLegibles(m)} · ${pesos(totalPorAdelantado(p.slug, m), MONEDA)}`,
-    })),
+    MESES_POR_ADELANTADO.map((m) => {
+      const total = totalPorAdelantado(p.slug, m);
+      return {
+        valor: opcionDeAdelanto(p.slug, m),
+        texto: `${p.nombre} · ${mesesLegibles(m)} · ${pesos(total, MONEDA)}${admiteOxxo(total) ? "" : " · sin OXXO"}`,
+      };
+    }),
   );
 }
 
@@ -148,10 +153,11 @@ export default async function Planes({ searchParams }) {
       <main className="wrap panel-main">
         <h1>Planes</h1>
         <p className="panel-lead">
-          Tres planes, sin letras chiquitas. Publicar tu restaurante con su
-          menú no cuesta; los de paga son para cuando necesites más menús y
-          quieras destacar. Se cobran por restaurante: cada mes con tarjeta, o
-          por adelantado en OXXO o por SPEI. Y se cancelan cuando quieras.
+          Cuatro planes, sin letras chiquitas. Publicar tu restaurante con su
+          menú no cuesta; los de paga son para cuando necesites más menús,
+          quieras destacar o quieras recibir pedidos por WhatsApp. Se cobran por
+          restaurante: cada mes con tarjeta, o por adelantado en OXXO o por
+          SPEI. Y se cancelan cuando quieras.
         </p>
 
         {aviso ? (
@@ -195,7 +201,11 @@ export default async function Planes({ searchParams }) {
           automático, con tarjeta de crédito o de débito, o por adelantado —de
           uno a doce meses en un solo pago— en OXXO, por SPEI, con saldo de
           Mercado Pago o con tarjeta. Lo que pagas por adelantado no se renueva
-          solo: al vencer, pagas otros meses o activas el cobro automático.
+          solo: al vencer, pagas otros meses o activas el cobro automático. En
+          OXXO se paga hasta {pesos(TOPE_OXXO_CENTAVOS, MONEDA)} de una vez; lo
+          que pasa de eso, por SPEI, con saldo o con tarjeta. En el plan
+          Pedidos, los mensajes de WhatsApp los cobra Meta aparte, a la tarjeta
+          que el restaurante registra en su cuenta de WhatsApp.
           Quien esté en la lista de espera conserva el precio
           de lanzamiento el primer año. Un plan de paga que se cancela o deja
           de pagarse vuelve a Básico al vencer: los menús de más siguen

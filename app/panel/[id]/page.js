@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
-import { menusIncluidos, fotosPlatillosIncluidas } from "../../../lib/planes";
+import { asistenteIncluido, menusIncluidos, fotosPlatillosIncluidas } from "../../../lib/planes";
 import { catalogoDeServicios } from "../../../lib/servicios";
 import { catalogoDePagos } from "../../../lib/pagos";
 import EditarForm from "./form";
@@ -150,7 +150,9 @@ export default async function Editar({ params }) {
           coords={coords?.[0] ?? null}
           catalogoServicios={catalogoDeServicios(catalogoServicios ?? [])}
           catalogoPagos={catalogoDePagos(catalogoPagos ?? [])}
-          numeroAsistente={lineaWhatsapp?.is_active ? lineaWhatsapp.display_phone : null}
+          numeroAsistente={
+            lineaWhatsapp?.is_active && asistenteIncluido(restaurante) ? lineaWhatsapp.display_phone : null
+          }
         >
 
           {/* Los pedidos van primero cuando hay asistente: es lo único de esta
@@ -161,9 +163,11 @@ export default async function Editar({ params }) {
               <div className="bloque-qr-texto">
                 <h2 className="sub">Pedidos por WhatsApp</h2>
                 <p className="ayuda">
-                  {lineaWhatsapp?.is_active
+                  {lineaWhatsapp?.is_active && asistenteIncluido(restaurante)
                     ? `Tu asistente contesta el ${telefonoLegible(lineaWhatsapp.display_phone)}: horario, menú y pedidos.`
-                    : "Tu asistente de WhatsApp está pausado."}
+                    : lineaWhatsapp?.is_active
+                      ? "Tu asistente de WhatsApp está en pausa: el plan Pedidos no está vigente."
+                      : "Tu asistente de WhatsApp está pausado."}
                   {pedidosNuevos
                     ? ` Tienes ${pedidosNuevos} ${pedidosNuevos === 1 ? "pedido nuevo" : "pedidos nuevos"} por aceptar.`
                     : ""}

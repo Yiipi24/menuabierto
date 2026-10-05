@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { cerradosDesde } from "../../../../lib/pedidos";
+import { asistenteIncluido } from "../../../../lib/planes";
 import { supabaseSession } from "../../../../lib/supabase";
 import { telefonoLegible } from "../../../../lib/whatsapp";
 import CabeceraPanel from "../../cabecera";
@@ -22,7 +23,7 @@ export default async function Pedidos({ params }) {
 
   const { data: restaurante } = await supabase
     .from("restaurants")
-    .select("id, name, slug, whatsapp_orders")
+    .select("id, name, slug, whatsapp_orders, plan, premium_until")
     .eq("id", id)
     .eq("owner_id", auth.user.id)
     .maybeSingle();
@@ -30,7 +31,11 @@ export default async function Pedidos({ params }) {
 
   const desde = cerradosDesde();
   const [{ data: linea }, { data: abiertos }, { data: cerrados }] = await Promise.all([
-    supabase.from("whatsapp_lines").select("display_phone, is_active").eq("restaurant_id", id).maybeSingle(),
+    supabase
+      .from("whatsapp_lines")
+      .select("display_phone, is_active, answers_in_app")
+      .eq("restaurant_id", id)
+      .maybeSingle(),
     // Los abiertos, del más viejo al más nuevo: es el orden en que se cocinan.
     supabase
       .from("orders")
@@ -49,7 +54,10 @@ export default async function Pedidos({ params }) {
       .limit(50),
   ]);
 
-  const conectado = Boolean(linea?.is_active);
+  // El asistente es del plan Pedidos: conectado y sin el plan vigente, no
+  // contesta, igual que pausado.
+  const conPlan = asistenteIncluido(restaurante);
+  const conectado = Boolean(linea?.is_active) && conPlan;
 
   return (
     <div className="panel-wrap">
@@ -73,13 +81,33 @@ export default async function Pedidos({ params }) {
           </div>
         </div>
 
-        {!linea ? (
+        {!linea && !conPlan ? (
+          <div className="pedidos-aviso">
+            <strong>El asistente de WhatsApp viene con el plan Pedidos.</strong>
+            <p>
+              Conectado a tu número, contesta solo a qué hora abres, dónde estás y cuál es tu página;
+              manda tu menú, y toma los pedidos platillo por platillo con los precios de tu carta. Lee
+              tu menú de aquí, así que cualquier cambio que hagas ya lo tiene.{" "}
+              <Link href="/panel/planes">Ver el plan Pedidos</Link>.
+            </p>
+          </div>
+        ) : !linea ? (
           <div className="pedidos-aviso">
             <strong>Tu asistente de WhatsApp todavía no está conectado.</strong>
             <p>
-              Conectado a tu número, contesta solo a qué hora abres, dónde estás y cuál es tu página;
-              manda tu menú, y toma los pedidos platillo por platillo con los precios de tu carta. Para
-              conectarlo, escríbenos a <a href="mailto:hola@menuabierto.com">hola@menuabierto.com</a>.
+              Ya tienes el plan Pedidos: lo conectamos contigo a tu número en una videollamada. Escríbenos
+              a <a href="mailto:hola@menuabierto.com">hola@menuabierto.com</a> para agendarla.
+            </p>
+          </div>
+        ) : !conPlan ? (
+          <div className="pedidos-aviso">
+            <strong>Tu asistente está en pausa.</strong>
+            <p>
+              El plan Pedidos de este restaurante no está vigente, y sin él el asistente no contesta
+              mensajes ni toma pedidos. Renuévalo en <Link href="/panel/planes">Planes</Link>.
+              {linea.answers_in_app
+                ? " Mientras tanto, los mensajes te llegan a tu app de WhatsApp Business, como siempre."
+                : " Mientras tanto, nadie contesta en ese número: tu botón de pedir y tu carta mandan ahí. Si no vas a renovar, escríbenos a hola@menuabierto.com para desconectarlo."}
             </p>
           </div>
         ) : !conectado ? (
@@ -101,7 +129,12 @@ export default async function Pedidos({ params }) {
           </div>
         ) : null}
 
-        <ListaPedidos id={id} pedidos={[...(abiertos ?? []), ...(cerrados ?? [])]} conectado={conectado} />
+        <ListaPedidos
+          id={id}
+          pedidos={[...(abiertos ?? []), ...(cerrados ?? [])]}
+          conectado={conectado}
+          sinPlan={Boolean(linea) && !conPlan}
+        />
       </main>
     </div>
   );
