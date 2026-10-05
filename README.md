@@ -78,7 +78,8 @@ baratos por nombre, a propósito. `precios` es un segmento reservado.
 ## Reseñas verificadas por escaneo del QR
 
 Contra Google no se gana por volumen de reseñas sino por confianza, y el QR de
-la mesa es la única prueba de visita que tenemos: nadie la copia sin pegar un
+la mesa es la única prueba de visita que tenemos (el asistente de WhatsApp manda
+el mismo enlace a quien recibió su pedido, que es la prueba de compra): nadie la copia sin pegar un
 QR en cada mesa. Al escanear, `/q/<codigo>` —ahora una ruta y no una página,
 porque tiene que poder poner la cookie del visitante— registra un **pase de
 visita** (`visit_passes`) ligado a esa cookie y, si había sesión, a la
@@ -305,8 +306,16 @@ El flujo de la suscripción:
 Las dos maneras no se juntan, porque juntas cobrarían dos veces el mismo mes:
 con la suscripción cobrando no se ofrece el adelanto, y con meses pagados por
 adelantado, o con una ficha de OXXO por pagar, no se ofrece la suscripción.
-Con un plan vigente, o con una ficha de OXXO por pagar, solo se pagan más
-meses de ese mismo plan.
+Con un plan vigente se pagan más meses de ese mismo plan o se sube a uno más
+alto; con una ficha de OXXO por pagar, solo del plan de la ficha. **Al subir**,
+lo que queda de los pagos por adelantado del plan anterior se convierte en días
+del nuevo: la parte sin usar de cada pago aplicado y no devuelto, a lo que se
+pagó por él, al precio por día del pago nuevo (veinte días de un Premium de
+$399 son $266, unos 3.7 días de Pedidos). Lo calcula
+`registrar_pago_por_adelantado()`, lo guarda en `payments.credit_cents` del
+pago nuevo —para revisar a mano una devolución posterior— y cierra los pagos
+del plan anterior. Lo que viene de una suscripción no se convierte. Bajar a
+medio periodo no se ofrece.
 
 Los dos caminos escriben el plan de la ficha, y lo hacen en la base con la
 fila de la ficha bloqueada: `registrar_pago_por_adelantado()` y
@@ -540,7 +549,13 @@ restaurante con la carta solo en PDF recibe el pedido como texto libre.
 - **Aceptar, "Ya está listo", Entregado, Cancelar.** Cada cambio pasa por
   `cambiar_estado_pedido()` —solo el dueño, solo hacia adelante— y le escribe
   al cliente en el mismo chat ("Aceptamos tu pedido K7M2…", "ya va en
-  camino"). Entregado no escribe nada. Si pasaron más de 24 horas desde el
+  camino"). Entregado le pide la reseña con un enlace de un solo uso
+  (`/q/pedido/<token>`, `token_de_resena()`): abrirlo le deja un pase de visita
+  como el del QR de la mesa, así que su reseña sale verificada, y lo lleva a
+  las reseñas de la ficha sin contar como escaneo. El token se gasta la
+  primera vez (`pase_de_pedido()`), caduca a los 30 días y el mensaje va sin
+  vista previa, para que el robot de la vista previa no lo gaste. Si el aviso
+  no sale, al dueño no se le pide nada. Si pasaron más de 24 horas desde el
   último mensaje del cliente, WhatsApp ya no deja escribirle sin plantilla, y
   la pantalla lo dice.
 - **El aviso**: un pedido nuevo deja una fila `pedido` en la bandeja (trigger
@@ -623,6 +638,16 @@ Premium en las dos funciones que preguntaban por él con nombre
 (`menus_incluidos` y `posicion_de_precio`). La búsqueda destacada ya tomaba
 cualquier plan de paga. En la app, lo que preguntaba "¿es Premium?" pregunta
 `premiumIncluido()`.
+
+**Estadísticas de pedidos** (`/panel/<id>/pedidos/estadisticas`): pedidos,
+lo vendido y el ticket promedio (de referencia, sin cancelados), lo que más se
+pide, a qué hora y cómo, en 7, 30 o 90 días. Las cuenta
+`estadisticas_de_pedidos()` en la base —PostgREST corta en mil filas y un local
+con movimiento las pasa en un trimestre—, con `security invoker` para que la
+RLS de `orders` deje ver solo los propios. Las horas van en la zona del
+restaurante (la del centro si la suya no es válida), y los platillos se cuentan
+como los pinta el panel: un renglón sin nombre no cuenta y uno sin cantidad
+válida vale 1.
 
 En OXXO se paga hasta $10,000 de una vez (`TOPE_OXXO_CENTAVOS`): 6 y 12 meses
 de Pedidos por adelantado salen marcados "sin OXXO" y se pagan por SPEI, con

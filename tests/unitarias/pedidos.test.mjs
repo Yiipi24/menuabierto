@@ -221,6 +221,13 @@ test("los estados del pedido y lo que se le avisa al cliente", () => {
   assert.match(avisoDeEstado({ status: "listo", codigo: "K7M2", entrega: "llevar" }), /pasar por él/);
   assert.match(avisoDeEstado({ status: "cancelado", codigo: "K7M2", telefono: "81 1234 5678" }), /llámanos al 81 1234 5678/);
   assert.equal(avisoDeEstado({ status: "entregado", codigo: "K7M2" }), null);
+  // Al entregar se pide la reseña, con el enlace que deja el pase del QR.
+  const enlace = `https://menuabierto.com/q/pedido/${"a".repeat(32)}`;
+  assert.equal(
+    avisoDeEstado({ status: "entregado", codigo: "K7M2", resena: enlace }),
+    `¡Gracias por tu pedido K7M2! Si te gustó, tu reseña nos ayuda mucho: ${enlace}`,
+  );
+  assert.equal(avisoDeEstado({ status: "nuevo", codigo: "K7M2", resena: enlace }), null);
 });
 
 test("el código: corto, sin letras que se confunden", () => {
@@ -284,4 +291,18 @@ test("la fila respeta lo que la base va a comprobar", () => {
 
   assert.deepEqual(lineasGuardadas(fila.items), [{ id: "p-pastor", nombre: "Tacos de pastor", cantidad: 2, precio: 2500 }]);
   assert.deepEqual(lineasGuardadas("x"), []);
+});
+
+test("estadísticas: el periodo es 7, 30 o 90 días, y la hora se dice como franja", async () => {
+  const { periodoDeEstadisticas, franjaHoraria } = await import("../../lib/pedidos.js");
+  assert.equal(periodoDeEstadisticas("7"), 7);
+  assert.equal(periodoDeEstadisticas(90), 90);
+  assert.equal(periodoDeEstadisticas("15"), 30);
+  assert.equal(periodoDeEstadisticas(undefined), 30);
+  assert.equal(franjaHoraria(14), "2 pm a 3 pm");
+  assert.equal(franjaHoraria(0), "12 am a 1 am");
+  assert.equal(franjaHoraria(11), "11 am a 12 pm");
+  assert.equal(franjaHoraria(23), "11 pm a 12 am");
+  assert.equal(franjaHoraria(24), "");
+  assert.equal(franjaHoraria(null), "");
 });

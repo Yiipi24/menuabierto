@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   PLANES,
   asistenteIncluido,
+  ordenDePlan,
   premiumIncluido,
+  subeOMantiene,
   planVigente,
   menusIncluidos,
   fotosPlatillosIncluidas,
@@ -48,4 +50,17 @@ test("Pedidos incluye lo de Premium, y el asistente es solo de Pedidos", () => {
   assert.equal(asistenteIncluido({ plan: "pedidos", premium_until: ayer }), false);
   assert.equal(premiumIncluido({ plan: "pedidos", premium_until: ayer }), false);
   assert.equal(asistenteIncluido(null), false);
+});
+
+test("pagando por adelantado se queda en el plan o sube, nunca baja", () => {
+  assert.deepEqual(["basico", "plus", "premium", "pedidos"].map(ordenDePlan), [0, 1, 2, 3]);
+  assert.equal(subeOMantiene("basico", "plus"), true);
+  assert.equal(subeOMantiene("basico", "pedidos"), true);
+  assert.equal(subeOMantiene("premium", "premium"), true);
+  assert.equal(subeOMantiene("premium", "pedidos"), true);
+  assert.equal(subeOMantiene("pedidos", "premium"), false);
+  assert.equal(subeOMantiene("premium", "plus"), false);
+  // Básico no se compra, y un plan que no existe tampoco.
+  assert.equal(subeOMantiene("basico", "basico"), false);
+  assert.equal(subeOMantiene("basico", "inventado"), false);
 });

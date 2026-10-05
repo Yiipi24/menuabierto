@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
-import { PLANES, menusIncluidos, nombreDelPlan, planVigente } from "../../../lib/planes";
+import {
+  PLANES,
+  menusIncluidos,
+  nombreDelPlan,
+  ordenDePlan,
+  planVigente,
+  subeOMantiene,
+} from "../../../lib/planes";
 import {
   MESES_POR_ADELANTADO,
   MONEDA,
@@ -65,17 +72,17 @@ const ERRORES = {
   suscripcion:
     "Tienes el cobro automático activo. Para pagar por adelantado, cancélalo primero: lo que ya pagaste se respeta.",
   cambio:
-    "Para cambiar de plan, espera a que venza el que tienes. Mientras, puedes pagar más meses del mismo.",
+    "Pagando por adelantado puedes quedarte en tu plan o subir; para bajar, espera a que venza el que tienes.",
   "otro-por-cobrar":
     "Tienes un pago en OXXO o SPEI por hacer de otro plan. Págalo, o espera a que venza, antes de pagar este.",
 };
 
 // Las opciones del pago por adelantado de una ficha: plan y meses juntos, con
 // su total, para que el <select> diga cuánto es sin JavaScript. Con un plan
-// vigente, o con una ficha de OXXO por pagar, solo se ofrecen meses de ese
-// mismo plan. Lo que pasa del tope de OXXO lo dice ahí mismo.
-function opcionesDeAdelanto(soloPlan) {
-  return PLANES.filter((p) => p.slug !== "basico" && (!soloPlan || p.slug === soloPlan)).flatMap((p) =>
+// vigente se ofrece ese y los de arriba; con una ficha de OXXO por pagar, solo
+// el de la ficha. Lo que pasa del tope de OXXO lo dice ahí mismo.
+function opcionesDeAdelanto(vigente, soloPlan) {
+  return PLANES.filter((p) => (soloPlan ? p.slug === soloPlan : subeOMantiene(vigente, p.slug))).flatMap((p) =>
     MESES_POR_ADELANTADO.map((m) => {
       const total = totalPorAdelantado(p.slug, m);
       return {
@@ -229,8 +236,17 @@ export default async function Planes({ searchParams }) {
                 // Las dos formas de pagar no se juntan: con una corriendo, la
                 // otra cobraría dos veces el mismo mes.
                 const puedeSuscribirse = !adelanto && !porCobrar;
-                const soloPlan = vigente !== "basico" ? vigente : (porCobrar?.plan ?? null);
-                const opciones = cobroAutomaticoActivo(suscripcion) ? [] : opcionesDeAdelanto(soloPlan);
+                const opciones = cobroAutomaticoActivo(suscripcion)
+                  ? []
+                  : opcionesDeAdelanto(vigente, porCobrar?.plan ?? null);
+                // Con meses pagados por adelantado y un plan más alto a la
+                // mano, se dice qué pasa con lo que queda antes de pagar. Lo
+                // que viene de la suscripción no se convierte: no hay pago
+                // por adelantado del que salga el valor.
+                const puedeSubir =
+                  Boolean(adelanto) &&
+                  !porCobrar &&
+                  PLANES.some((p) => ordenDePlan(p.slug) > ordenDePlan(vigente));
                 return (
                   <li className="fila-plan" key={r.id}>
                     <div className="fila-plan-nombre">
@@ -298,9 +314,15 @@ export default async function Planes({ searchParams }) {
                             disabled={!cobroActivo}
                             title={cobroActivo ? undefined : "El cobro aún no está habilitado"}
                           >
-                            {vigente === "basico" ? "Pagar por adelantado" : "Pagar más meses"}
+                            Pagar por adelantado
                           </button>
                         </form>
+                      ) : null}
+                      {opciones.length && puedeSubir ? (
+                        <small className="fila-plan-detalle">
+                          Si subes de plan, lo que te queda de lo que pagaste por {nombreDelPlan(r)} se
+                          convierte en días del nuevo.
+                        </small>
                       ) : null}
                       {viva ? (
                         <form action={cancelarPlan}>
