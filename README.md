@@ -305,8 +305,14 @@ El flujo de la suscripción:
 Las dos maneras no se juntan, porque juntas cobrarían dos veces el mismo mes:
 con la suscripción cobrando no se ofrece el adelanto, y con meses pagados por
 adelantado, o con una ficha de OXXO por pagar, no se ofrece la suscripción.
-Con un plan vigente, o con una ficha de OXXO por pagar, solo se pagan más
-meses de ese mismo plan.
+Con un plan vigente se pagan más meses de ese mismo plan o se sube a uno más
+alto; con una ficha de OXXO por pagar, solo del plan de la ficha. **Al subir**,
+lo que queda del plan vigente se convierte en días del nuevo, a su precio
+(diez días de Premium a $399 son 1.8 de Pedidos a $2,200), y los pagos del
+plan anterior quedan cerrados en ese momento. Lo calcula
+`registrar_pago_por_adelantado()` con los precios que le manda
+`lib/adelantos.js` (`p_precios`, los de `lib/cobro.js`); sin ellos, el cambio
+empieza de cero. Bajar a medio periodo no se ofrece.
 
 Los dos caminos escriben el plan de la ficha, y lo hacen en la base con la
 fila de la ficha bloqueada: `registrar_pago_por_adelantado()` y

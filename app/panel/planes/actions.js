@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
-import { PLANES, planVigente } from "../../../lib/planes";
+import { PLANES, planVigente, subeOMantiene } from "../../../lib/planes";
 import {
   adelantoVigente,
   cobroAutomaticoActivo,
@@ -160,9 +160,10 @@ export async function pagarPorAdelantado(formData) {
   const actual = await suscripcionDe(supabase, ficha.id);
   if (cobroAutomaticoActivo(actual)) redirect("/panel/planes?error=suscripcion");
 
-  // Más meses del plan que ya tiene, o cualquiera si está en Básico. Cambiar
-  // de plan con uno vigente perdería lo que queda del otro. Una ficha de OXXO
-  // por pagar cuenta igual: si se paga después, sería un plan encima de otro.
+  // Más meses del plan que ya tiene, o uno más alto: lo que queda del vigente
+  // se convierte en días del nuevo al aplicarse el pago. Bajar a medio periodo
+  // no. Una ficha de OXXO por pagar fija el plan: si se paga después, sería un
+  // plan encima de otro.
   let pagos;
   try {
     pagos = await pagosVigentes(supabase, [ficha.id]);
@@ -171,7 +172,7 @@ export async function pagarPorAdelantado(formData) {
     redirect("/panel/planes?error=pasarela");
   }
   const vigente = planVigente(ficha);
-  if (vigente !== "basico" && vigente !== opcion.plan) redirect("/panel/planes?error=cambio");
+  if (!subeOMantiene(vigente, opcion.plan)) redirect("/panel/planes?error=cambio");
   if (pagos.some((p) => pagoPorCobrar(p) && p.plan !== opcion.plan)) {
     redirect("/panel/planes?error=otro-por-cobrar");
   }
