@@ -262,10 +262,19 @@ a OXXO ni a SPEI, pero sí acepta los dos en un pago suelto. Stripe queda como
 alternativa y por eso `subscriptions.provider` y `payments.provider` existen
 como columnas.
 
+En `/panel/planes`, cada ficha tiene su selector (`elegir-plan.js`): el dueño
+elige un plan, luego cómo pagarlo —"cada mes con tarjeta" o "por adelantado"
+con los meses—, ve el total en el resumen y toca "Continuar con el pago". Ese
+formulario va a `continuarConElPago`, que lo pasa a una de las dos acciones de
+abajo sin cambiar lo que comprueban. Lo que no se puede (por ejemplo, el cobro
+automático con meses ya pagados por adelantado) se dice en el selector con la
+misma razón que daría la acción, y no se preselecciona ningún plan:
+"Recomendado" en la tabla es una sugerencia, no una elección.
+
 El flujo de la suscripción:
 
-1. En `/panel/planes` el dueño toca "Contratar Plus". La acción
-   (`app/panel/planes/actions.js`) crea la suscripción en Mercado Pago
+1. El dueño elige un plan y "cada mes con tarjeta". La acción
+   (`contratarPlan` en `app/panel/planes/actions.js`) crea la suscripción en Mercado Pago
    (`/preapproval`) con `external_reference = <restaurante>:<plan>`, guarda la
    fila en `subscriptions` como pendiente y lo manda al `init_point` a pagar.
 2. Al pagar vuelve a `/panel/planes/volver?preapproval_id=…`, que sincroniza en
@@ -285,8 +294,8 @@ El flujo de la suscripción:
 
 ### Pago por adelantado (OXXO y SPEI)
 
-1. En `/panel/planes` el dueño elige plan y meses en un solo `<select>`
-   ("Plus · 3 meses · $597") y toca "Pagar por adelantado". La acción
+1. El dueño elige un plan, "por adelantado" y los meses ("3 meses · $597";
+   los que pasan del tope de OXXO dicen "sin OXXO"). La acción
    (`pagarPorAdelantado` en `app/panel/planes/actions.js`) crea una preferencia
    de Checkout Pro por el total, con `external_reference =
    adelanto:<restaurante>:<plan>:<meses>`, y lo manda a pagar. El prefijo

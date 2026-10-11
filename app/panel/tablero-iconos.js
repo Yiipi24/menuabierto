@@ -340,3 +340,58 @@ export function IconoGente(props) {
     </Svg>
   );
 }
+
+// Los de la página de planes: el diamante de Premium, la palomita de cada
+// beneficio, la tarjeta del cobro mensual, el candado del pago seguro, la "i"
+// de las formas de pago y la flecha del botón que lleva a pagar.
+export function IconoDiamante(props) {
+  return (
+    <Svg {...props}>
+      <path d="M7 4.5h10l3.5 5L12 20 3.5 9.5z" />
+      <path d="M3.5 9.5h17M9.5 4.5L8 9.5l4 10.5 4-10.5-1.5-5" />
+    </Svg>
+  );
+}
+
+export function IconoPalomita(props) {
+  return (
+    <Svg {...props}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
+    </Svg>
+  );
+}
+
+export function IconoTarjeta(props) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="5.5" width="18" height="13" rx="2" />
+      <path d="M3 9.5h18M7 15h4" />
+    </Svg>
+  );
+}
+
+export function IconoCandado(props) {
+  return (
+    <Svg {...props}>
+      <rect x="5" y="10.5" width="14" height="10" rx="2" />
+      <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+    </Svg>
+  );
+}
+
+export function IconoInfo(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.6" />
+      <path d="M12 11v5M12 8h.01" />
+    </Svg>
+  );
+}
+
+export function IconoFlecha(props) {
+  return (
+    <Svg {...props}>
+      <path d="M5 12h14M13.5 6.5L19 12l-5.5 5.5" />
+    </Svg>
+  );
+}

@@ -1,36 +1,38 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
+import { PLANES, menusIncluidos, nombreDelPlan, ordenDePlan, planVigente } from "../../../lib/planes";
 import {
-  PLANES,
-  menusIncluidos,
-  nombreDelPlan,
-  ordenDePlan,
-  planVigente,
-  subeOMantiene,
-} from "../../../lib/planes";
-import {
-  MESES_POR_ADELANTADO,
   MONEDA,
   TOPE_OXXO_CENTAVOS,
   adelantoVigente,
-  admiteOxxo,
-  cobroAutomaticoActivo,
   estadoLegible,
   medioLegible,
-  mesesLegibles,
-  opcionDeAdelanto,
   pagoPorCobrar,
   precioDe,
-  totalPorAdelantado,
 } from "../../../lib/cobro";
 import { cobroConfigurado } from "../../../lib/mercadopago";
 import { confirmarPendientes, pagosVigentes } from "../../../lib/adelantos";
 import { pesos } from "../../../lib/precios";
+import { rutaFicha } from "../../../lib/slug";
 import CabeceraPanel from "../cabecera";
-import { cancelarPlan, contratarPlan, pagarPorAdelantado } from "./actions";
+import {
+  IconoAbrir,
+  IconoCarta,
+  IconoCorona,
+  IconoDiamante,
+  IconoInfo,
+  IconoPalomita,
+  IconoTienda,
+  IconoWhatsapp,
+} from "../tablero-iconos";
+import { planesParaElegir } from "../../../lib/opciones-de-pago";
+import { cancelarPlan } from "./actions";
+import ElegirPlan from "./elegir-plan";
 
 export const metadata = { title: "Planes — Menú Abierto" };
+
+const BUCKET_FOTOS = "restaurantes";
 
 // El catálogo de planes vive en lib/planes.js: la sección de menús necesita
 // los mismos números para decir "3 de 5", y dos listas separadas se separan
@@ -77,25 +79,17 @@ const ERRORES = {
     "Tienes un pago en OXXO o SPEI por hacer de otro plan. Págalo, o espera a que venza, antes de pagar este.",
 };
 
-// Las opciones del pago por adelantado de una ficha: plan y meses juntos, con
-// su total, para que el <select> diga cuánto es sin JavaScript. Con un plan
-// vigente se ofrece ese y los de arriba; con una ficha de OXXO por pagar, solo
-// el de la ficha. Lo que pasa del tope de OXXO lo dice ahí mismo.
-function opcionesDeAdelanto(vigente, soloPlan) {
-  return PLANES.filter((p) => (soloPlan ? p.slug === soloPlan : subeOMantiene(vigente, p.slug))).flatMap((p) =>
-    MESES_POR_ADELANTADO.map((m) => {
-      const total = totalPorAdelantado(p.slug, m);
-      return {
-        valor: opcionDeAdelanto(p.slug, m),
-        texto: `${p.nombre} · ${mesesLegibles(m)} · ${pesos(total, MONEDA)}${admiteOxxo(total) ? "" : " · sin OXXO"}`,
-      };
-    }),
-  );
-}
+const ICONOS_PLAN = {
+  basico: IconoTienda,
+  plus: IconoCorona,
+  premium: IconoDiamante,
+  pedidos: IconoWhatsapp,
+};
 
-function precioLegible(slug) {
-  const centavos = precioDe(slug);
-  return centavos ? `${pesos(centavos, MONEDA)} al mes` : null;
+// Lo que más se compara entre planes es cuántos menús caben: en la lista de
+// cada tarjeta, la cifra va en negritas.
+function conCifras(texto) {
+  return texto.split(/(\d+ menús)/).map((parte, i) => (i % 2 ? <strong key={i}>{parte}</strong> : parte));
 }
 
 function fechaCorta(valor) {
@@ -127,22 +121,35 @@ export default async function Planes({ searchParams }) {
 
   const { data: restaurantes } = await supabase
     .from("restaurants")
-    .select("id, name, plan, premium_until")
+    .select("id, name, slug, status, plan, premium_until")
     .eq("owner_id", auth.user.id)
     .order("created_at", { ascending: false });
 
   const ids = (restaurantes ?? []).map((r) => r.id);
-  const [{ data: menus }, { data: suscripciones }] = ids.length
+  const [{ data: menus }, { data: suscripciones }, { data: fotos }] = ids.length
     ? await Promise.all([
         supabase.from("menus").select("id, restaurant_id").in("restaurant_id", ids),
         supabase
           .from("subscriptions")
           .select("restaurant_id, plan, status, next_payment_at")
           .in("restaurant_id", ids),
+        supabase
+          .from("restaurant_media")
+          .select("restaurant_id, storage_path, category, position")
+          .in("restaurant_id", ids)
+          .order("position"),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
 
   const suscripcionDe = new Map((suscripciones ?? []).map((s) => [s.restaurant_id, s]));
+
+  // La miniatura de cada ficha es su fachada; si no tiene, la primera foto.
+  // Es la misma regla que el selector del tablero.
+  const portadaDe = new Map();
+  for (const f of fotos ?? []) {
+    const actual = portadaDe.get(f.restaurant_id);
+    if (!actual || (f.category === "fachada" && actual.category !== "fachada")) portadaDe.set(f.restaurant_id, f);
+  }
 
   // Si los pagos no se pueden leer, la página se enseña igual, sin ellos: el
   // candado de verdad está en las acciones, que sí fallan cerrado.
@@ -157,15 +164,24 @@ export default async function Planes({ searchParams }) {
     <div className="panel-wrap">
       <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} atras="/panel" />
 
-      <main className="wrap panel-main">
-        <h1>Planes</h1>
-        <p className="panel-lead">
-          Cuatro planes, sin letras chiquitas. Publicar tu restaurante con su
-          menú no cuesta; los de paga son para cuando necesites más menús,
-          quieras destacar o quieras recibir pedidos por WhatsApp. Se cobran por
-          restaurante: cada mes con tarjeta, o por adelantado en OXXO o por
-          SPEI. Y se cancelan cuando quieras.
-        </p>
+      <main className="wrap wrap-ancho panel-main planes-pagina">
+        <header className="planes-encabezado">
+          <div>
+            <h1>Planes</h1>
+            <p className="planes-subtitulo">
+              Elige el plan ideal para tu restaurante. Puedes cambiar de plan cuando lo necesites.
+            </p>
+          </div>
+          <div className="planes-por-restaurante">
+            <span className="planes-por-restaurante-icono">
+              <IconoTienda ancho={22} />
+            </span>
+            <p>
+              <strong>Un plan por restaurante</strong>
+              Cada restaurante puede tener un plan diferente.
+            </p>
+          </div>
+        </header>
 
         {aviso ? (
           <p className={`form-msg ${aviso.clase}`} role="status">
@@ -178,52 +194,87 @@ export default async function Planes({ searchParams }) {
           </p>
         ) : null}
 
-        <div className="plans">
+        <section className="planes-grid" aria-label="Comparación de planes">
           {PLANES.map((p) => {
-            const precio = precioLegible(p.slug);
+            const Icono = ICONOS_PLAN[p.slug] ?? IconoTienda;
+            const centavos = precioDe(p.slug);
             return (
               <article
-                className={p.destacado ? "plan plan-featured" : "plan"}
+                className={p.destacado ? "plan-tarjeta plan-tarjeta-recomendada" : "plan-tarjeta"}
                 key={p.slug}
               >
-                {p.destacado ? <span className="plan-badge">{p.nombre}</span> : null}
+                {p.destacado ? <span className="plan-recomendado">Recomendado</span> : null}
+                <span className="plan-tarjeta-icono">
+                  <Icono ancho={22} />
+                </span>
                 <h2>{p.nombre}</h2>
-                <div className="plan-price">
-                  {precio ? pesos(precioDe(p.slug), MONEDA) : p.precio}{" "}
-                  <span>{precio ? `${MONEDA} al mes` : p.detalle}</span>
-                </div>
-                <p className="plan-menus">{p.menus} menús por restaurante</p>
+                <p className="plan-tarjeta-precio">
+                  {centavos ? pesos(centavos, MONEDA) : p.precio}
+                  <span>{centavos ? `${MONEDA} al mes` : p.detalle}</span>
+                </p>
+                <p className="plan-tarjeta-resumen">{p.resumen}</p>
                 <ul>
                   {p.incluye.map((linea) => (
-                    <li key={linea}>{linea}</li>
+                    <li key={linea}>
+                      <IconoPalomita ancho={16} />
+                      <span>{conCifras(linea)}</span>
+                    </li>
                   ))}
                 </ul>
               </article>
             );
           })}
-        </div>
+        </section>
 
-        <p className="plan-note">
-          Hay dos formas de pagar, las dos con Mercado Pago: cada mes en
-          automático, con tarjeta de crédito o de débito, o por adelantado —de
-          uno a doce meses en un solo pago— en OXXO, por SPEI, con saldo de
-          Mercado Pago o con tarjeta. Lo que pagas por adelantado no se renueva
-          solo: al vencer, pagas otros meses o activas el cobro automático. En
-          OXXO se paga hasta {pesos(TOPE_OXXO_CENTAVOS, MONEDA)} de una vez; lo
-          que pasa de eso, por SPEI, con saldo o con tarjeta. En el plan
-          Pedidos, los mensajes de WhatsApp los cobra Meta aparte, a la tarjeta
-          que el restaurante registra en su cuenta de WhatsApp.
-          Quien esté en la lista de espera conserva el precio
-          de lanzamiento el primer año. Un plan de paga que se cancela o deja
-          de pagarse vuelve a Básico al vencer: los menús de más siguen
-          guardados, pero dejan de verse hasta que renueves o borres los que
-          sobren. La factura fiscal (CFDI) todavía no se emite desde aquí.
-        </p>
+        <section className="formas-de-pago" aria-labelledby="titulo-formas-de-pago">
+          <div className="formas-de-pago-titulo">
+            <span className="formas-de-pago-icono">
+              <IconoInfo ancho={20} />
+            </span>
+            <h2 id="titulo-formas-de-pago">Formas de pago</h2>
+          </div>
+          <dl className="formas-de-pago-lista">
+            <div>
+              <dt>Cada mes</dt>
+              <dd>
+                Cobro automático con tarjeta de crédito o de débito, con Mercado Pago. Lo cancelas
+                cuando quieras.
+              </dd>
+            </div>
+            <div>
+              <dt>Por adelantado</dt>
+              <dd>
+                De uno a doce meses en un solo pago: OXXO, SPEI, saldo de Mercado Pago o tarjeta. En
+                OXXO, hasta {pesos(TOPE_OXXO_CENTAVOS, MONEDA)} por pago; lo que pase de eso, por SPEI,
+                con saldo o con tarjeta.
+              </dd>
+            </div>
+            <div>
+              <dt>Al vencer o cancelar</dt>
+              <dd>
+                Lo pagado por adelantado no se renueva solo: al vencer, pagas otros meses o activas el
+                cobro automático. Un plan que se cancela o deja de pagarse vuelve a Básico al vencer;
+                tus menús de más siguen guardados, pero no se ven hasta que renueves o borres los que
+                sobren.
+              </dd>
+            </div>
+            <div>
+              <dt>Bueno saber</dt>
+              <dd>
+                En Pedidos, los mensajes de WhatsApp los cobra Meta aparte, a la tarjeta de tu cuenta de
+                WhatsApp. Si estás en la lista de espera, conservas el precio de lanzamiento el primer
+                año. La factura fiscal (CFDI) todavía no se emite desde aquí.
+              </dd>
+            </div>
+          </dl>
+        </section>
 
         {restaurantes?.length ? (
-          <>
-            <h2 className="sub">Tus restaurantes</h2>
-            <ul className="lista-planes">
+          <section className="planes-restaurantes" aria-labelledby="titulo-tus-restaurantes">
+            <h2 id="titulo-tus-restaurantes">Tus restaurantes</h2>
+            <p className="planes-subtitulo">Elige el plan y la forma de pago para cada restaurante.</p>
+
+            <ul className="lista-planes-restaurante">
               {restaurantes.map((r) => {
                 const usados = (menus ?? []).filter((m) => m.restaurant_id === r.id).length;
                 const vigente = planVigente(r);
@@ -233,111 +284,98 @@ export default async function Planes({ searchParams }) {
                 const pagosDeEsta = pagos.filter((p) => p.restaurant_id === r.id);
                 const adelanto = adelantoVigente(pagosDeEsta);
                 const porCobrar = pagosDeEsta.find((p) => pagoPorCobrar(p)) ?? null;
-                // Las dos formas de pagar no se juntan: con una corriendo, la
-                // otra cobraría dos veces el mismo mes.
-                const puedeSuscribirse = !adelanto && !porCobrar;
-                const opciones = cobroAutomaticoActivo(suscripcion)
-                  ? []
-                  : opcionesDeAdelanto(vigente, porCobrar?.plan ?? null);
-                // Con meses pagados por adelantado y un plan más alto a la
-                // mano, se dice qué pasa con lo que queda antes de pagar. Lo
-                // que viene de la suscripción no se convierte: no hay pago
-                // por adelantado del que salga el valor.
-                const puedeSubir =
-                  Boolean(adelanto) &&
-                  !porCobrar &&
-                  PLANES.some((p) => ordenDePlan(p.slug) > ordenDePlan(vigente));
-                return (
-                  <li className="fila-plan" key={r.id}>
-                    <div className="fila-plan-nombre">
-                      {r.name}
-                      {adelanto ? (
-                        <small className="fila-plan-detalle">
-                          Pagado por adelantado
-                          {r.premium_until ? ` · vigente hasta el ${fechaCorta(r.premium_until)}` : ""}
-                        </small>
-                      ) : suscripcion ? (
-                        <small className="fila-plan-detalle">
-                          {estado.nombre}
-                          {vigente !== "basico" && r.premium_until
-                            ? ` · ${suscripcion.status === "cancelled" ? "hasta" : "vigente hasta"} el ${fechaCorta(r.premium_until)}`
-                            : ""}
-                        </small>
-                      ) : null}
-                      {porCobrar ? (
-                        <small className="fila-plan-detalle">
-                          Pago pendiente{medioLegible(porCobrar.method) ? ` ${medioLegible(porCobrar.method)}` : ""}
-                          {porCobrar.expires_at ? ` · tienes hasta el ${fechaCorta(porCobrar.expires_at)}` : ""}
-                        </small>
-                      ) : null}
-                    </div>
-                    <span className={vigente === "basico" ? "estado" : "estado estado-publicado"}>
-                      {nombreDelPlan(r)}
-                    </span>
-                    <span className="cupo">
-                      {usados} de {menusIncluidos(r)} menús
-                    </span>
-                    <Link className="btn-texto" href={`/panel/${r.id}/menus`}>
-                      Menús
-                    </Link>
+                const portada = portadaDe.get(r.id);
+                const foto = portada
+                  ? supabase.storage.from(BUCKET_FOTOS).getPublicUrl(portada.storage_path).data.publicUrl
+                  : null;
+                // Con meses pagados por adelantado, al subir de plan lo que
+                // queda se convierte en días del nuevo. Lo que viene de la
+                // suscripción no: no hay pago por adelantado del que salga el
+                // valor. El selector lo dice solo si se elige un plan más alto.
+                const notaSubir =
+                  adelanto && !porCobrar
+                    ? `Lo que te queda de lo que pagaste por ${nombreDelPlan(r)} se convierte en días del nuevo plan.`
+                    : null;
 
-                    <div className="fila-plan-acciones">
-                      {!puedeSuscribirse ? null : PLANES.filter((p) => p.slug !== "basico" && p.slug !== (viva ? suscripcion.plan : vigente)).map(
-                        (p) => (
-                          <form action={contratarPlan} key={p.slug}>
-                            <input type="hidden" name="restaurante" value={r.id} />
-                            <input type="hidden" name="plan" value={p.slug} />
-                            <button
-                              className={p.destacado ? "btn btn-sm" : "btn-linea btn-sm"}
-                              type="submit"
-                              disabled={!cobroActivo}
-                              title={cobroActivo ? undefined : "El cobro aún no está habilitado"}
-                            >
-                              {viva || vigente !== "basico" ? `Cambiar a ${p.nombre}` : `Contratar ${p.nombre}`}
-                            </button>
-                          </form>
-                        ),
-                      )}
-                      {opciones.length ? (
-                        <form action={pagarPorAdelantado} className="form-adelanto">
-                          <input type="hidden" name="restaurante" value={r.id} />
-                          <select name="opcion" aria-label={`Pagar por adelantado: ${r.name}`}>
-                            {opciones.map((o) => (
-                              <option key={o.valor} value={o.valor}>
-                                {o.texto}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            className="btn-linea btn-sm"
-                            type="submit"
-                            disabled={!cobroActivo}
-                            title={cobroActivo ? undefined : "El cobro aún no está habilitado"}
-                          >
-                            Pagar por adelantado
-                          </button>
-                        </form>
-                      ) : null}
-                      {opciones.length && puedeSubir ? (
-                        <small className="fila-plan-detalle">
-                          Si subes de plan, lo que te queda de lo que pagaste por {nombreDelPlan(r)} se
-                          convierte en días del nuevo.
-                        </small>
-                      ) : null}
-                      {viva ? (
-                        <form action={cancelarPlan}>
-                          <input type="hidden" name="restaurante" value={r.id} />
-                          <button className="btn-texto" type="submit">
-                            Cancelar suscripción
-                          </button>
-                        </form>
-                      ) : null}
+                return (
+                  <li className="restaurante-plan" key={r.id}>
+                    <div className="restaurante-plan-cabeza">
+                      <div className="restaurante-plan-foto" aria-hidden="true">
+                        {foto ? (
+                          <img src={foto} alt="" loading="lazy" width={128} height={88} />
+                        ) : (
+                          <IconoTienda ancho={28} />
+                        )}
+                      </div>
+                      <div className="restaurante-plan-nombre">
+                        <h3>{r.name}</h3>
+                        {r.status === "publicado" && r.slug ? (
+                          <Link href={rutaFicha(r.slug)} target="_blank" rel="noopener" className="restaurante-plan-enlace">
+                            Ver mi perfil público
+                            <IconoAbrir ancho={14} />
+                          </Link>
+                        ) : null}
+                        {adelanto ? (
+                          <small className="restaurante-plan-detalle">
+                            Pagado por adelantado
+                            {r.premium_until ? ` · vigente hasta el ${fechaCorta(r.premium_until)}` : ""}
+                          </small>
+                        ) : suscripcion ? (
+                          <small className="restaurante-plan-detalle">
+                            {estado.nombre}
+                            {vigente !== "basico" && r.premium_until
+                              ? ` · ${suscripcion.status === "cancelled" ? "hasta" : "vigente hasta"} el ${fechaCorta(r.premium_until)}`
+                              : ""}
+                          </small>
+                        ) : null}
+                        {porCobrar ? (
+                          <small className="restaurante-plan-detalle">
+                            Pago pendiente{medioLegible(porCobrar.method) ? ` ${medioLegible(porCobrar.method)}` : ""}
+                            {porCobrar.expires_at ? ` · tienes hasta el ${fechaCorta(porCobrar.expires_at)}` : ""}
+                          </small>
+                        ) : null}
+                      </div>
+                      <div className="restaurante-plan-datos">
+                        <span className="chip-plan">
+                          Plan actual: <strong>{nombreDelPlan(r)}</strong>
+                        </span>
+                        <span className="chip-plan">
+                          {usados} de {menusIncluidos(r)} menús
+                        </span>
+                        <Link className="chip-plan chip-enlace" href={`/panel/${r.id}/menus`}>
+                          <IconoCarta ancho={16} />
+                          Menús
+                        </Link>
+                      </div>
                     </div>
+
+                    <ElegirPlan
+                      restaurante={{
+                        id: r.id,
+                        nombre: r.name,
+                        moneda: MONEDA,
+                        topeOxxo: pesos(TOPE_OXXO_CENTAVOS, MONEDA),
+                      }}
+                      planes={planesParaElegir({ vigente, suscripcion, viva, adelanto, porCobrar })}
+                      cobroActivo={cobroActivo}
+                      notaSubir={notaSubir}
+                      ordenVigente={ordenDePlan(vigente)}
+                    />
+
+                    {viva ? (
+                      <form action={cancelarPlan} className="restaurante-plan-cancelar">
+                        <input type="hidden" name="restaurante" value={r.id} />
+                        <span>¿Ya no quieres el cobro automático?</span>
+                        <button className="btn-texto" type="submit">
+                          Cancelar suscripción
+                        </button>
+                      </form>
+                    ) : null}
                   </li>
                 );
               })}
             </ul>
-          </>
+          </section>
         ) : (
           <div className="vacio">
             <h2>Todavía no tienes ningún restaurante</h2>

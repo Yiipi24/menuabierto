@@ -355,138 +355,439 @@ section { scroll-margin-top: 84px; }
 .footer a { text-decoration: none; }
 
 .footer a:hover { color: #fff; }
-/* ---------- plans ---------- */
+/* ---------- planes ---------- */
 
-.plans {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  align-items: start;
+/* La página de planes: el catálogo, las formas de pago y, por ficha, elegir
+   plan y forma de pagar con el resumen al lado. Toma el ancho grande del
+   panel para que las cuatro tarjetas quepan sin apretarse. */
+.planes-pagina { display: grid; gap: 28px; }
+
+.planes-pagina .form-msg { margin-top: 0; }
+
+.planes-encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 1180px) { .plans { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 660px) { .plans { grid-template-columns: 1fr; } }
+.planes-encabezado h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
 
-/* Lo que más se compara entre planes: cuántos menús caben. */
-.plan-menus {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--accent);
-  margin-bottom: 16px;
-}
+.planes-subtitulo { color: var(--ink-soft); font-size: 15.5px; }
 
-.plan {
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 28px 26px;
-  background: var(--paper);
-}
-
-.plan-featured { border-color: var(--ink); }
-
-.plan-badge {
-  position: absolute;
-  top: -11px;
-  left: 26px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 4px 11px;
-  border-radius: 999px;
-}
-
-/* La tarjeta de plan vive ahora en /panel/planes, donde el titulo de la
-   pagina ya es un h1 y el de la tarjeta baja a h2. Se aceptan los dos
-   niveles para que el estilo no dependa del orden de la pagina. */
-.plan h2,
-.plan h3 { font-size: 19px; font-weight: 650; margin-bottom: 6px; }
-
-.plan-price { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
-
-.plan-price span {
-  display: block;
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--ink-faint);
-  letter-spacing: 0;
-}
-
-.plan ul { margin: 0; padding: 0; list-style: none; }
-
-.plan li {
-  position: relative;
-  padding: 7px 0 7px 24px;
-  color: var(--ink-soft);
-  font-size: 15.5px;
-}
-
-.plan li::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: var(--accent);
-  font-weight: 700;
-}
-
-/* Que plan tiene cada ficha del duenio, debajo de las dos tarjetas. */
-.lista-planes { list-style: none; margin: 22px 0 0; padding: 0; }
-
-.fila-plan {
+.planes-por-restaurante {
   display: flex;
   align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: var(--sombra);
+  max-width: 340px;
+}
+
+.planes-por-restaurante p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
+
+.planes-por-restaurante strong { display: block; color: var(--ink); font-size: 14px; }
+
+.planes-por-restaurante-icono,
+.plan-tarjeta-icono,
+.formas-de-pago-icono,
+.opcion-pago-icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.planes-por-restaurante-icono { width: 40px; height: 40px; }
+
+/* Las cuatro tarjetas: misma altura por fila, el mismo orden de arriba abajo
+   (icono, nombre, precio, para qué sirve, qué incluye). */
+.planes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.plan-tarjeta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 10px;
+  padding: 24px 22px 22px;
+  box-shadow: var(--sombra);
 }
 
-.fila-plan-nombre { flex: 1; min-width: 0; font-weight: 600; }
+/* Recomendado no es "elegido": borde y fondo apenas tintados, y la etiqueta.
+   Lo elegido vive abajo, en el selector de cada ficha, y se ve distinto. */
+.plan-tarjeta-recomendada {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, var(--accent-soft) 0%, var(--paper) 140px);
+}
 
-.fila-plan-detalle {
+.plan-recomendado {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.plan-tarjeta-icono { width: 42px; height: 42px; margin-bottom: 14px; }
+
+.plan-tarjeta h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+
+.plan-tarjeta-precio { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+
+.plan-tarjeta-precio span {
+  display: block;
+  margin-top: 4px;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-faint);
+}
+
+.plan-tarjeta-resumen {
+  margin: 14px 0 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.plan-tarjeta ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+
+.plan-tarjeta li {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 9px;
+  align-items: start;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.plan-tarjeta li .icono { margin-top: 2px; color: var(--accent); }
+
+.plan-tarjeta li strong { color: var(--ink); font-weight: 700; }
+
+/* Formas de pago: lo que antes era un párrafo largo, en cuatro grupos que se
+   leen de un vistazo. */
+.formas-de-pago {
+  background: #fff7f1;
+  border: 1px solid #f6d9cb;
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+
+.formas-de-pago-titulo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+
+.formas-de-pago-icono { width: 34px; height: 34px; background: #fff; }
+
+.formas-de-pago-titulo h2 { font-size: 18px; font-weight: 700; }
+
+.formas-de-pago-lista {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+
+.formas-de-pago-lista dt { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+
+.formas-de-pago-lista dd { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+
+/* Tus restaurantes: una tarjeta por ficha. */
+.planes-restaurantes h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+
+.lista-planes-restaurante { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; }
+
+.restaurante-plan {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+  padding: 20px 22px;
+}
+
+.restaurante-plan-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.restaurante-plan-foto {
+  flex: none;
+  width: 112px;
+  height: 76px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper-warm);
+  color: var(--ink-faint);
+  display: grid;
+  place-items: center;
+}
+
+.restaurante-plan-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.restaurante-plan-nombre { flex: 1; min-width: 200px; display: grid; gap: 3px; justify-items: start; }
+
+.restaurante-plan-nombre h3 { font-size: 20px; font-weight: 700; }
+
+.restaurante-plan-enlace {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.restaurante-plan-detalle { font-size: 13px; color: var(--ink-faint); }
+
+.restaurante-plan-datos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.chip-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.chip-plan strong { color: var(--ink); }
+
+.chip-enlace { text-decoration: none; color: var(--ink); font-weight: 600; }
+
+.chip-enlace:hover { border-color: var(--ink-faint); }
+
+/* Elegir plan y forma de pagar a la izquierda, el resumen a la derecha. */
+.elegir-plan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  padding-top: 18px;
+}
+
+.elegir-pasos { display: grid; gap: 20px; align-content: start; }
+
+.elegir-paso { border: 0; margin: 0; padding: 0; min-width: 0; }
+
+.elegir-paso[disabled] .opciones-pago { opacity: 0.55; }
+
+.elegir-paso-titulo {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 0;
+  margin-bottom: 12px;
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.elegir-paso-titulo small {
   display: block;
   font-size: 13px;
   font-weight: 400;
   color: var(--ink-faint);
-  margin-top: 2px;
 }
 
-/* Contratar, cambiar y cancelar: una fila propia debajo, para que en un
-   telefono no se peleen con el nombre por el mismo renglon. */
-.fila-plan-acciones {
-  flex-basis: 100%;
+.elegir-paso-numero {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.opciones-plan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.opciones-pago { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+/* Una opción es una etiqueta con su radio dentro: el radio se oculta a la
+   vista pero sigue siendo el control, con teclado y lector de pantalla. */
+.opcion-plan,
+.opcion-pago {
+  position: relative;
+  display: flex;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.opcion-plan input,
+.opcion-pago input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.opcion-plan:hover,
+.opcion-pago:hover { border-color: var(--ink-faint); }
+
+.opcion-plan:has(input:focus-visible),
+.opcion-pago:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Elegido: borde de color, fondo tintado y palomita. Distinto del
+   "Recomendado" de la tabla, que solo sugiere. */
+.opcion-elegida,
+.opcion-elegida:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.opcion-apagada { cursor: default; opacity: 0.6; }
+
+.opcion-apagada:hover { border-color: var(--line); }
+
+.opcion-plan { flex-direction: column; gap: 2px; padding: 12px 14px; }
+
+.opcion-plan-nombre {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 6px;
+  justify-content: space-between;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 15px;
 }
 
-/* Pagar por adelantado: un solo <select> con plan, meses y total, y su
-   boton. En un telefono el select toma el renglon y el boton baja. */
-.form-adelanto {
+.opcion-plan-nombre .icono { color: var(--accent); }
+
+.opcion-plan-precio { font-size: 13.5px; color: var(--ink-soft); }
+
+.opcion-plan-nota { font-size: 12px; font-weight: 600; color: var(--ink-faint); }
+
+.opcion-pago { align-items: flex-start; gap: 12px; padding: 12px 14px; }
+
+.opcion-pago-icono { width: 36px; height: 36px; }
+
+.opcion-pago-texto { display: grid; gap: 2px; font-size: 13px; color: var(--ink-soft); line-height: 1.4; }
+
+.opcion-pago-texto strong { font-size: 14.5px; color: var(--ink); }
+
+.elegir-meses { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 14px; font-weight: 600; }
+
+.elegir-meses select {
+  flex: 1;
+  min-width: 220px;
+  max-width: 360px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  background: #fff;
+  color: var(--ink);
+}
+
+/* El resumen: qué se va a pagar antes de ir a la pasarela. */
+.resumen-pago {
+  align-self: start;
+  background: #fff7f1;
+  border: 1px solid #f6d9cb;
+  border-radius: var(--radius);
+  padding: 18px 18px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.resumen-pago h3 { font-size: 15px; font-weight: 700; }
+
+.resumen-pago dl { margin: 0; display: grid; gap: 8px; }
+
+.resumen-pago dl > div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+
+.resumen-pago dt { color: var(--ink-soft); }
+
+.resumen-pago dd { margin: 0; font-weight: 600; text-align: right; }
+
+.resumen-total { padding-top: 10px; border-top: 1px solid #f1d3c4; align-items: baseline; }
+
+.resumen-total dd strong { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+
+.resumen-total dd span { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink-faint); }
+
+.resumen-nota { font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
+
+.resumen-boton { width: 100%; }
+
+.resumen-seguro {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+.restaurante-plan-cancelar {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  max-width: 100%;
+  margin-top: 16px;
+  font-size: 13.5px;
+  color: var(--ink-faint);
 }
 
-.form-adelanto select {
-  max-width: 100%;
-  padding: 7px 10px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  font: inherit;
-  font-size: 14px;
-  background: var(--paper);
-  color: var(--ink);
+.restaurante-plan-cancelar .btn-texto { font-size: 13.5px; text-decoration: underline; }
+
+@media (max-width: 1080px) {
+  .planes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 24px; }
+  .formas-de-pago-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .elegir-plan { grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
+}
+
+@media (max-width: 860px) {
+  .elegir-plan { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .planes-pagina { gap: 22px; }
+  .planes-encabezado h1 { font-size: 26px; }
+  .planes-por-restaurante { max-width: none; width: 100%; }
+  .planes-grid { grid-template-columns: 1fr; }
+  .formas-de-pago-lista { grid-template-columns: 1fr; gap: 12px; }
+  .restaurante-plan { padding: 16px; }
+  .restaurante-plan-foto { width: 72px; height: 56px; }
+  .opciones-plan { grid-template-columns: 1fr; }
+  .opciones-pago { grid-template-columns: 1fr; }
+  .elegir-meses select { max-width: none; min-width: 0; width: 100%; }
 }
 
 .plan-note {
