@@ -201,3 +201,21 @@ export async function pagarPorAdelantado(formData) {
   if (!preferencia?.init_point) redirect("/panel/planes?error=pasarela");
   redirect(preferencia.init_point);
 }
+
+/**
+ * El botón "Continuar con el pago" de la página: un solo formulario con el
+ * plan y la forma de pagar elegidos, que se reparte entre las dos acciones de
+ * arriba sin cambiar lo que comprueban. Con "cada mes" es `contratarPlan`; con
+ * "por adelantado", `pagarPorAdelantado` con la opción "plan:meses".
+ */
+export async function continuarConElPago(formData) {
+  const modo = String(formData.get("modo") ?? "");
+  if (modo === "mensual") return contratarPlan(formData);
+  if (modo === "adelanto") {
+    const datos = new FormData();
+    datos.set("restaurante", String(formData.get("restaurante") ?? ""));
+    datos.set("opcion", `${formData.get("plan") ?? ""}:${formData.get("meses") ?? ""}`);
+    return pagarPorAdelantado(datos);
+  }
+  redirect("/panel/planes?error=plan");
+}

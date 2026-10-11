@@ -15,7 +15,7 @@ import { sincronizarPago } from "../../../../lib/adelantos";
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
-  const secreto = process.env.MP_WEBHOOK_SECRET;
+  const secreto = String(process.env.MP_WEBHOOK_SECRET ?? "").trim();
   if (!secreto) {
     console.error("cobro: falta MP_WEBHOOK_SECRET; se rechaza el webhook");
     return new Response(null, { status: 503 });
