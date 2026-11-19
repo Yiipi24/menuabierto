@@ -1,4 +1,5 @@
 import { IconoTienda, IconoPin } from "./tablero-iconos";
+import { propsDeFoto } from "../../lib/imagenes";
 
 // Piezas que comparten la lista de restaurantes (servidor) y el filtro de
 // métricas (cliente): la miniatura, la etiqueta de estado y la línea de
@@ -21,7 +22,13 @@ export function Estado({ status }) {
 
 export function Avatar({ restaurante, ancho = 24 }) {
   if (restaurante?.foto) {
-    return <img className="sel-logo" src={restaurante.foto} alt="" width={56} height={56} />;
+    return <img
+        className="sel-logo"
+        {...propsDeFoto(restaurante.foto, { anchos: [112] })}
+        alt=""
+        width={56}
+        height={56}
+      />;
   }
   return (
     <span className="sel-logo sel-logo-vacio" aria-hidden="true">

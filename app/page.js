@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { fotoCocina, fotoEncabezado } from "../lib/fotos";
+import { fotoCocina, propsEncabezado } from "../lib/fotos";
+import { propsDeFoto } from "../lib/imagenes";
 import { supabaseServer } from "../lib/supabase";
 import { conFotos, guardadosDe } from "../lib/busqueda";
 import { catalogoComida, rutaCocina } from "../lib/zonas";
@@ -206,7 +207,10 @@ export default async function Home({ searchParams }) {
 
   // La imagen del encabezado: primero la del archivo, y si no hay, la de un
   // restaurante publicado. Nada de banco de fotos escondido en el código.
-  const fotoPortada = fotoEncabezado() ?? resultados.find((r) => r.foto)?.foto ?? null;
+  // La foto del encabezado es lo más grande de la portada y casi siempre su
+  // LCP: va en srcset y con prioridad alta (#82).
+  const fotoPortada =
+    propsEncabezado() ?? propsDeFoto(resultados.find((r) => r.foto)?.foto, { sizes: "100vw" });
 
   const enPortada = categorias.slice(0, CATEGORIAS_EN_PORTADA);
   // Las zonas del filtro salen de los resultados que hay, no de un catálogo de
@@ -255,7 +259,7 @@ export default async function Home({ searchParams }) {
 
       <header className="portada">
         <div className="portada-fondo" aria-hidden="true">
-          {fotoPortada ? <img src={fotoPortada} alt="" /> : null}
+          {fotoPortada.src ? <img {...fotoPortada} alt="" fetchPriority="high" /> : null}
         </div>
 
         <div className="wrap wrap-ancho portada-inner">

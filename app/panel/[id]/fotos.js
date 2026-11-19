@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { subirFotos, borrarFoto, editarFoto } from "./actions";
 import { MAX_FOTO_BYTES, TIPOS_FOTO, revisarArchivos } from "../../../lib/subidas";
 import Modal from "../modal";
+import { propsDeFoto } from "../../../lib/imagenes";
 
 const inicial = { status: "idle", message: "" };
 
@@ -156,7 +157,7 @@ function Galeria({ id, fotos, platillos }) {
       <ul className="galeria">
         {fotos.map((f) => (
           <li key={f.id} className={f.is_visible === false ? "galeria-foto es-oculta" : "galeria-foto"}>
-            <img src={f.url} alt={f.alt ?? ""} loading="lazy" />
+            <img {...propsDeFoto(f.url, { anchos: [480] })} alt={f.alt ?? ""} loading="lazy" decoding="async" />
             {f.dish_name ? (
               <span className="galeria-nombre">
                 {f.is_featured ? <em>★</em> : null}

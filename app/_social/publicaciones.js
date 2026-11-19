@@ -21,6 +21,7 @@ import {
 import { IconoBote, IconoComentario, IconoCorazon } from "./iconos";
 import { rutaFicha } from "../../lib/slug";
 import Compartir from "./compartir";
+import { propsDeFoto } from "../../lib/imagenes";
 
 // Las publicaciones: la lista de la ficha ("Novedades de …") y, con otra
 // cabecera, las del feed del comensal. Es el mismo componente porque es la
@@ -234,7 +235,7 @@ export function Publicacion({
       <header className="publicacion-cabeza">
         <span className="publicacion-avatar" aria-hidden="true">
           {publicacion.restaurant_foto ? (
-            <img src={publicacion.restaurant_foto} alt="" />
+            <img {...propsDeFoto(publicacion.restaurant_foto, { anchos: [96] })} alt="" />
           ) : (
             <span>{(nombre ?? "?").slice(0, 1)}</span>
           )}
@@ -283,9 +284,10 @@ export function Publicacion({
           />
         ) : (
           <img
-            src={publicacion.url}
+            {...propsDeFoto(publicacion.url, { anchos: [480, 720], sizes: "(max-width: 680px) 100vw, 640px" })}
             alt={publicacion.body || `Publicación de ${nombre}`}
             loading="lazy"
+            decoding="async"
           />
         )}
       </figure>

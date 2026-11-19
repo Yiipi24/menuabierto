@@ -6,6 +6,7 @@ import Modal from "../panel/modal";
 import { pesos } from "../../lib/precios";
 import { rutaMenuCarta } from "../../lib/slug";
 import { IconoChevron, IconoFlecha } from "./iconos";
+import { propsDeFoto } from "../../lib/imagenes";
 
 // "Favoritos de la casa": las fotos grandes bajo el encabezado.
 //
@@ -58,7 +59,12 @@ export default function Favoritos({ slug, nombre, fotos, hayMenu, hrefMenu }) {
                   f.dishName ? `Ver ${f.dishName}` : `Ver foto ${f.alt ? `de ${f.alt}` : "del platillo"}`
                 }
               >
-                <img src={f.url} alt={f.alt ?? f.dishName ?? ""} loading="lazy" />
+                <img
+                  {...propsDeFoto(f.url, { anchos: [480, 720], calidad: 60, sizes: "(max-width: 720px) 82vw, 33vw" })}
+                  alt={f.alt ?? f.dishName ?? ""}
+                  loading="lazy"
+                  decoding="async"
+                />
                 {f.dishName ? (
                   <span className="fx-favorito-franja">
                     <span className="fx-favorito-texto">
@@ -83,7 +89,10 @@ export default function Favoritos({ slug, nombre, fotos, hayMenu, hrefMenu }) {
       >
         {abierta ? (
           <div className="fx-favorito-visor">
-            <img src={abierta.url} alt={abierta.alt ?? abierta.dishName ?? ""} />
+            <img
+              {...propsDeFoto(abierta.url, { sizes: "(max-width: 720px) 100vw, 720px" })}
+              alt={abierta.alt ?? abierta.dishName ?? ""}
+            />
             <div className="fx-favorito-visor-datos">
               {abierta.dishLabel ? (
                 <span className="fx-favorito-etiqueta">{abierta.dishLabel}</span>

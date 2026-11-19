@@ -15,3 +15,7 @@ Si no está, el encabezado usa un degradado cálido y se ve entero igual.
 **Licencia:** aquí solo entran fotos que se puedan usar —propias, compradas, o
 de banco con licencia libre— y conviene anotar en el mensaje del commit de
 dónde salió.
+
+**Después de cambiarla**, corre `node scripts/generar-portada.mjs`: deja los
+anchos `hero-640.webp`, `hero-1280.webp` y `hero-1920.webp` que la portada
+sirve en `srcset`, para que un celular no baje la foto completa.
