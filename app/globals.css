@@ -355,6 +355,42 @@ section { scroll-margin-top: 84px; }
 .footer a { text-decoration: none; }
 
 .footer a:hover { color: #fff; }
+
+.footer-legal { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+
+/* ---------- aviso de privacidad y términos ---------- */
+
+/* El aviso corto junto a cada formulario que pide un dato: discreto, pero
+   con el enlace al aviso completo a la vista. */
+.aviso-corto {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 12px 0 0;
+}
+
+.aviso-corto a { color: inherit; text-decoration: underline; }
+
+.legal h2 { font-size: 19px; margin: 32px 0 10px; }
+
+.legal p,
+.legal li { line-height: 1.65; }
+
+.legal p { margin: 0 0 12px; }
+
+.legal ul { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 6px; }
+
+.legal-fecha { color: var(--ink-soft); font-size: 14px; }
+
+.legal-pie { margin-top: 36px; }
+
+/* Lo que falta para que el aviso cumpla se ve, no se esconde. */
+.legal-pendiente {
+  background: #fde68a;
+  color: #78350f;
+  padding: 0 4px;
+  border-radius: 3px;
+}
 /* ---------- planes ---------- */
 
 /* La página de planes: el catálogo, las formas de pago y, por ficha, elegir

@@ -2,6 +2,7 @@ import { supabaseServer, todasLasFilas } from "../lib/supabase";
 import { rutaFicha, rutaMenu, rutaMenuCarta } from "../lib/slug";
 import { sitioIndexable, urlDelSitio } from "../lib/sitio";
 import { catalogoComida, rutaCocina, rutaZona } from "../lib/zonas";
+import { ACTUALIZADO } from "../lib/legal";
 
 // El sitemap se arma con la base, no a mano: las fichas son casi todo el sitio
 // y aparecen y se publican solas. Se recalcula cada hora en vez de en cada
@@ -91,6 +92,14 @@ export default async function sitemap() {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    // El aviso de privacidad y los términos: casi nunca cambian, pero un dueño
+    // que busca "Menú Abierto términos" antes de pagar tiene que encontrarlos.
+    ...["/privacidad", "/terminos"].map((ruta) => ({
+      url: urlDelSitio(ruta),
+      lastModified: new Date(`${ACTUALIZADO}T00:00:00Z`),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    })),
   ];
 
   for (const c of catalogo.cocinas) {

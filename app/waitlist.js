@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { CAMPO_TRAMPA, PROPS_TRAMPA } from "../lib/trampa";
+import AvisoCorto from "./aviso-corto";
 
 export default function Waitlist() {
   const [role, setRole] = useState("comensal");
@@ -94,6 +95,8 @@ export default function Waitlist() {
       >
         {state.message}
       </p>
+
+      <AvisoCorto para="solo para avisarte cuando abramos" />
     </form>
   );
 }

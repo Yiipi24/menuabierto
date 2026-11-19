@@ -176,6 +176,11 @@ test("un pedido completo con las listas, a domicilio y con nota", () => {
   assert.match(carrito2.mensajes[0].texto, /• 2 × Agua de horchata — \$60\nTotal aproximado: \$135/);
   assert.deepEqual(ids(entrega.mensajes[0]), ["e:sitio", "e:llevar", "e:domicilio"]);
   assert.match(direccion.mensajes[0].texto, /¿A dónde te lo llevamos\?[\s\S]*Pedido mínimo \$150 a domicilio\./);
+  // El aviso va antes de que el cliente escriba su dirección (LFPDPPP).
+  assert.match(
+    direccion.mensajes[0].texto,
+    /Tu nombre, tu número y tu dirección los recibe Taquería El Trompo para entregarte el pedido\. Aviso de privacidad: https:\/\/menuabierto\.com\/privacidad#pedidos$/,
+  );
   assert.match(confirmar.mensajes[0].texto, /Revisa tu pedido para Taquería El Trompo:\n• 3 × Tacos de pastor — \$75\n• 2 × Agua de horchata — \$60\nTotal aproximado: \$135\nA domicilio · a nombre de ANA MARÍA\nEntrega en: Padre Mier 456, Col\. Centro/);
   assert.deepEqual(ids(confirmar.mensajes[0]), ["f:confirmar", "f:cambiar", "f:cancelar"]);
   assert.match(conNota.mensajes[0].texto, /^Agregué la nota\.[\s\S]*Nota: sin cebolla porfa/);

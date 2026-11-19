@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { registrar } from "./actions";
 import { PROPS_TRAMPA } from "../../lib/trampa";
+import AvisoCorto from "../aviso-corto";
 
 const inicial = { status: "idle", message: "" };
 
@@ -96,6 +97,11 @@ export default function RegistroForm({ next = "/" }) {
 
       {/* Trampa para bots: invisible y fuera del recorrido de teclado. */}
       <input {...PROPS_TRAMPA} />
+
+      <AvisoCorto
+        terminos
+        para="para crear y operar tu cuenta, y para mostrar tu nombre junto a lo que publiques"
+      />
 
       <button className="btn btn-block" type="submit" disabled={pending}>
         {pending ? "Creando cuenta…" : "Crear cuenta"}

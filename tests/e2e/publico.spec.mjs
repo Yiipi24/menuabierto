@@ -9,8 +9,13 @@ async function primeraFichaPublicada(request) {
   expect(respuesta.ok()).toBeTruthy();
   const xml = await respuesta.text();
   const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
-  // Una ficha es una ruta de uno o dos tramos que no es de /comida ni la raíz.
-  return urls.find((r) => /^\/[a-z0-9]+(\/[a-z0-9]+)?$/.test(r) && !r.startsWith("/comida")) ?? null;
+  // Una ficha es una ruta de uno o dos tramos que no es de /comida, ni de las
+  // páginas fijas que también entran al sitemap, ni la raíz.
+  const fijas = ["/comida", "/privacidad", "/terminos"];
+  return (
+    urls.find((r) => /^\/[a-z0-9]+(\/[a-z0-9]+)?$/.test(r) && !fijas.some((f) => r.startsWith(f))) ??
+    null
+  );
 }
 
 test("la portada carga y busca", async ({ page }) => {
@@ -22,6 +27,23 @@ test("la portada carga y busca", async ({ page }) => {
   await buscador.press("Enter");
   await page.waitForURL(/[?&]q=tacos/);
   await expect(page.locator("main")).toBeVisible();
+});
+
+test("el aviso de privacidad y los términos están a un clic desde el pie", async ({ page }) => {
+  await page.goto("/");
+  const pie = page.locator("footer.footer");
+  await expect(pie.getByRole("link", { name: "Aviso de privacidad" })).toHaveAttribute("href", "/privacidad");
+  await expect(pie.getByRole("link", { name: "Términos" })).toHaveAttribute("href", "/terminos");
+
+  for (const [ruta, titulo] of [
+    ["/privacidad", "Aviso de privacidad"],
+    ["/terminos", "Términos y condiciones"],
+  ]) {
+    const respuesta = await page.goto(ruta);
+    expect(respuesta.status()).toBe(200);
+    await expect(page.locator("h1")).toHaveText(titulo);
+    await expect(page.locator("footer.footer")).toBeVisible();
+  }
 });
 
 test("una ficha publicada y su carta responden", async ({ page, request }) => {

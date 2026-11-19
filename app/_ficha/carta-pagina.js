@@ -131,12 +131,6 @@ export default async function CartaPagina({ slug, menuId = null }) {
         />
       </main>
 
-      <footer className="footer">
-        <div className="wrap footer-inner">
-          <span>© {new Date().getFullYear()} Menú Abierto</span>
-          <a href="mailto:hola@menuabierto.com">hola@menuabierto.com</a>
-        </div>
-      </footer>
     </>
   );
 }

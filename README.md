@@ -369,9 +369,32 @@ por nosotros, y un panel de cobranza propio. La página lo dice.
 
 ## Lista de espera
 
-El formulario hace `POST /api/waitlist`. Hoy la ruta valida el correo y lo
-registra en los logs de Vercel; cuando exista la base de datos hay que
-sustituir ese punto por la escritura real.
+El formulario hace `POST /api/waitlist`: la ruta valida el correo, descarta lo
+que cae en la trampa de bots y lo guarda en la tabla `waitlist` con el rol
+("comensal" o "restaurante").
+
+## Aviso de privacidad y términos
+
+`/privacidad` es el aviso de privacidad integral (LFPDPPP) y `/terminos` los
+términos y condiciones. Los dos se enlazan desde el pie, que vive en el layout
+raíz para salir en todas las páginas, y entran al sitemap. `privacidad` y
+`terminos` son segmentos reservados, en `lib/slug.js` y en `slug_reservado()`.
+
+Junto a cada formulario que pide un dato va el aviso corto (`app/aviso-corto.js`):
+quién responde, para qué y el enlace al integral. Lo llevan la lista de espera,
+el registro y reclamar. El asistente de WhatsApp lo dice en el paso que pide la
+dirección, con el enlace a `/privacidad#pedidos`.
+
+En los pedidos por WhatsApp el responsable de los datos es el restaurante y
+Menú Abierto es el encargado: el aviso lo explica, y los términos le piden al
+dueño su propio aviso.
+
+Quién es el responsable y su domicilio viven en `lib/legal.js`. Mientras falte
+un dato, las páginas lo enseñan marcado como pendiente en vez de inventarlo.
+**Si cambia lo que el sitio recaba** (una tabla nueva, un formulario, un
+proveedor), el aviso se actualiza en el mismo cambio, junto con `ACTUALIZADO`.
+Los precios de los términos salen de `lib/cobro.js`. El texto no sustituye la
+revisión de un abogado.
 
 ## Indexación
 
