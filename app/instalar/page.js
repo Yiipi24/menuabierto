@@ -6,6 +6,7 @@ import { currentUser } from "../../lib/supabase";
 export const metadata = {
   title: "Instala Menú Abierto — Menú Abierto",
   description: "Lleva Menú Abierto en tu teléfono: se instala desde el navegador, sin tienda de aplicaciones.",
+  alternates: { canonical: "/instalar" },
 };
 
 // La pantalla de instalación. Es una página y no un banner porque en iOS no

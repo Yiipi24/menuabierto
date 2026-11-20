@@ -11,7 +11,7 @@ async function primeraFichaPublicada(request) {
   const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
   // Una ficha es una ruta de uno o dos tramos que no es de /comida, ni de las
   // páginas fijas que también entran al sitemap, ni la raíz.
-  const fijas = ["/comida", "/planes", "/privacidad", "/terminos"];
+  const fijas = ["/comida", "/planes", "/precios", "/privacidad", "/terminos"];
   return (
     urls.find((r) => /^\/[a-z0-9]+(\/[a-z0-9]+)?$/.test(r) && !fijas.some((f) => r.startsWith(f))) ??
     null
