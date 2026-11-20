@@ -400,7 +400,13 @@ sustituir ese punto por la escritura real.
 `/robots.txt` y `/sitemap.xml` se generan desde la app (`app/robots.js` y
 `app/sitemap.js`). El sitemap se arma con las fichas publicadas, sus cartas
 visibles y las páginas por tipo de comida y por zona, y se recalcula cada
-hora.
+hora. Una carta entra solo si tiene algo que enseñar (`menuPublicable` en
+`lib/menus-publicos.js`): la de archivo, con su archivo; la digital, con al
+menos un platillo. Es la regla con la que la ficha esconde las vacías, y sin
+ella el sitemap anunciaba URLs que respondían "Menú no encontrado". Las
+páginas con contenido propio (`/precios`, `/instalar`, las de `/comida`)
+llevan su canonical; `/precios` lo lleva sin la query, para que cada búsqueda
+no cuente como una página distinta.
 
 ### Páginas por tipo de comida y por zona
 
@@ -727,6 +733,28 @@ desaparece cuando todo está listo.
 
   Una ficha sembrada del DENUE que alguien reclama no pasa por
   `crearRestaurante`, así que no anota `alta_creada`; sus otros pasos sí.
+
+## Cabeceras de seguridad
+
+`next.config.js` manda a todo el sitio:
+
+- `X-Frame-Options: DENY` y `frame-ancestors 'none'`: nadie más puede meter el
+  sitio en un iframe;
+- `X-Content-Type-Options: nosniff`;
+- `Referrer-Policy: strict-origin-when-cross-origin`;
+- `Permissions-Policy`: cámara, micrófono y ubicación solo para el propio
+  sitio (las historias, "cerca de mí" y el punto del local), lo demás para
+  nadie;
+- una `Content-Security-Policy` corta: `base-uri 'self'`, `object-src` que
+  deja solo el sitio y el almacenamiento de Supabase (el PDF de una carta de
+  archivo va en `<object>`), y `upgrade-insecure-requests`.
+
+La política no restringe scripts todavía: Next mete scripts en línea, y
+cerrarlos pide un nonce por respuesta, que vuelve dinámicas todas las páginas.
+Un recurso nuevo que el sitio incruste con `<object>` o desde otro dominio en
+un iframe propio pide tocar esta lista. En local, `nosniff` hace que la
+consola se queje de `/_vercel/insights/script.js`, que solo existe en Vercel;
+no es un error del sitio.
 
 ## Contraste
 
