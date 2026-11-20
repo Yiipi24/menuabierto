@@ -691,6 +691,43 @@ para varias sucursales, y entender audios o fotos: a esos contesta que por
 ahora solo lee texto. Los pedidos guardan teléfono y dirección del cliente:
 el aviso de privacidad del restaurante tiene que decirlo.
 
+## Alta guiada y el embudo del dueño
+
+Arriba del editor de cada ficha (`/panel/<id>`) va la lista **"Para publicar
+tu ficha"**, con su avance (`app/panel/[id]/alta-guiada.js`):
+
+1. dirección con su punto en el mapa;
+2. horario;
+3. al menos una foto visible;
+4. la carta: un menú visible con platillos, o con su archivo;
+5. el QR descargado;
+6. publicada.
+
+Cada paso se marca solo y lleva a su sección. Quién decide qué está listo es
+`pasosDeAlta()` en `lib/alta.js`, una función pura con pruebas. La lista
+desaparece cuando todo está listo.
+
+- **La carta primero desde una foto.** Si la ficha no tiene menús, el paso de
+  la carta ofrece "Cargar tu carta desde una foto" (`empezarCartaConFoto`):
+  crea el menú "Carta" con las reglas de `crearMenu` y abre la pantalla de
+  importar. Capturarla a mano queda como segunda opción.
+- **Publicar avisa, no bloquea.** Si falta la carta o la dirección, "Publicar"
+  abre un diálogo que dice qué falta, con "Completar primero" y "Publicar de
+  todos modos" (`app/panel/[id]/boton-publicar.js`).
+- **El embudo** vive en `alta_pasos`: una fila por ficha y paso, con la
+  primera vez que se dio. Los pasos son `alta_creada`, `menu_creado`,
+  `qr_descargado` y `ficha_publicada`. Los anotan las acciones del panel
+  (`registrarPaso`, que nunca truena) con la sesión del dueño; la RLS solo deja
+  leer y agregar en fichas propias. El QR se anota al bajar el PNG o el SVG,
+  porque es lo único de la lista que no se deduce de la ficha. Para contar:
+
+  ```sql
+  select paso, count(*) from alta_pasos group by paso;
+  ```
+
+  Una ficha sembrada del DENUE que alguien reclama no pasa por
+  `crearRestaurante`, así que no anota `alta_creada`; sus otros pasos sí.
+
 ## Contraste
 
 El texto tiene que llegar a 4.5:1 contra su fondo (WCAG AA), y axe lo revisa

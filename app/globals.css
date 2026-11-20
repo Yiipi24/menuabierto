@@ -4863,6 +4863,71 @@ img.menu-archivo-vista { min-height: 0; }
   margin-bottom: 18px;
 }
 
+/* ---------- alta guiada: "Para publicar tu ficha" (#88) ---------- */
+
+.alta-guiada {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin: 4px 0 26px;
+}
+
+.alta-guiada-cabeza { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+.alta-guiada-cabeza h2 { font-size: 18px; font-weight: 700; }
+
+.alta-guiada-avance { font-size: 14px; font-weight: 650; color: var(--ink-soft); white-space: nowrap; }
+
+.alta-guiada-barra {
+  height: 6px;
+  margin: 10px 0 14px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.alta-guiada-barra span { display: block; height: 100%; background: var(--verde); border-radius: inherit; }
+
+.alta-guiada-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+.alta-paso { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+
+.alta-paso-marca {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.alta-paso.es-listo .alta-paso-marca { background: var(--verde); border-color: var(--verde); color: #fff; }
+
+.alta-paso.es-listo strong { color: var(--ink-soft); font-weight: 600; }
+
+.alta-paso-texto strong { display: block; font-size: 15px; line-height: 26px; }
+
+.alta-paso-texto p { margin: 0 0 6px; font-size: 14px; color: var(--ink-soft); }
+
+.alta-paso-enlace { font-size: 14px; font-weight: 600; color: var(--accent); }
+
+.alta-paso-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+
+/* Los saltos de la lista no quedan tapados por la cabecera del panel. */
+#direccion,
+#horario,
+#fotos,
+#menus,
+#publicar { scroll-margin-top: 96px; }
+
+.modal-lista { margin: 0 0 18px; padding-left: 20px; display: grid; gap: 4px; }
+
+.modal-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+
 .tarjeta-cabeza {
   display: flex;
   align-items: center;
