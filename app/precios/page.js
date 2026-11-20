@@ -11,6 +11,9 @@ export const metadata = {
   title: "¿Cuánto cuesta comer? Busca por precio de platillo — Menú Abierto",
   description:
     "Quién vende tacos al pastor a menos de treinta pesos cerca de ti, y cuánto cuesta comer en tu colonia, con los precios de verdad de cada carta.",
+  // Una sola dirección para todas las búsquedas: "/precios?q=tacos" y sus
+  // variantes son la misma página para un buscador.
+  alternates: { canonical: "/precios" },
 };
 
 // La búsqueda se resuelve en cada visita: depende de lo que escriba cada

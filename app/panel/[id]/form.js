@@ -515,7 +515,7 @@ export default function EditarForm({
           )}
         </fieldset>
 
-        <h2 className="sub">Dirección</h2>
+        <h2 className="sub" id="direccion">Dirección</h2>
 
         <label className="campo">
           <span>Calle y número <em>(opcional)</em></span>
@@ -860,7 +860,7 @@ export default function EditarForm({
           />
         </fieldset>
 
-        <fieldset className="grupo">
+        <fieldset className="grupo" id="horario">
           <legend>
             Horarios <em>(marca el día que cierras)</em>
           </legend>

@@ -50,12 +50,12 @@
 :root {
   --ink: #2a211c;
   --ink-soft: #6b5d54;
-  --ink-faint: #a1938a;
+  --ink-faint: #746a63;
   --paper: #fdfaf5;
   --paper-warm: #f6efe4;
   --line: #ece3d6;
-  --accent: #d94a26;
-  --accent-hondo: #b83a19;
+  --accent: #bf4121;
+  --accent-hondo: #a3361a;
   --accent-soft: #fdeee8;
   --verde: #2f9e5f;
   --oro: #f5a623;
@@ -3659,6 +3659,12 @@ img.menu-archivo-vista { min-height: 0; }
 .carta {
   --menu-acento: #c2410c;
   --menu-acento-suave: #fff1e7;
+  /* El acento como texto, ya legible sobre su fondo (lib/plantillas.js,
+     colorLegible). Los valores de aquí son los de la paleta de base; la
+     carta trae los de la suya en el style. */
+  --menu-acento-en-claro: #c2410c;
+  --menu-acento-en-oscuro: #cc5f33;
+  --menu-acento-texto: var(--menu-acento-en-claro);
   --carta-fondo: var(--paper);
   --carta-tinta: var(--ink);
   --carta-suave: var(--ink-soft);
@@ -3724,10 +3730,10 @@ img.menu-archivo-vista { min-height: 0; }
   font-size: 13px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
 }
 
-.carta-adorno { flex: none; color: var(--menu-acento); opacity: 0.9; }
+.carta-adorno { flex: none; color: var(--menu-acento-texto); opacity: 0.9; }
 
 .carta .carta-seccion {
   display: flex;
@@ -3738,7 +3744,7 @@ img.menu-archivo-vista { min-height: 0; }
   font-size: 19px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
 }
 
 .carta .carta-seccion::after {
@@ -3765,7 +3771,7 @@ img.menu-archivo-vista { min-height: 0; }
 
 .carta .menu-icono {
   align-self: center;
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
   opacity: 0.95;
 }
 
@@ -3803,14 +3809,14 @@ img.menu-archivo-vista { min-height: 0; }
 .carta .menu-precio {
   margin-left: auto;
   font-family: var(--carta-letra-nombre);
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
   font-size: 20px;
   font-weight: 700;
 }
 
 .carta .menu-etiqueta {
   background: var(--menu-acento-suave);
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
 }
 
 /* Dentro de la carta las marcas toman el color de la plantilla, como todo lo
@@ -3818,7 +3824,7 @@ img.menu-archivo-vista { min-height: 0; }
 .carta .menu-marca {
   border-color: var(--menu-acento-suave);
   background: var(--menu-acento-suave);
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
 }
 
 .carta .menu-marca .icono { color: currentColor; }
@@ -3850,6 +3856,7 @@ img.menu-archivo-vista { min-height: 0; }
 
 .carta-pizarron,
 .carta-pizarra {
+  --menu-acento-texto: var(--menu-acento-en-oscuro);
   --carta-fondo: #17130f;
   --carta-tinta: #f4efe4;
   --carta-suave: #b9b0a1;
@@ -3903,7 +3910,7 @@ img.menu-archivo-vista { min-height: 0; }
 
 .carta-pizarron .carta-seccion > span {
   flex: none;
-  background: var(--menu-acento);
+  background: var(--menu-acento-texto);
   color: #17130f;
   padding: 5px 34px;
   font-size: 21px;
@@ -3927,7 +3934,7 @@ img.menu-archivo-vista { min-height: 0; }
    que el lector de pantalla lea "129 pesos" y no "flecha 129 flecha". */
 .carta-pizarron .menu-precio::before,
 .carta-pizarron .menu-precio::after {
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
   font-size: 17px;
 }
 
@@ -3972,7 +3979,7 @@ img.menu-archivo-vista { min-height: 0; }
 
 /* ---------- pizarra: lo mismo sin marco y sin listones ---------- */
 
-.carta-pizarra .carta-seccion { color: var(--menu-acento); }
+.carta-pizarra .carta-seccion { color: var(--menu-acento-texto); }
 
 .carta-pizarra .menu-nombre { font-size: 18px; }
 
@@ -4003,7 +4010,7 @@ img.menu-archivo-vista { min-height: 0; }
   display: block;
   margin-top: 10px;
   font-size: 12px;
-  color: var(--menu-acento);
+  color: var(--menu-acento-texto);
 }
 
 .carta-elegante .menu-item { border-bottom: 0; }
@@ -4891,6 +4898,71 @@ img.menu-archivo-vista { min-height: 0; }
   padding: 20px 22px;
   margin-bottom: 18px;
 }
+
+/* ---------- alta guiada: "Para publicar tu ficha" (#88) ---------- */
+
+.alta-guiada {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin: 4px 0 26px;
+}
+
+.alta-guiada-cabeza { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+.alta-guiada-cabeza h2 { font-size: 18px; font-weight: 700; }
+
+.alta-guiada-avance { font-size: 14px; font-weight: 650; color: var(--ink-soft); white-space: nowrap; }
+
+.alta-guiada-barra {
+  height: 6px;
+  margin: 10px 0 14px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.alta-guiada-barra span { display: block; height: 100%; background: var(--verde); border-radius: inherit; }
+
+.alta-guiada-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+.alta-paso { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+
+.alta-paso-marca {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.alta-paso.es-listo .alta-paso-marca { background: var(--verde); border-color: var(--verde); color: #fff; }
+
+.alta-paso.es-listo strong { color: var(--ink-soft); font-weight: 600; }
+
+.alta-paso-texto strong { display: block; font-size: 15px; line-height: 26px; }
+
+.alta-paso-texto p { margin: 0 0 6px; font-size: 14px; color: var(--ink-soft); }
+
+.alta-paso-enlace { font-size: 14px; font-weight: 600; color: var(--accent); }
+
+.alta-paso-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+
+/* Los saltos de la lista no quedan tapados por la cabecera del panel. */
+#direccion,
+#horario,
+#fotos,
+#menus,
+#publicar { scroll-margin-top: 96px; }
+
+.modal-lista { margin: 0 0 18px; padding-left: 20px; display: grid; gap: 4px; }
+
+.modal-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
 
 .tarjeta-cabeza {
   display: flex;
@@ -9528,7 +9600,7 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 
 .hero-acciones .social-seguidores strong { color: #fdfaf5; }
 
-.hero-acciones .social-seguidores .icono { color: #a1938a; }
+.hero-acciones .social-seguidores .icono { color: var(--ink-faint); }
 
 .hero-pedir { order: 0; padding: 13px 24px; font-size: 15.5px; border-radius: 10px; }
 

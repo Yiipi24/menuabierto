@@ -11,6 +11,7 @@ import { iconoPlatilloValido } from "../../../../lib/iconos-platillo";
 import { catalogoDeEtiquetas, etiquetasValidas } from "../../../../lib/etiquetas-platillo";
 import { aCentavos } from "../../../../lib/precios";
 import { MAX_ARCHIVO_BYTES } from "../../../../lib/subidas";
+import { registrarPaso } from "../../../../lib/alta";
 
 const BUCKET_MENUS = "menus";
 const TIPOS_ARCHIVO = {
@@ -153,8 +154,24 @@ export async function crearMenu(_prevState, formData) {
     return { status: "error", message: "No pudimos crear el menú." };
   }
 
+  await registrarPaso(supabase, id, "menu_creado");
   refrescar(restaurante, creado.id);
   return { status: "ok", message: `"${nombre}" creado.`, menuId: creado.id };
+}
+
+// El atajo del alta guiada (#88): la carta desde una foto como primer camino.
+// Crea el menú "Carta" con las mismas reglas que `crearMenu` —cupo del plan,
+// primer menú como principal, el paso del embudo— y deja al dueño en la
+// pantalla de importar, con la cámara a un toque.
+export async function empezarCartaConFoto(formData) {
+  const id = String(formData.get("id") ?? "");
+  const datos = new FormData();
+  datos.set("id", id);
+  datos.set("nombre", "Carta");
+  datos.set("kind", "digital");
+  const creado = await crearMenu(null, datos);
+  if (creado?.status !== "ok" || !creado.menuId) redirect(`/panel/${id}/menus`);
+  redirect(`/panel/${id}/menus/${creado.menuId}/importar`);
 }
 
 export async function guardarMenu(_prevState, formData) {

@@ -423,7 +423,13 @@ revisión de un abogado.
 `/robots.txt` y `/sitemap.xml` se generan desde la app (`app/robots.js` y
 `app/sitemap.js`). El sitemap se arma con las fichas publicadas, sus cartas
 visibles y las páginas por tipo de comida y por zona, y se recalcula cada
-hora.
+hora. Una carta entra solo si tiene algo que enseñar (`menuPublicable` en
+`lib/menus-publicos.js`): la de archivo, con su archivo; la digital, con al
+menos un platillo. Es la regla con la que la ficha esconde las vacías, y sin
+ella el sitemap anunciaba URLs que respondían "Menú no encontrado". Las
+páginas con contenido propio (`/precios`, `/instalar`, las de `/comida`)
+llevan su canonical; `/precios` lo lleva sin la query, para que cada búsqueda
+no cuente como una página distinta.
 
 ### Páginas por tipo de comida y por zona
 
@@ -713,6 +719,81 @@ WhatsApp en vez de por push (también plantilla, y se paga), un solo número
 para varias sucursales, y entender audios o fotos: a esos contesta que por
 ahora solo lee texto. Los pedidos guardan teléfono y dirección del cliente:
 el aviso de privacidad del restaurante tiene que decirlo.
+
+## Alta guiada y el embudo del dueño
+
+Arriba del editor de cada ficha (`/panel/<id>`) va la lista **"Para publicar
+tu ficha"**, con su avance (`app/panel/[id]/alta-guiada.js`):
+
+1. dirección con su punto en el mapa;
+2. horario;
+3. al menos una foto visible;
+4. la carta: un menú visible con platillos, o con su archivo;
+5. el QR descargado;
+6. publicada.
+
+Cada paso se marca solo y lleva a su sección. Quién decide qué está listo es
+`pasosDeAlta()` en `lib/alta.js`, una función pura con pruebas. La lista
+desaparece cuando todo está listo.
+
+- **La carta primero desde una foto.** Si la ficha no tiene menús, el paso de
+  la carta ofrece "Cargar tu carta desde una foto" (`empezarCartaConFoto`):
+  crea el menú "Carta" con las reglas de `crearMenu` y abre la pantalla de
+  importar. Capturarla a mano queda como segunda opción.
+- **Publicar avisa, no bloquea.** Si falta la carta o la dirección, "Publicar"
+  abre un diálogo que dice qué falta, con "Completar primero" y "Publicar de
+  todos modos" (`app/panel/[id]/boton-publicar.js`).
+- **El embudo** vive en `alta_pasos`: una fila por ficha y paso, con la
+  primera vez que se dio. Los pasos son `alta_creada`, `menu_creado`,
+  `qr_descargado` y `ficha_publicada`. Los anotan las acciones del panel
+  (`registrarPaso`, que nunca truena) con la sesión del dueño; la RLS solo deja
+  leer y agregar en fichas propias. El QR se anota al bajar el PNG o el SVG,
+  porque es lo único de la lista que no se deduce de la ficha. Para contar:
+
+  ```sql
+  select paso, count(*) from alta_pasos group by paso;
+  ```
+
+  Una ficha sembrada del DENUE que alguien reclama no pasa por
+  `crearRestaurante`, así que no anota `alta_creada`; sus otros pasos sí.
+
+## Cabeceras de seguridad
+
+`next.config.js` manda a todo el sitio:
+
+- `X-Frame-Options: DENY` y `frame-ancestors 'none'`: nadie más puede meter el
+  sitio en un iframe;
+- `X-Content-Type-Options: nosniff`;
+- `Referrer-Policy: strict-origin-when-cross-origin`;
+- `Permissions-Policy`: cámara, micrófono y ubicación solo para el propio
+  sitio (las historias, "cerca de mí" y el punto del local), lo demás para
+  nadie;
+- una `Content-Security-Policy` corta: `base-uri 'self'`, `object-src` que
+  deja solo el sitio y el almacenamiento de Supabase (el PDF de una carta de
+  archivo va en `<object>`), y `upgrade-insecure-requests`.
+
+La política no restringe scripts todavía: Next mete scripts en línea, y
+cerrarlos pide un nonce por respuesta, que vuelve dinámicas todas las páginas.
+Un recurso nuevo que el sitio incruste con `<object>` o desde otro dominio en
+un iframe propio pide tocar esta lista. En local, `nosniff` hace que la
+consola se queje de `/_vercel/insights/script.js`, que solo existe en Vercel;
+no es un error del sitio.
+
+## Contraste
+
+El texto tiene que llegar a 4.5:1 contra su fondo (WCAG AA), y axe lo revisa
+en las páginas públicas. Los colores base de `globals.css` ya cumplen sobre
+blanco, `--paper` y `--paper-warm`: `--accent` (`#bf4121`, también como fondo
+de los botones con texto blanco) y `--ink-faint` (`#746a63`). Un color nuevo
+para texto se mide antes de entrar.
+
+Las paletas de la carta (`PALETAS` en `lib/plantillas.js`) son del dueño y su
+acento va como texto sobre fondos claros y sobre el pizarrón oscuro. Ningún
+color sirve para los dos, así que `variablesDeEstilo` manda tres: el acento
+tal cual, para adornos y barras, y su versión legible en cada fondo
+(`--menu-acento-en-claro` y `--menu-acento-en-oscuro`, de `colorLegible`). La
+carta usa la que toca en `--menu-acento-texto`. Una paleta nueva que no se lea
+rompe `plantillas-contraste.test.mjs`, no la carta.
 
 ## Fotos: tamaño y peso
 

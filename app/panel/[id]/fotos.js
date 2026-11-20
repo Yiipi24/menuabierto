@@ -19,7 +19,7 @@ export default function Fotos({ id, fotos, cupoPlatillos, platillos = [] }) {
   const otras = fotos.filter((f) => f.category !== "fachada" && f.category !== "platillo");
 
   return (
-    <section className="bloque-fotos">
+    <section className="bloque-fotos" id="fotos">
       <h2 className="sub">Fotos del restaurante</h2>
       <p className="ayuda">
         JPG, PNG o WebP, hasta 5 MB cada una.

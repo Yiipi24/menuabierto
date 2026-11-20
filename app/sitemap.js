@@ -3,6 +3,7 @@ import { rutaFicha, rutaMenu, rutaMenuCarta } from "../lib/slug";
 import { sitioIndexable, urlDelSitio } from "../lib/sitio";
 import { catalogoComida, rutaCocina, rutaZona } from "../lib/zonas";
 import { ACTUALIZADO } from "../lib/legal";
+import { menuPublicable, platillosDeFila } from "../lib/menus-publicos";
 
 // El sitemap se arma con la base, no a mano: las fichas son casi todo el sitio
 // y aparecen y se publican solas. Se recalcula cada hora en vez de en cada
@@ -57,14 +58,18 @@ export default async function sitemap() {
         .range(desde, hasta),
     );
 
-    menus = await todasLasFilas((desde, hasta) =>
+    // Visible no basta: un menú de archivo sin archivo, o uno digital sin
+    // platillos, la ficha no lo enseña y su URL responde "Menú no
+    // encontrado". Anunciarlo es mandar al rastreador a una página vacía.
+    const filas = await todasLasFilas((desde, hasta) =>
       supabase
         .from("menus")
-        .select("id, restaurant_id, updated_at")
+        .select("id, restaurant_id, updated_at, kind, file_path, menu_items(count)")
         .eq("is_visible", true)
         .order("id")
         .range(desde, hasta),
     );
+    menus = filas.filter((m) => menuPublicable({ ...m, platillos: platillosDeFila(m) }));
   } catch {
     // Sin base no hay directorio, pero el sitio sigue existiendo: mejor un
     // sitemap con la portada que un 500 que le enseña un error al rastreador.
@@ -91,6 +96,13 @@ export default async function sitemap() {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
+    },
+    // Quién vende qué y a cuánto: la búsqueda por precio de platillo.
+    {
+      url: urlDelSitio("/precios"),
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.6,
     },
     // Lo que busca un dueño antes de registrarse: cuánto cuesta.
     {
