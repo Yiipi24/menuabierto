@@ -2,7 +2,7 @@ import Link from "next/link";
 import Nav from "../nav";
 import { RESPONSABLE, fechaLegible, quienResponde } from "../../lib/legal";
 import { PLANES } from "../../lib/planes";
-import { MESES_POR_ADELANTADO, precioDe } from "../../lib/cobro";
+import { MESES_POR_ADELANTADO, TASA_IVA, precioConIva, precioDe } from "../../lib/cobro";
 import { pesos } from "../../lib/precios";
 
 export const metadata = {
@@ -22,6 +22,7 @@ function planesDePaga() {
   return PLANES.filter((p) => precioDe(p.slug) != null).map((p) => ({
     nombre: p.nombre,
     precio: pesos(precioDe(p.slug)),
+    conIva: pesos(precioConIva(p.slug)),
   }));
 }
 
@@ -140,11 +141,15 @@ export default function Terminos() {
         <ul>
           {planes.map((p) => (
             <li key={p.nombre}>
-              {p.nombre}: {p.precio} MXN
+              {p.nombre}: {p.precio} MXN + IVA ({p.conIva} con IVA)
             </li>
           ))}
         </ul>
         <ul>
+          <li>
+            Al pagar se agrega el IVA del {Math.round(TASA_IVA * 100)}%: lo que cobra Mercado Pago es el
+            total con IVA. Los planes y sus precios están en <Link href="/planes">/planes</Link>.
+          </li>
           <li>
             Los cobros los procesa Mercado Pago. Con tarjeta, el plan se cobra cada mes hasta
             que lo canceles. Si cancelas, conservas lo que ya pagaste hasta el final de ese

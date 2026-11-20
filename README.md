@@ -364,6 +364,28 @@ servidor), y opcionalmente `PRECIO_PLUS_MXN`, `PRECIO_PREMIUM_MXN` y
 y 2,200). Sin `MP_ACCESS_TOKEN` la
 página de planes enseña los botones deshabilitados y no se puede contratar.
 
+### IVA
+
+Los precios de arriba son **antes de IVA**, y así se anuncian: "$199 MXN al mes
++ IVA", con el total debajo. Lo que se le manda a Mercado Pago es **con IVA**
+(`TASA_IVA` = 16% en `lib/cobro.js`): `precioConIva()` en la suscripción de
+cada mes y `totalPorAdelantado()` en el pago por adelantado, que calcula el IVA
+sobre el total de los meses (`subtotalPorAdelantado()` es el de antes de IVA).
+El tope de OXXO se compara contra el total con IVA, que es lo que la tienda
+cobra. La conversión de lo pagado al subir de plan usa los montos que
+registró la pasarela, así que ya va con IVA sin cambiar nada en la base.
+
+Una suscripción creada antes de este cambio conserva el monto que se le dio
+al crearla: Mercado Pago no lo actualiza solo.
+
+### La página pública de planes
+
+`/planes` enseña los planes, sus precios y las formas de pago a quien todavía
+no tiene cuenta. El catálogo y las formas de pago son los mismos componentes
+que usa `/panel/planes` (`app/planes/catalogo.js`), para que las dos no puedan
+anunciar precios distintos. Contratar sigue pasando por el panel, con la ficha
+elegida. `planes` es un segmento reservado.
+
 Queda fuera, a propósito: la factura fiscal (CFDI), que Mercado Pago no emite
 por nosotros, y un panel de cobranza propio. La página lo dice.
 
@@ -691,6 +713,37 @@ WhatsApp en vez de por push (también plantilla, y se paga), un solo número
 para varias sucursales, y entender audios o fotos: a esos contesta que por
 ahora solo lee texto. Los pedidos guardan teléfono y dirección del cliente:
 el aviso de privacidad del restaurante tiene que decirlo.
+
+## Fotos: tamaño y peso
+
+Las fotos se guardan como las sube cada quien (hasta 5 MB) y se sirven
+transformadas: `lib/imagenes.js` cambia `/storage/v1/object/public/` por
+`/storage/v1/render/image/public/` y pide ancho y calidad. El almacenamiento de
+Supabase redimensiona al vuelo y, si el navegador lo acepta, entrega WebP o
+AVIF; no agranda una foto más chica que el ancho pedido. `propsDeFoto(url,
+{ anchos, calidad, sizes })` da el `src`, el `srcSet` y el `sizes` de un
+`<img>`. Lo que no viene del almacenamiento (las fotos de `/public`, la vista
+previa de un archivo recién elegido) pasa sin tocar.
+
+- La portada de la ficha va con `fetchPriority="high"`: React la hoistea como
+  `<link rel="preload">`. El layout abre la conexión al almacenamiento desde
+  el `<head>` (`preconnect`).
+- Lo que queda debajo (favoritos, publicaciones) se pide a 720 como máximo,
+  con `loading="lazy"`: en 4G compite por el ancho de banda con la portada.
+- La carta de archivo (una foto de la carta impresa) va hasta 2000 de ancho y
+  calidad 80, porque es texto que se tiene que leer. "Abrir el menú completo"
+  sigue llevando al original.
+- El encabezado de la portada sale de `public/portada/hero-<ancho>.webp`, que
+  genera `node scripts/generar-portada.mjs`.
+
+Medido con Playwright en un Pixel 7 a 1.6 Mbps y 150 ms (#82): la ficha de
+muestra pasó de 26 s de LCP a unos 2.5 s (la portada, de un PNG de 1.2 MB a un
+WebP de 70 KB), y la portada del sitio de 5.5 s a unos 2.5 s.
+
+Las transformaciones las cobra Supabase por imagen de origen distinta al mes,
+con un cupo incluido en el plan. Si se apagan en el proyecto, `render/image`
+deja de responder y las fotos se rompen: se vuelve a servir el original
+quitando el cambio de ruta en `urlTransformada`.
 
 ## Datos estructurados y enlaces compartidos
 

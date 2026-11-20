@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { subirFotoDeCuenta, quitarFotoDeCuenta } from "./actions";
 import { MAX_AVATAR_BYTES, TIPOS_FOTO, revisarArchivos } from "../../../lib/subidas";
 import { IconoUsuario } from "../tablero-iconos";
+import { propsDeFoto } from "../../../lib/imagenes";
 
 const inicial = { status: "idle", message: "" };
 
@@ -71,7 +72,7 @@ export default function FotoDeCuenta({ foto }) {
     <section className="foto-cuenta">
       <div className="foto-cuenta-muestra">
         {mostrada ? (
-          <img src={mostrada} alt="Tu foto de la cuenta" width={72} height={72} />
+          <img {...propsDeFoto(mostrada, { anchos: [144] })} alt="Tu foto de la cuenta" width={72} height={72} />
         ) : (
           <span className="foto-cuenta-vacia" aria-hidden="true">
             <IconoUsuario ancho={30} />

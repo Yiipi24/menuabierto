@@ -92,6 +92,13 @@ export default async function sitemap() {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    // Lo que busca un dueño antes de registrarse: cuánto cuesta.
+    {
+      url: urlDelSitio("/planes"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
     // El aviso de privacidad y los términos: casi nunca cambian, pero un dueño
     // que busca "Menú Abierto términos" antes de pagar tiene que encontrarlos.
     ...["/privacidad", "/terminos"].map((ruta) => ({

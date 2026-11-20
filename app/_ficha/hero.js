@@ -6,6 +6,7 @@ import { IconoDestacado } from "../destacados";
 import { IconoPin } from "./iconos";
 import { mensajeDeContacto } from "../../lib/whatsapp";
 import { urlDelSitio } from "../../lib/sitio";
+import { propsDeFoto } from "../../lib/imagenes";
 
 // El encabezado de la ficha: la fachada a un lado y, al otro, el panel oscuro
 // con todo lo que se decide en los primeros tres segundos —qué es, si está
@@ -35,7 +36,11 @@ export default function Hero({
     <header className={portada ? "hero" : "hero hero-sinfoto"} id="inicio">
       {portada ? (
         <figure className="hero-foto">
-          <img src={portada.url} alt={portada.alt ?? `Fachada de ${r.name}`} fetchPriority="high" />
+          <img
+            {...propsDeFoto(portada.url, { sizes: "(max-width: 720px) 100vw, 58vw" })}
+            alt={portada.alt ?? `Fachada de ${r.name}`}
+            fetchPriority="high"
+          />
         </figure>
       ) : null}
 

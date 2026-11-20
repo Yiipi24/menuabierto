@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cerrarSesion } from "./panel/actions";
 import { IconoUsuario } from "./panel/tablero-iconos";
+import { propsDeFoto } from "../lib/imagenes";
 
 /**
  * Quién entró, en un menú que cuelga del avatar.
@@ -28,7 +29,7 @@ export default function SesionUsuario({ correo, foto, href = "/panel", destino }
     <div className="menu-usuario">
       <Link className="menu-usuario-boton" href={href} aria-label="Tu cuenta">
         <span className="panel-avatar" aria-hidden="true">
-          {foto ? <img src={foto} alt="" width={32} height={32} /> : <IconoUsuario ancho={18} />}
+          {foto ? <img {...propsDeFoto(foto, { anchos: [64] })} alt="" width={32} height={32} /> : <IconoUsuario ancho={18} />}
         </span>
       </Link>
 

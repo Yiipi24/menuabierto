@@ -43,8 +43,15 @@ export const metadata = {
 export const viewport = { themeColor: "#1c1917" };
 
 export default function RootLayout({ children }) {
+  // Las fotos de las fichas vienen del almacenamiento de Supabase, otro
+  // dominio: abrir la conexión desde el <head> ahorra el saludo (DNS, TCP y
+  // TLS, unos tres viajes) antes de la foto de portada, que es el LCP de la
+  // ficha (#82).
+  const almacenamiento = process.env.SUPABASE_URL;
+
   return (
     <html lang="es-MX">
+      <head>{almacenamiento ? <link rel="preconnect" href={almacenamiento} /> : null}</head>
       <body>
         {children}
         <Pie />
