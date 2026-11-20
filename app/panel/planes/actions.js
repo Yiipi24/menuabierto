@@ -10,7 +10,7 @@ import {
   mesesLegibles,
   pagoPorCobrar,
   planDePagaValido,
-  precioDe,
+  precioConIva,
   totalPorAdelantado,
 } from "../../../lib/cobro";
 import {
@@ -94,9 +94,10 @@ export async function contratarPlan(formData) {
     creada = await crearSuscripcion({
       restauranteId: ficha.id,
       plan,
-      precioCentavos: precioDe(plan),
+      // Con IVA: los precios se anuncian antes de IVA y se cobran con él.
+      precioCentavos: precioConIva(plan),
       correo: auth.user.email,
-      razon: `Menú Abierto · ${nombreDe(plan)} · ${ficha.name}`,
+      razon: `Menú Abierto · ${nombreDe(plan)} · ${ficha.name} · IVA incluido`,
     });
   } catch (error) {
     console.error("cobro: no se pudo crear la suscripción", error?.message);
@@ -191,7 +192,7 @@ export async function pagarPorAdelantado(formData) {
       meses: opcion.meses,
       totalCentavos: total,
       correo: auth.user.email,
-      titulo: `Menú Abierto · ${nombreDe(opcion.plan)} · ${mesesLegibles(opcion.meses)} · ${ficha.name}`,
+      titulo: `Menú Abierto · ${nombreDe(opcion.plan)} · ${mesesLegibles(opcion.meses)} · ${ficha.name} · IVA incluido`,
     });
   } catch (error) {
     console.error("cobro: no se pudo crear el pago por adelantado", error?.message);

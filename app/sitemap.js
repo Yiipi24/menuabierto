@@ -91,6 +91,13 @@ export default async function sitemap() {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    // Lo que busca un dueño antes de registrarse: cuánto cuesta.
+    {
+      url: urlDelSitio("/planes"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
   ];
 
   for (const c of catalogo.cocinas) {

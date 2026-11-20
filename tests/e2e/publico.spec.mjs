@@ -9,8 +9,13 @@ async function primeraFichaPublicada(request) {
   expect(respuesta.ok()).toBeTruthy();
   const xml = await respuesta.text();
   const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
-  // Una ficha es una ruta de uno o dos tramos que no es de /comida ni la raíz.
-  return urls.find((r) => /^\/[a-z0-9]+(\/[a-z0-9]+)?$/.test(r) && !r.startsWith("/comida")) ?? null;
+  // Una ficha es una ruta de uno o dos tramos que no es de /comida, ni de las
+  // páginas fijas que también entran al sitemap, ni la raíz.
+  const fijas = ["/comida", "/planes", "/privacidad", "/terminos"];
+  return (
+    urls.find((r) => /^\/[a-z0-9]+(\/[a-z0-9]+)?$/.test(r) && !fijas.some((f) => r.startsWith(f))) ??
+    null
+  );
 }
 
 test("la portada carga y busca", async ({ page }) => {
@@ -22,6 +27,17 @@ test("la portada carga y busca", async ({ page }) => {
   await buscador.press("Enter");
   await page.waitForURL(/[?&]q=tacos/);
   await expect(page.locator("main")).toBeVisible();
+});
+
+test("los planes y sus precios se ven sin cuenta, antes y con IVA", async ({ page }) => {
+  const respuesta = await page.goto("/planes");
+  expect(respuesta.status()).toBe(200);
+  await expect(page.locator("h1")).toHaveText("Planes para restaurantes");
+  const precios = page.locator(".plan-tarjeta-precio");
+  await expect(precios).toHaveCount(4);
+  await expect(page.locator(".plan-tarjeta-precio span").nth(1)).toContainText("+ IVA");
+  await expect(page.locator(".plan-tarjeta-iva").first()).toContainText("con IVA");
+  await expect(page.getByRole("link", { name: "Crea tu cuenta gratis" })).toHaveAttribute("href", "/registro");
 });
 
 test("una ficha publicada y su carta responden", async ({ page, request }) => {

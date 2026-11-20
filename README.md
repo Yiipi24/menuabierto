@@ -364,6 +364,28 @@ servidor), y opcionalmente `PRECIO_PLUS_MXN`, `PRECIO_PREMIUM_MXN` y
 y 2,200). Sin `MP_ACCESS_TOKEN` la
 página de planes enseña los botones deshabilitados y no se puede contratar.
 
+### IVA
+
+Los precios de arriba son **antes de IVA**, y así se anuncian: "$199 MXN al mes
++ IVA", con el total debajo. Lo que se le manda a Mercado Pago es **con IVA**
+(`TASA_IVA` = 16% en `lib/cobro.js`): `precioConIva()` en la suscripción de
+cada mes y `totalPorAdelantado()` en el pago por adelantado, que calcula el IVA
+sobre el total de los meses (`subtotalPorAdelantado()` es el de antes de IVA).
+El tope de OXXO se compara contra el total con IVA, que es lo que la tienda
+cobra. La conversión de lo pagado al subir de plan usa los montos que
+registró la pasarela, así que ya va con IVA sin cambiar nada en la base.
+
+Una suscripción creada antes de este cambio conserva el monto que se le dio
+al crearla: Mercado Pago no lo actualiza solo.
+
+### La página pública de planes
+
+`/planes` enseña los planes, sus precios y las formas de pago a quien todavía
+no tiene cuenta. El catálogo y las formas de pago son los mismos componentes
+que usa `/panel/planes` (`app/planes/catalogo.js`), para que las dos no puedan
+anunciar precios distintos. Contratar sigue pasando por el panel, con la ficha
+elegida. `planes` es un segmento reservado.
+
 Queda fuera, a propósito: la factura fiscal (CFDI), que Mercado Pago no emite
 por nosotros, y un panel de cobranza propio. La página lo dice.
 

@@ -16,8 +16,11 @@ test("una ficha en Básico sin pagos puede pagar cualquier plan de las dos forma
     );
     assert.equal(p.actual, false);
   }
-  assert.equal(planes.plus.precioMensual, "$199");
-  assert.equal(planes.plus.adelantos[1].total, "$597");
+  // Lo que se cobra es con IVA; el precio anunciado, antes de IVA.
+  assert.equal(planes.plus.precioMensual, "$230.84");
+  assert.equal(planes.plus.precioSinIva, "$199");
+  assert.equal(planes.plus.adelantos[1].total, "$692.52");
+  assert.equal(planes.plus.adelantos[1].subtotal, "$597");
   // Lo que pasa del tope de OXXO lo dice ahí mismo.
   assert.equal(planes.pedidos.adelantos.find((a) => a.meses === 6).sinOxxo, true);
   assert.equal(planes.pedidos.adelantos.find((a) => a.meses === 3).sinOxxo, false);

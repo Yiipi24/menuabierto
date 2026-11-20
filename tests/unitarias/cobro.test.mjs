@@ -27,6 +27,11 @@ import {
   opcionDeAdelanto,
   pagoPorCobrar,
   referenciaDeAdelanto,
+  TASA_IVA,
+  conIva,
+  ivaDe,
+  precioConIva,
+  subtotalPorAdelantado,
   totalPorAdelantado,
 } from "../../lib/cobro.js";
 
@@ -155,10 +160,27 @@ test("por adelantado se pagan 1, 3, 6 o 12 meses, al precio del mes por los mese
   for (const malo of [0, 2, 13, -1, "3.5", "03x", "", null, "1e1"]) {
     assert.equal(mesesValidos(malo), false, String(malo));
   }
-  assert.equal(totalPorAdelantado("plus", 3), precioDe("plus") * 3);
-  assert.equal(totalPorAdelantado("premium", 12), precioDe("premium") * 12);
+  assert.equal(subtotalPorAdelantado("plus", 3), precioDe("plus") * 3);
+  assert.equal(subtotalPorAdelantado("premium", 12), precioDe("premium") * 12);
+  // Lo que se cobra es el subtotal con IVA.
+  assert.equal(totalPorAdelantado("plus", 3), conIva(precioDe("plus") * 3));
+  assert.equal(totalPorAdelantado("premium", 12), conIva(precioDe("premium") * 12));
   assert.equal(totalPorAdelantado("basico", 3), null);
   assert.equal(totalPorAdelantado("plus", 2), null);
+});
+
+test("los precios se anuncian antes de IVA y se cobran con el 16%", () => {
+  assert.equal(TASA_IVA, 0.16);
+  assert.equal(ivaDe(19900), 3184);
+  assert.equal(conIva(19900), 23084);
+  assert.equal(conIva(39900), 46284);
+  assert.equal(conIva(220000), 255200);
+  // Se redondea a centavos, sobre el total y no mes por mes.
+  assert.equal(conIva(19999), 23199);
+  assert.equal(totalPorAdelantado("plus", 3), 69252);
+  assert.equal(precioConIva("plus"), conIva(precioDe("plus")));
+  assert.equal(precioConIva("basico"), null);
+  assert.equal(conIva(null), null);
 });
 
 test("la opción del panel lleva plan y meses, y solo combinaciones válidas", () => {
