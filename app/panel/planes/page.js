@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseSession } from "../../../lib/supabase";
-import { PLANES, menusIncluidos, nombreDelPlan, ordenDePlan, planVigente } from "../../../lib/planes";
+import { menusIncluidos, nombreDelPlan, ordenDePlan, planVigente } from "../../../lib/planes";
 import {
   MONEDA,
   TOPE_OXXO_CENTAVOS,
@@ -9,26 +9,17 @@ import {
   estadoLegible,
   medioLegible,
   pagoPorCobrar,
-  precioDe,
 } from "../../../lib/cobro";
 import { cobroConfigurado } from "../../../lib/mercadopago";
 import { confirmarPendientes, pagosVigentes } from "../../../lib/adelantos";
 import { pesos } from "../../../lib/precios";
 import { rutaFicha } from "../../../lib/slug";
 import CabeceraPanel from "../cabecera";
-import {
-  IconoAbrir,
-  IconoCarta,
-  IconoCorona,
-  IconoDiamante,
-  IconoInfo,
-  IconoPalomita,
-  IconoTienda,
-  IconoWhatsapp,
-} from "../tablero-iconos";
+import { IconoAbrir, IconoCarta, IconoTienda } from "../tablero-iconos";
 import { planesParaElegir } from "../../../lib/opciones-de-pago";
 import { cancelarPlan } from "./actions";
 import ElegirPlan from "./elegir-plan";
+import { CatalogoDePlanes, FormasDePago } from "../../planes/catalogo";
 import { propsDeFoto } from "../../../lib/imagenes";
 
 export const metadata = { title: "Planes — Menú Abierto" };
@@ -79,19 +70,6 @@ const ERRORES = {
   "otro-por-cobrar":
     "Tienes un pago en OXXO o SPEI por hacer de otro plan. Págalo, o espera a que venza, antes de pagar este.",
 };
-
-const ICONOS_PLAN = {
-  basico: IconoTienda,
-  plus: IconoCorona,
-  premium: IconoDiamante,
-  pedidos: IconoWhatsapp,
-};
-
-// Lo que más se compara entre planes es cuántos menús caben: en la lista de
-// cada tarjeta, la cifra va en negritas.
-function conCifras(texto) {
-  return texto.split(/(\d+ menús)/).map((parte, i) => (i % 2 ? <strong key={i}>{parte}</strong> : parte));
-}
 
 function fechaCorta(valor) {
   if (!valor) return null;
@@ -195,80 +173,9 @@ export default async function Planes({ searchParams }) {
           </p>
         ) : null}
 
-        <section className="planes-grid" aria-label="Comparación de planes">
-          {PLANES.map((p) => {
-            const Icono = ICONOS_PLAN[p.slug] ?? IconoTienda;
-            const centavos = precioDe(p.slug);
-            return (
-              <article
-                className={p.destacado ? "plan-tarjeta plan-tarjeta-recomendada" : "plan-tarjeta"}
-                key={p.slug}
-              >
-                {p.destacado ? <span className="plan-recomendado">Recomendado</span> : null}
-                <span className="plan-tarjeta-icono">
-                  <Icono ancho={22} />
-                </span>
-                <h2>{p.nombre}</h2>
-                <p className="plan-tarjeta-precio">
-                  {centavos ? pesos(centavos, MONEDA) : p.precio}
-                  <span>{centavos ? `${MONEDA} al mes` : p.detalle}</span>
-                </p>
-                <p className="plan-tarjeta-resumen">{p.resumen}</p>
-                <ul>
-                  {p.incluye.map((linea) => (
-                    <li key={linea}>
-                      <IconoPalomita ancho={16} />
-                      <span>{conCifras(linea)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            );
-          })}
-        </section>
+        <CatalogoDePlanes />
 
-        <section className="formas-de-pago" aria-labelledby="titulo-formas-de-pago">
-          <div className="formas-de-pago-titulo">
-            <span className="formas-de-pago-icono">
-              <IconoInfo ancho={20} />
-            </span>
-            <h2 id="titulo-formas-de-pago">Formas de pago</h2>
-          </div>
-          <dl className="formas-de-pago-lista">
-            <div>
-              <dt>Cada mes</dt>
-              <dd>
-                Cobro automático con tarjeta de crédito o de débito, con Mercado Pago. Lo cancelas
-                cuando quieras.
-              </dd>
-            </div>
-            <div>
-              <dt>Por adelantado</dt>
-              <dd>
-                De uno a doce meses en un solo pago: OXXO, SPEI, saldo de Mercado Pago o tarjeta. En
-                OXXO, hasta {pesos(TOPE_OXXO_CENTAVOS, MONEDA)} por pago; lo que pase de eso, por SPEI,
-                con saldo o con tarjeta.
-              </dd>
-            </div>
-            <div>
-              <dt>Al vencer o cancelar</dt>
-              <dd>
-                Lo pagado por adelantado no se renueva solo: al vencer, pagas otros meses o activas el
-                cobro automático. Un plan que se cancela o deja de pagarse vuelve a Básico al vencer;
-                tus menús de más siguen guardados, pero no se ven hasta que renueves o borres los que
-                sobren.
-              </dd>
-            </div>
-            <div>
-              <dt>Bueno saber</dt>
-              <dd>
-                En Pedidos, los mensajes de WhatsApp los cobra Meta aparte, a la tarjeta de tu cuenta de
-                WhatsApp. Si estás en la lista de espera, conservas el precio de lanzamiento el primer
-                año. La factura fiscal (CFDI) todavía no se emite desde aquí.
-              </dd>
-            </div>
-          </dl>
-        </section>
+        <FormasDePago />
 
         {restaurantes?.length ? (
           <section className="planes-restaurantes" aria-labelledby="titulo-tus-restaurantes">

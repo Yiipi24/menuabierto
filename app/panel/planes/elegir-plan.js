@@ -71,7 +71,7 @@ export default function ElegirPlan({ restaurante, planes, cobroActivo, notaSubir
                     {p.nombre}
                     {elegido ? <IconoPalomita ancho={16} /> : null}
                   </span>
-                  <span className="opcion-plan-precio">{p.precioMensual} al mes</span>
+                  <span className="opcion-plan-precio">{p.precioSinIva} + IVA al mes</span>
                   {p.actual ? <span className="opcion-plan-nota">Tu plan actual</span> : null}
                 </label>
               );
@@ -147,7 +147,7 @@ export default function ElegirPlan({ restaurante, planes, cobroActivo, notaSubir
               >
                 {plan.adelantos.map((a) => (
                   <option key={a.meses} value={a.meses}>
-                    {a.etiqueta} · {a.total}
+                    {a.etiqueta} · {a.total} con IVA
                     {a.sinOxxo ? " · sin OXXO" : ""}
                   </option>
                 ))}
@@ -185,7 +185,7 @@ export default function ElegirPlan({ restaurante, planes, cobroActivo, notaSubir
                 <>
                   <strong>{modo === "mensual" ? plan.precioMensual : adelanto.total}</strong>
                   <span>
-                    {restaurante.moneda} {modo === "mensual" ? "al mes" : "en un solo pago"}
+                    {restaurante.moneda} {modo === "mensual" ? "al mes" : "en un solo pago"}, IVA incluido
                   </span>
                 </>
               ) : (

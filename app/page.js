@@ -480,6 +480,9 @@ export default async function Home({ searchParams }) {
               <Link className="btn" href="/registro">
                 Comienza ahora
               </Link>
+              <Link className="promo-enlace" href="/planes">
+                Ver planes y precios
+              </Link>
             </div>
           </aside>
         </div>
@@ -513,6 +516,9 @@ export default async function Home({ searchParams }) {
             </Link>
             <Link className="btn-linea" href="/reclamar">
               Reclama tu ficha
+            </Link>
+            <Link className="btn-linea" href="/planes">
+              Planes y precios
             </Link>
           </div>
         </div>
