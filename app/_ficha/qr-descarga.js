@@ -43,7 +43,9 @@ function descargar(nombre, url) {
   enlace.remove();
 }
 
-export default function QrDescarga({ nombreArchivo, children }) {
+// `alDescargar`, si viene, se llama con cada descarga: el panel lo usa para
+// marcar el paso del QR en el alta guiada.
+export default function QrDescarga({ nombreArchivo, alDescargar, children }) {
   const caja = useRef(null);
   const [error, setError] = useState(false);
 
@@ -102,11 +104,25 @@ export default function QrDescarga({ nombreArchivo, children }) {
     <div className="qr-descarga" ref={caja}>
       {children}
       <div className="qr-descarga-botones">
-        <button type="button" className="btn-linea" onClick={bajarPng}>
+        <button
+          type="button"
+          className="btn-linea"
+          onClick={() => {
+            bajarPng();
+            alDescargar?.();
+          }}
+        >
           <IconoDescargar ancho={16} />
           PNG
         </button>
-        <button type="button" className="btn-linea" onClick={bajarSvg}>
+        <button
+          type="button"
+          className="btn-linea"
+          onClick={() => {
+            bajarSvg();
+            alDescargar?.();
+          }}
+        >
           <IconoDescargar ancho={16} />
           SVG
         </button>

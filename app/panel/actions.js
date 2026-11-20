@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { invalidarFicha, invalidarRutas } from "../../lib/cache";
 import { supabaseSession } from "../../lib/supabase";
+import { registrarPaso } from "../../lib/alta";
 
 const BUCKET_FOTOS = "restaurantes";
 
@@ -108,6 +109,8 @@ export async function crearRestaurante(_prevState, formData) {
     }
   }
 
+  await registrarPaso(supabase, creado.id, "alta_creada");
+
   revalidatePath("/panel");
   // Directo a la ficha: recien creada le faltan telefono, horarios y fotos, y
   // volver a la lista deja al dueno sin ver donde cargarlos.
@@ -138,6 +141,7 @@ export async function cambiarEstado(formData) {
     .maybeSingle();
 
   if (error) console.error("cambiar estado", error.message);
+  if (cambiado && estado === "publicado") await registrarPaso(supabase, id, "ficha_publicada");
 
   revalidatePath("/panel");
 
@@ -148,6 +152,17 @@ export async function cambiarEstado(formData) {
     invalidarFicha(cambiado.slug);
     invalidarRutas();
   }
+}
+
+// El QR se baja en el navegador; la página lo avisa aquí para que la lista
+// "Para publicar tu ficha" lo marque (#88). Con la sesión del dueño, la RLS
+// no deja anotarlo en una ficha ajena.
+export async function anotarQrDescargado(id) {
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) return;
+  await registrarPaso(supabase, String(id ?? ""), "qr_descargado");
+  revalidatePath(`/panel/${id}`);
 }
 
 export async function borrarRestaurante(formData) {

@@ -8,7 +8,9 @@ import EditarForm from "./form";
 import Fotos from "./fotos";
 import CabeceraPanel from "../cabecera";
 import PosicionDePrecio from "./posicion-precio";
-import { cambiarEstado } from "../actions";
+import BotonPublicar from "./boton-publicar";
+import AltaGuiada from "./alta-guiada";
+import { avanceDeAlta, faltanParaPublicar, pasosDeAlta } from "../../../lib/alta";
 import BorrarRestaurante from "../borrar";
 import { telefonoLegible } from "../../../lib/whatsapp";
 
@@ -46,6 +48,7 @@ export default async function Editar({ params }) {
     { count: cupones },
     { data: lineaWhatsapp },
     { count: pedidosNuevos },
+    { data: pasos },
   ] = await Promise.all([
     supabase.from("cuisines").select("slug, name").order("name"),
     supabase
@@ -69,7 +72,7 @@ export default async function Editar({ params }) {
     supabase.rpc("restaurant_coords", { rid: id }),
     supabase
       .from("menus")
-      .select("id, name, is_visible")
+      .select("id, name, is_visible, kind, file_path")
       .eq("restaurant_id", id)
       .order("position"),
     // Los platillos, solo id y nombre: son las opciones del selector con el
@@ -99,6 +102,8 @@ export default async function Editar({ params }) {
       .select("id", { count: "exact", head: true })
       .eq("restaurant_id", id)
       .eq("status", "nuevo"),
+    // Los pasos del alta que no se deducen de la ficha (el QR descargado).
+    supabase.from("alta_pasos").select("paso").eq("restaurant_id", id),
   ]);
 
   const conUrl = (fotos ?? []).map((f) => ({
@@ -111,6 +116,16 @@ export default async function Editar({ params }) {
   const cupoMenus = menusIncluidos(restaurante);
   const visibles = (menus ?? []).filter((m) => m.is_visible).length;
 
+  const lista = pasosDeAlta({
+    restaurante,
+    coords: coords?.[0] ?? null,
+    horarios,
+    fotos,
+    menus,
+    platillos,
+    pasos: (pasos ?? []).map((p) => p.paso),
+  });
+
   return (
     <div className="panel-wrap">
       <CabeceraPanel correo={auth.user.email} usuarioId={auth.user.id} atras="/panel" />
@@ -118,18 +133,8 @@ export default async function Editar({ params }) {
       <main className="wrap panel-main panel-angosto">
         <div className="panel-encabezado">
           <h1>{restaurante.name}</h1>
-          <div className="panel-acciones">
-            <form action={cambiarEstado}>
-              <input type="hidden" name="id" value={restaurante.id} />
-              <input
-                type="hidden"
-                name="status"
-                value={publicado ? "oculto" : "publicado"}
-              />
-              <button className={publicado ? "btn-texto" : "btn"} type="submit">
-                {publicado ? "Ocultar" : "Publicar"}
-              </button>
-            </form>
+          <div className="panel-acciones" id="publicar">
+            <BotonPublicar id={restaurante.id} publicado={publicado} faltan={faltanParaPublicar(lista)} />
             <BorrarRestaurante id={restaurante.id} nombre={restaurante.name} />
           </div>
         </div>
@@ -139,6 +144,14 @@ export default async function Editar({ params }) {
             ? "Está publicado: cualquiera puede verlo."
             : "Está en borrador: solo tú lo ves hasta que lo publiques."}
         </p>
+
+        <AltaGuiada
+          id={restaurante.id}
+          lista={lista}
+          avance={avanceDeAlta(lista)}
+          publicado={publicado}
+          tieneMenus={(menus ?? []).length > 0}
+        />
 
         {/* Los menús y las fotos van dentro del componente del formulario, no
             después: así el botón de guardar puede quedar al final de todo. */}
@@ -179,7 +192,7 @@ export default async function Editar({ params }) {
             </section>
           ) : null}
 
-          <section className="bloque-menu">
+          <section className="bloque-menu" id="menus">
             <div className="bloque-menu-cabeza">
               <h2 className="sub">Menús</h2>
               <span className="cupo">

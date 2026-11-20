@@ -7,6 +7,7 @@ import CabeceraPanel from "../../cabecera";
 import Qr from "../../../_ficha/qr";
 import QrDescarga from "../../../_ficha/qr-descarga";
 import CopiarEnlace from "./copiar";
+import { anotarQrDescargado } from "../../actions";
 
 export const metadata = { title: "El QR de tu restaurante — Menú Abierto" };
 
@@ -65,7 +66,7 @@ export default async function QrDelRestaurante({ params }) {
         {/* El código primero y grande: es a lo que se entra a esta pantalla.
             Todo lo demás —el enlace, los consejos— va debajo. */}
         <section className="qr-hoja">
-          <QrDescarga nombreArchivo={archivo}>
+          <QrDescarga nombreArchivo={archivo} alDescargar={anotarQrDescargado.bind(null, id)}>
             <div className="qr-hoja-caja">
               <Qr texto={url} titulo={`Código QR de ${restaurante.name}`} />
             </div>
