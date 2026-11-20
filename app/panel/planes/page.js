@@ -29,6 +29,7 @@ import {
 import { planesParaElegir } from "../../../lib/opciones-de-pago";
 import { cancelarPlan } from "./actions";
 import ElegirPlan from "./elegir-plan";
+import { propsDeFoto } from "../../../lib/imagenes";
 
 export const metadata = { title: "Planes — Menú Abierto" };
 
@@ -302,7 +303,7 @@ export default async function Planes({ searchParams }) {
                     <div className="restaurante-plan-cabeza">
                       <div className="restaurante-plan-foto" aria-hidden="true">
                         {foto ? (
-                          <img src={foto} alt="" loading="lazy" width={128} height={88} />
+                          <img {...propsDeFoto(foto, { anchos: [256] })} alt="" loading="lazy" width={128} height={88} />
                         ) : (
                           <IconoTienda ancho={28} />
                         )}

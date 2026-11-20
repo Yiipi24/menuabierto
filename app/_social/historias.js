@@ -13,6 +13,7 @@ import {
   IconoPausa,
   IconoReproducir,
 } from "./iconos";
+import { propsDeFoto } from "../../lib/imagenes";
 
 // El carrusel de historias y su visor.
 //
@@ -133,7 +134,7 @@ export default function Historias({ historias, nombre, volverA, titulo = "Histor
                     // los diez megas del archivo.
                     <video src={h.url} muted playsInline preload="metadata" />
                   ) : (
-                    <img src={h.url} alt="" loading="lazy" />
+                    <img {...propsDeFoto(h.url, { anchos: [160] })} alt="" loading="lazy" decoding="async" />
                   )}
                 </span>
                 <span className="historia-nombre">{h.titulo ?? tituloDe(h, i)}</span>
@@ -333,7 +334,10 @@ function Visor({ historias, inicio, nombre, alCerrar, alVer }) {
               }}
             />
           ) : (
-            <img src={actual.url} alt={actual.body || `Historia de ${nombre}`} />
+            <img
+              {...propsDeFoto(actual.url, { sizes: "(max-width: 600px) 100vw, 480px" })}
+              alt={actual.body || `Historia de ${nombre}`}
+            />
           )}
 
           {/* Las dos mitades invisibles: tocar a la izquierda regresa, a la

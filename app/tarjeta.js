@@ -2,6 +2,7 @@ import Link from "next/link";
 import { rutaFicha, rutaMenu } from "../lib/slug";
 import { iconoCocina, tonoCocina } from "./cocinas";
 import Favorito from "./favorito";
+import { propsDeFoto } from "../lib/imagenes";
 
 // La tarjeta de un restaurante en una lista. La dibujaba la portada dentro de
 // su propio `map`, y ahora la enseñan también las páginas de /comida: una
@@ -35,7 +36,12 @@ export default function Tarjeta({ r, slugCocina, guardado = false }) {
     <article className="tarjeta" style={{ "--categoria-tono": tonoCocina(slugCocina) }}>
       <div className="tarjeta-foto">
         {r.foto ? (
-          <img src={r.foto} alt="" loading="lazy" />
+          <img
+            {...propsDeFoto(r.foto, { anchos: [480, 960], sizes: "(max-width: 600px) 100vw, 360px" })}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
           <span className="tarjeta-sinfoto" aria-hidden="true">
             {icono}

@@ -669,6 +669,37 @@ para varias sucursales, y entender audios o fotos: a esos contesta que por
 ahora solo lee texto. Los pedidos guardan teléfono y dirección del cliente:
 el aviso de privacidad del restaurante tiene que decirlo.
 
+## Fotos: tamaño y peso
+
+Las fotos se guardan como las sube cada quien (hasta 5 MB) y se sirven
+transformadas: `lib/imagenes.js` cambia `/storage/v1/object/public/` por
+`/storage/v1/render/image/public/` y pide ancho y calidad. El almacenamiento de
+Supabase redimensiona al vuelo y, si el navegador lo acepta, entrega WebP o
+AVIF; no agranda una foto más chica que el ancho pedido. `propsDeFoto(url,
+{ anchos, calidad, sizes })` da el `src`, el `srcSet` y el `sizes` de un
+`<img>`. Lo que no viene del almacenamiento (las fotos de `/public`, la vista
+previa de un archivo recién elegido) pasa sin tocar.
+
+- La portada de la ficha va con `fetchPriority="high"`: React la hoistea como
+  `<link rel="preload">`. El layout abre la conexión al almacenamiento desde
+  el `<head>` (`preconnect`).
+- Lo que queda debajo (favoritos, publicaciones) se pide a 720 como máximo,
+  con `loading="lazy"`: en 4G compite por el ancho de banda con la portada.
+- La carta de archivo (una foto de la carta impresa) va hasta 2000 de ancho y
+  calidad 80, porque es texto que se tiene que leer. "Abrir el menú completo"
+  sigue llevando al original.
+- El encabezado de la portada sale de `public/portada/hero-<ancho>.webp`, que
+  genera `node scripts/generar-portada.mjs`.
+
+Medido con Playwright en un Pixel 7 a 1.6 Mbps y 150 ms (#82): la ficha de
+muestra pasó de 26 s de LCP a unos 2.5 s (la portada, de un PNG de 1.2 MB a un
+WebP de 70 KB), y la portada del sitio de 5.5 s a unos 2.5 s.
+
+Las transformaciones las cobra Supabase por imagen de origen distinta al mes,
+con un cupo incluido en el plan. Si se apagan en el proyecto, `render/image`
+deja de responder y las fotos se rompen: se vuelve a servir el original
+quitando el cambio de ruta en `urlTransformada`.
+
 ## Datos estructurados y enlaces compartidos
 
 Cada ficha y cada carta llevan su bloque `application/ld+json`

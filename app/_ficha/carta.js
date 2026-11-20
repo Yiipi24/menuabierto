@@ -7,6 +7,7 @@ import {
   BotonPedirWhatsapp,
   PedidoProvider,
 } from "./pedido";
+import { propsDeFoto } from "../../lib/imagenes";
 
 // El marcado de la carta vive aparte porque la ficha ya no la pinta: ahora la
 // enseña la página /menu, y el día que vuelva a hacer falta en otro lado no hay
@@ -60,9 +61,14 @@ export default function Carta({ menus, restaurante, destacados = [], pedidos = n
               ) : (
                 <img
                   className="menu-archivo-vista"
-                  src={m.fileUrl}
+                  {...propsDeFoto(m.fileUrl, {
+                    anchos: [960, 1440, 2000],
+                    calidad: 80,
+                    sizes: "(max-width: 600px) 100vw, 560px",
+                  })}
                   alt={`${m.name} de ${restaurante.name}`}
                   loading="lazy"
+                  decoding="async"
                 />
               )}
               <a className="btn btn-sm" href={m.fileUrl} target="_blank" rel="noopener noreferrer">

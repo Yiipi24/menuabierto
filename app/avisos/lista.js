@@ -8,6 +8,7 @@ import { textoDeAviso } from "../../lib/resenas";
 import { textoDeAvisoDePedido } from "../../lib/avisos";
 import { IconoCampana, IconoDestello } from "../_social/iconos";
 import { IconoRed } from "../redes-iconos";
+import { propsDeFoto } from "../../lib/imagenes";
 
 // La bandeja. Los avisos se marcan como leídos al abrirla —estar aquí es
 // haberlos visto— pero se siguen enseñando: una bandeja que se vacía sola al
@@ -96,7 +97,7 @@ export default function ListaAvisos({ avisos }) {
         <li key={a.id} className={a.read_at ? "aviso" : "aviso sin-leer"}>
           <Link href={`/${a.restaurant_slug}`}>
             <span className="aviso-media" aria-hidden="true">
-              {a.url ? <img src={a.url} alt="" loading="lazy" /> : <IconoDestello ancho={20} />}
+              {a.url ? <img {...propsDeFoto(a.url, { anchos: [96] })} alt="" loading="lazy" decoding="async" /> : <IconoDestello ancho={20} />}
             </span>
             <span className="aviso-texto">
               <strong>{a.restaurant_name}</strong> publicó una historia.
