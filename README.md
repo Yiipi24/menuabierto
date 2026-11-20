@@ -691,6 +691,22 @@ para varias sucursales, y entender audios o fotos: a esos contesta que por
 ahora solo lee texto. Los pedidos guardan teléfono y dirección del cliente:
 el aviso de privacidad del restaurante tiene que decirlo.
 
+## Contraste
+
+El texto tiene que llegar a 4.5:1 contra su fondo (WCAG AA), y axe lo revisa
+en las páginas públicas. Los colores base de `globals.css` ya cumplen sobre
+blanco, `--paper` y `--paper-warm`: `--accent` (`#bf4121`, también como fondo
+de los botones con texto blanco) y `--ink-faint` (`#746a63`). Un color nuevo
+para texto se mide antes de entrar.
+
+Las paletas de la carta (`PALETAS` en `lib/plantillas.js`) son del dueño y su
+acento va como texto sobre fondos claros y sobre el pizarrón oscuro. Ningún
+color sirve para los dos, así que `variablesDeEstilo` manda tres: el acento
+tal cual, para adornos y barras, y su versión legible en cada fondo
+(`--menu-acento-en-claro` y `--menu-acento-en-oscuro`, de `colorLegible`). La
+carta usa la que toca en `--menu-acento-texto`. Una paleta nueva que no se lea
+rompe `plantillas-contraste.test.mjs`, no la carta.
+
 ## Fotos: tamaño y peso
 
 Las fotos se guardan como las sube cada quien (hasta 5 MB) y se sirven
