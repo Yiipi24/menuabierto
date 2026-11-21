@@ -22,6 +22,7 @@ import NoReclamada from "./no-reclamada";
 import { cargarSocial, recogerHistoriasViejas } from "../_social/datos";
 import { MedirVista } from "../medir";
 import { IconoEstrella, IconoFlechaAtras } from "./iconos";
+import Pie from "../pie";
 import {
   cargar,
   cargarPublico,
@@ -345,12 +346,7 @@ export default async function Ficha({ slug }) {
         volverA={volverAqui}
       />
 
-      <footer className="footer">
-        <div className="wrap footer-inner">
-          <span>© {new Date().getFullYear()} Menú Abierto</span>
-          <a href="mailto:hola@menuabierto.com">hola@menuabierto.com</a>
-        </div>
-      </footer>
+      <Pie />
     </>
   );
 }

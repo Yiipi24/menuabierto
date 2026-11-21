@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { empezarCartaConFoto } from "./menus/actions";
 import { IconoPalomita } from "../tablero-iconos";
+import { CORREO_DE_SOPORTE, enlaceDeCorreo } from "../../../lib/soporte";
 
 // La lista "Para publicar tu ficha" (#88), arriba del editor. Cada paso se
 // marca solo con lo que la ficha ya tiene (lib/alta.js) y lleva a donde se
@@ -74,6 +75,14 @@ export default function AltaGuiada({ id, lista, avance, publicado, tieneMenus })
           </li>
         ))}
       </ol>
+
+      <p className="alta-guiada-ayuda">
+        ¿Te atoraste? <Link href="/ayuda#duenos">Lee las preguntas frecuentes</Link> o{" "}
+        <a href={enlaceDeCorreo(CORREO_DE_SOPORTE, "Ayuda con el alta")}>
+          escríbenos
+        </a>
+        .
+      </p>
     </section>
   );
 }

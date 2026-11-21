@@ -30,6 +30,12 @@ export default async function CabeceraPanel({
     <header className="panel-top">
       <Brand href={marca ?? atras ?? "/"} />
       <div className="panel-top-derecha">
+        {/* La ayuda en todas las pantallas del panel: es donde un dueño se
+            atora, y "¿a quién le pregunto?" no debería mandarlo a buscar el
+            pie de la portada (criterio 6 del tablero, #83). */}
+        <Link className="btn-texto panel-ayuda" href="/ayuda">
+          Ayuda
+        </Link>
         {atras ? (
           <Link className="btn-texto" href={atras}>
             {atrasTexto}

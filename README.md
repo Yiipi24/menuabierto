@@ -734,6 +734,34 @@ desaparece cuando todo está listo.
   Una ficha sembrada del DENUE que alguien reclama no pasa por
   `crearRestaurante`, así que no anota `alta_creada`; sus otros pasos sí.
 
+## Ayuda y soporte
+
+`/ayuda` junta por dónde escribirnos y las preguntas frecuentes, en dos grupos:
+quien tiene un restaurante y quien busca dónde comer. Se llega desde el pie de
+todas las páginas públicas, desde "Publicar toma una tarde" en la portada,
+desde "Ayuda" en la barra de arriba del panel y desde el final de la lista
+"Para publicar tu ficha".
+
+- **Las respuestas salen de `lib/soporte.js`** (`preguntasFrecuentes()`), y las
+  cifras que citan —precios antes y con IVA, el tope de OXXO, los días de
+  gracia, las lecturas de carta por foto de cada plan— se leen de `lib/cobro.js`,
+  `lib/planes.js` y `lib/extraccion.js`. Cambiar un precio con
+  `PRECIO_PLUS_MXN` cambia también la respuesta. Las pruebas
+  (`tests/unitarias/soporte.test.mjs`) comprueban que los números de la
+  respuesta sean los que se cobran.
+- **Los mismos textos van como `FAQPage`** en los datos estructurados
+  (`jsonLdPreguntas`). Las respuestas no van en acordeón, para que se busquen
+  con Ctrl+F y cada una se enlace con su ancla (`/ayuda#qr`).
+- **El WhatsApp de soporte se prende con `SOPORTE_WHATSAPP`** en Vercel (diez
+  dígitos o con lada; se normaliza como el de pedidos). Sin la variable, o mal
+  escrita, solo se ofrece el correo, `hola@menuabierto.com`
+  (`CORREO_DE_SOPORTE`). Como toda variable de Vercel, cambiarla pide un
+  despliegue nuevo.
+- `ayuda` es una ruta fija (migración `20261121041716_ayuda_es_ruta_fija`):
+  ningún restaurante se puede quedar con esa dirección. Una prueba de
+  `slug.test.mjs` compara `RESERVADAS` con la lista de la última migración que
+  redefine `slug_reservado`, para que las dos no se separen.
+
 ## Cabeceras de seguridad
 
 `next.config.js` manda a todo el sitio:
