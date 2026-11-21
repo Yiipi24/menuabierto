@@ -10,7 +10,6 @@ import Orden from "./orden";
 import Waitlist from "./waitlist";
 import Filtros, { hrefCon, listaDe } from "./filtros";
 import MapaResultados from "./mapa-resultados";
-import Pie from "./pie";
 import { CORREO_DE_SOPORTE } from "../lib/soporte";
 import Tarjeta, { PRECIO } from "./tarjeta";
 import { iconoCocina, tonoCocina } from "./cocinas";
@@ -560,7 +559,6 @@ export default async function Home({ searchParams }) {
         </div>
       </section>
 
-      <Pie />
     </>
   );
 }

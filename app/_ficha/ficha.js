@@ -22,7 +22,6 @@ import NoReclamada from "./no-reclamada";
 import { cargarSocial, recogerHistoriasViejas } from "../_social/datos";
 import { MedirVista } from "../medir";
 import { IconoEstrella, IconoFlechaAtras } from "./iconos";
-import Pie from "../pie";
 import {
   cargar,
   cargarPublico,
@@ -346,7 +345,6 @@ export default async function Ficha({ slug }) {
         volverA={volverAqui}
       />
 
-      <Pie />
     </>
   );
 }

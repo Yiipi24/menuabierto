@@ -29,6 +29,23 @@ test("la portada carga y busca", async ({ page }) => {
   await expect(page.locator("main")).toBeVisible();
 });
 
+test("el aviso de privacidad y los términos están a un clic desde el pie", async ({ page }) => {
+  await page.goto("/");
+  const pie = page.locator("footer.footer");
+  await expect(pie.getByRole("link", { name: "Aviso de privacidad" })).toHaveAttribute("href", "/privacidad");
+  await expect(pie.getByRole("link", { name: "Términos" })).toHaveAttribute("href", "/terminos");
+
+  for (const [ruta, titulo] of [
+    ["/privacidad", "Aviso de privacidad"],
+    ["/terminos", "Términos y condiciones"],
+  ]) {
+    const respuesta = await page.goto(ruta);
+    expect(respuesta.status()).toBe(200);
+    await expect(page.locator("h1")).toHaveText(titulo);
+    await expect(page.locator("footer.footer")).toBeVisible();
+  }
+});
+
 test("los planes y sus precios se ven sin cuenta, antes y con IVA", async ({ page }) => {
   const respuesta = await page.goto("/planes");
   expect(respuesta.status()).toBe(200);
