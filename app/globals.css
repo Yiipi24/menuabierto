@@ -57,7 +57,10 @@
   --accent: #bf4121;
   --accent-hondo: #a3361a;
   --accent-soft: #fdeee8;
-  --verde: #2f9e5f;
+  /* El verde de "Abierto ahora" y de lo que salió bien. Va en #22784a y no
+     en el #2f9e5f de antes: el blanco sobre aquel daba 3.4:1 y el verde como
+     texto sobre el papel, 3.2:1. Este da 5.4:1 y 5.2:1. */
+  --verde: #22784a;
   --oro: #f5a623;
   --radius: 16px;
   --max: 1080px;
@@ -355,8 +358,6 @@ section { scroll-margin-top: 84px; }
 .footer a { text-decoration: none; }
 
 .footer a:hover { color: #fff; }
-
-.footer-legal { display: flex; flex-wrap: wrap; gap: 8px 18px; }
 
 /* ---------- aviso de privacidad y términos ---------- */
 
@@ -10671,3 +10672,73 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   .kpis.kpis-cuatro { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .estadisticas-listas { grid-template-columns: 1fr; }
 }
+
+/* ---------- ayuda ---------- */
+
+/* El pie: la ayuda y el correo, juntos y separados del año. */
+.footer-enlaces { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+
+/* La línea de ayuda debajo de "Publicar toma una tarde" en la portada. */
+.section-ayuda { margin-top: 28px; color: var(--ink-soft); font-size: 15.5px; line-height: 1.6; }
+
+.section-ayuda a,
+.alta-guiada-ayuda a { color: var(--accent); font-weight: 600; }
+
+/* Al final de la lista "Para publicar tu ficha": a quién preguntar. */
+.alta-guiada-ayuda { margin: 16px 0 0; font-size: 14px; color: var(--ink-soft); }
+
+/* /ayuda: una columna de lectura, más angosta que el directorio. */
+.ayuda { max-width: 780px; }
+
+.ayuda-encabezado h1 { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+
+.ayuda-encabezado .panel-lead { margin-bottom: 18px; }
+
+.ayuda-canales { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.ayuda-canales a { overflow-wrap: anywhere; }
+
+.ayuda-indice { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+
+.ayuda-indice a {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ayuda-indice a:hover { border-color: var(--accent); color: var(--accent); }
+
+.ayuda-grupo { margin-top: 40px; }
+
+.ayuda-grupo h2 { font-size: 23px; font-weight: 700; margin-bottom: 4px; }
+
+/* Cada pregunta tiene su ancla (/ayuda#qr): el margen deja que la barra de
+   arriba no la tape al llegar. */
+.ayuda-pregunta { padding: 18px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 84px; }
+
+.ayuda-pregunta h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+
+.ayuda-pregunta p { color: var(--ink-soft); line-height: 1.6; margin: 0 0 8px; }
+
+.ayuda-pregunta p:last-child { margin-bottom: 0; }
+
+.ayuda-enlaces { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+.ayuda-enlaces a { color: var(--accent); font-weight: 600; }
+
+.ayuda-final {
+  margin-top: 44px;
+  padding: 22px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.ayuda-final h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+
+.ayuda-final p { color: var(--ink-soft); margin: 0 0 14px; }

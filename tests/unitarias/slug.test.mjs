@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
 import {
   aSegmento,
   slugValido,
@@ -10,6 +11,7 @@ import {
   uuidValido,
   qrCodigoValido,
   segmentoReservado,
+  RESERVADAS,
 } from "../../lib/slug.js";
 
 test("aSegmento pega el nombre y quita acentos", () => {
@@ -61,4 +63,20 @@ test("uuid y código de QR se validan antes de ir a la base", () => {
   assert.equal(uuidValido("loquesea"), false);
   assert.equal(qrCodigoValido("k7mn3p"), true);
   assert.equal(qrCodigoValido("AB"), false);
+});
+
+test("las rutas reservadas son las mismas aquí y en la base", () => {
+  // La última migración que redefine `slug_reservado` es la que manda en la
+  // base. Si una ruta fija nueva entra en una lista y no en la otra, el panel
+  // ofrece un slug que la base rechaza, o al revés.
+  const carpeta = new URL("../../supabase/migrations/", import.meta.url);
+  const ultima = readdirSync(carpeta)
+    .filter((f) => f.endsWith(".sql"))
+    .sort()
+    .map((f) => readFileSync(new URL(f, carpeta), "utf8"))
+    .filter((sql) => /function public\.slug_reservado/.test(sql))
+    .at(-1);
+  const lista = ultima.match(/segmento in \(([^)]*)\)/)[1];
+  const enLaBase = [...lista.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  assert.deepEqual([...RESERVADAS].sort(), enLaBase.sort());
 });

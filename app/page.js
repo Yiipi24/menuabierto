@@ -10,6 +10,7 @@ import Orden from "./orden";
 import Waitlist from "./waitlist";
 import Filtros, { hrefCon, listaDe } from "./filtros";
 import MapaResultados from "./mapa-resultados";
+import { CORREO_DE_SOPORTE } from "../lib/soporte";
 import Tarjeta, { PRECIO } from "./tarjeta";
 import { iconoCocina, tonoCocina } from "./cocinas";
 
@@ -537,6 +538,13 @@ export default async function Home({ searchParams }) {
               </div>
             ))}
           </div>
+          {/* La duda antes de registrarse —cuánto cuesta, si hay que capturar
+              la carta a mano, si cobran comisión— se contesta aquí, sin
+              cuenta, y con a quién escribirle si no está. */}
+          <p className="section-ayuda">
+            ¿Dudas antes de empezar? <Link href="/ayuda#duenos">Lee las preguntas frecuentes</Link> o
+            escríbenos a <a href={`mailto:${CORREO_DE_SOPORTE}`}>{CORREO_DE_SOPORTE}</a>.
+          </p>
         </div>
       </section>
 

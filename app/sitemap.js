@@ -104,6 +104,14 @@ export default async function sitemap() {
       changeFrequency: "daily",
       priority: 0.6,
     },
+    // Las preguntas frecuentes: lo que un dueño busca antes de registrarse,
+    // y a quién escribirle.
+    {
+      url: urlDelSitio("/ayuda"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
     // Lo que busca un dueño antes de registrarse: cuánto cuesta.
     {
       url: urlDelSitio("/planes"),
