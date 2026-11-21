@@ -11,7 +11,7 @@ async function primeraFichaPublicada(request) {
   const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
   // Una ficha es una ruta de uno o dos tramos que no es de /comida, ni de las
   // páginas fijas que también entran al sitemap, ni la raíz.
-  const fijas = ["/comida", "/planes", "/precios", "/privacidad", "/terminos"];
+  const fijas = ["/ayuda", "/comida", "/planes", "/precios", "/privacidad", "/terminos"];
   return (
     urls.find((r) => /^\/[a-z0-9]+(\/[a-z0-9]+)?$/.test(r) && !fijas.some((f) => r.startsWith(f))) ??
     null
@@ -38,6 +38,20 @@ test("los planes y sus precios se ven sin cuenta, antes y con IVA", async ({ pag
   await expect(page.locator(".plan-tarjeta-precio span").nth(1)).toContainText("+ IVA");
   await expect(page.locator(".plan-tarjeta-iva").first()).toContainText("con IVA");
   await expect(page.getByRole("link", { name: "Crea tu cuenta gratis" })).toHaveAttribute("href", "/registro");
+});
+
+test("la ayuda se ve sin cuenta, con el correo y las preguntas como datos estructurados", async ({ page }) => {
+  const respuesta = await page.goto("/ayuda");
+  expect(respuesta.status()).toBe(200);
+  await expect(page.locator("h1")).toHaveText("Ayuda y preguntas frecuentes");
+  await expect(page.locator('.ayuda-canales a[href^="mailto:"]').first()).toBeVisible();
+  await expect(page.locator(".ayuda-pregunta").first()).toBeVisible();
+  const ld = JSON.parse(await page.locator('script[type="application/ld+json"]').first().textContent());
+  expect(ld["@type"]).toBe("FAQPage");
+  expect(ld.mainEntity.length).toBe(await page.locator(".ayuda-pregunta").count());
+  // El pie lleva a la ayuda desde cualquier página que lo enseñe.
+  await page.goto("/");
+  await expect(page.locator('footer a[href="/ayuda"]')).toBeVisible();
 });
 
 test("una ficha publicada y su carta responden", async ({ page, request }) => {

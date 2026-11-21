@@ -10,6 +10,7 @@ import { urlDelSitio } from "../../lib/sitio";
 import { jsonLdCarta } from "../../lib/jsonld";
 import DatosEstructurados from "./datos-estructurados";
 import Imprimir from "./imprimir";
+import Pie from "../pie";
 
 // Una carta suelta se busca dentro de las visibles: si el dueño la ocultó o la
 // borró, el QR que ya está pegado en la barra da 404 en vez de enseñar algo
@@ -131,12 +132,7 @@ export default async function CartaPagina({ slug, menuId = null }) {
         />
       </main>
 
-      <footer className="footer">
-        <div className="wrap footer-inner">
-          <span>© {new Date().getFullYear()} Menú Abierto</span>
-          <a href="mailto:hola@menuabierto.com">hola@menuabierto.com</a>
-        </div>
-      </footer>
+      <Pie />
     </>
   );
 }
