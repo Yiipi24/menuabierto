@@ -46,7 +46,8 @@ export default function Editor({
       <h2 className="sub">Secciones y platillos</h2>
       <p className="ayuda">
         Primero la sección —entradas, platos fuertes, bebidas, la que quieras—
-        y dentro sus platillos con su precio.
+        y dentro sus platillos con su precio. Escribe el precio final, con IVA
+        incluido: es el que ve quien lee tu carta, y la carta lo dice debajo.
       </p>
 
       {secciones.map((s, i) => (

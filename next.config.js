@@ -52,4 +52,12 @@ module.exports = {
   async headers() {
     return [{ source: "/:path*", headers: CABECERAS }];
   },
+  // La búsqueda vive en la portada desde hace tiempo; /explorar se queda para
+  // no romper los enlaces que ya se compartieron. Va aquí y no en una página
+  // con `redirect()`: aquella respondía 307 y, con él, el cascarón de la
+  // portada (once kilobytes con su mismo título). Aquí es un 308 sin cuerpo,
+  // permanente, y Next pasa la query tal cual (`?q=tacos&precio=2`).
+  async redirects() {
+    return [{ source: "/explorar", destination: "/", permanent: true }];
+  },
 };

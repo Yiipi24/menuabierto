@@ -800,6 +800,27 @@ tal cual, para adornos y barras, y su versión legible en cada fondo
 carta usa la que toca en `--menu-acento-texto`. Una paleta nueva que no se lea
 rompe `plantillas-contraste.test.mjs`, no la carta.
 
+## La carta a 360 px: objetivos táctiles y moneda
+
+- **Objetivos de 24 px.** Lo que se toca por sí solo —"Buscar", los "Volver…",
+  "Ya tengo cuenta", los enlaces del pie, de la portada y de `/ayuda`— mide al
+  menos 24 px de alto a 360 px (WCAG 2.2, 2.5.8). Crecen con relleno vertical
+  y no cambiando su `display`, que en `.btn-texto` movería márgenes en medio
+  panel. Los enlaces dentro de un párrafo quedan como están: la norma los
+  exceptúa. El título de una tarjeta mide menos, pero su `::after` cubre la
+  tarjeta entera, que es lo que se toca.
+- **La moneda.** Debajo de la última carta, `leyendaDePrecios()`
+  (`lib/menus-publicos.js`) dice "Precios en pesos mexicanos (MXN), con IVA
+  incluido, como los publica el restaurante." Solo si hay platillos con precio
+  en una carta digital: una de archivo trae los suyos dentro del PDF. El
+  editor del menú le pide al dueño capturar el precio final, con IVA, que es lo
+  que la ley pide enseñar. Los datos estructurados ya llevaban
+  `priceCurrency`.
+- **`/explorar`** es una redirección permanente (308) en `next.config.js`, con
+  la query intacta. Antes era una página con `redirect()`, que respondía 307
+  con el cascarón de la portada y su mismo título. Ya no se cierra en
+  `robots.js`: así los buscadores siguen la redirección de los enlaces viejos.
+
 ## Fotos: tamaño y peso
 
 Las fotos se guardan como las sube cada quien (hasta 5 MB) y se sirven

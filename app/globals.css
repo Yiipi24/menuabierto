@@ -157,10 +157,20 @@ a { color: inherit; }
 @media (max-width: 640px) {
   .nav-links a.hide-sm { display: none; }
   .nav-links { gap: 14px; }
+  /* "Crea tu cuenta" en un solo renglón: partido, el botón era un círculo. */
+  .nav-links .btn { white-space: nowrap; }
   /* El enlace a las novedades se queda con su campana: la palabra completa no
      cabe junto al botón de crear cuenta y lo empujaba a un segundo renglón. */
   .nav-avisos-texto { display: none; }
 
+}
+
+/* Por debajo de 360 px (un iPhone SE de los primeros) el logo y el botón no
+   caben con el margen de 24 px: el margen baja a 16 y el botón se encoge un
+   poco, en vez de partirse o de empujar la página de lado. */
+@media (max-width: 359px) {
+  .nav-inner { padding: 0 16px; gap: 10px; }
+  .nav-links .btn { padding-inline: 12px; font-size: 13px; }
 }
 
 /* ---------- botones ---------- */
@@ -10708,3 +10718,36 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 .ayuda-final h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
 
 .ayuda-final p { color: var(--ink-soft); margin: 0 0 14px; }
+
+/* ---------- objetivos táctiles ---------- */
+
+/* WCAG 2.2, 2.5.8: lo que se toca por sí solo, fuera de una oración, mide al
+   menos 24 px de alto (#98, criterio 4 del tablero). Estos enlaces de texto
+   sueltos medían 21–23 px a 360 px. Crecen por dentro, con relleno vertical,
+   y no con `inline-flex`: `.btn-texto` sale en 46 lugares, y cambiarle el
+   display activaría márgenes que hoy no aplican. Los que van dentro de un
+   párrafo quedan como están: la norma los exceptúa. */
+.nav-links a:not(.btn),
+.btn-texto,
+.ficha-volver,
+.footer-enlaces a,
+.categorias-cabeza a,
+.promo-enlace,
+.ayuda-enlaces a {
+  padding-block: 3px;
+}
+
+/* El campo de búsqueda: la etiqueta ya mide 54 px y lo enfoca al tocarla, pero
+   el input medía 23. Que ocupe todo el alto de su caja. */
+.buscador-campo input { align-self: stretch; }
+
+/* La leyenda de la moneda al pie de la carta (#98). */
+.carta-leyenda {
+  margin: 18px auto 8px;
+  padding: 0 16px;
+  max-width: 34em;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}

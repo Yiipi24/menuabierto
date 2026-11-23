@@ -64,7 +64,7 @@ export default async function Novedades() {
                 <Link className="btn" href="/">
                   Descubrir restaurantes
                 </Link>
-                <Link className="btn-linea" href="/explorar">
+                <Link className="btn-linea" href="/?vista=mapa">
                   Ver el mapa
                 </Link>
               </div>
