@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { pesos } from "../../lib/precios";
-import { enlaceWhatsapp, mensajeDePedido } from "../../lib/whatsapp";
+import { enlaceWhatsapp, letraChicaDe, mensajeDePedido } from "../../lib/whatsapp";
 import { medir } from "../medir";
 import { IconoRed } from "../redes-iconos";
 
@@ -198,8 +198,8 @@ export function BarraPedido() {
         </div>
       </div>
 
-      {pedido.pedidos.nota ? (
-        <p className="pedido-barra-nota">{pedido.pedidos.nota}</p>
+      {letraChicaDe(pedido.pedidos) ? (
+        <p className="pedido-barra-nota">{letraChicaDe(pedido.pedidos)}</p>
       ) : null}
     </div>
   );
@@ -223,7 +223,7 @@ export function AvisoPedido({ conPlatillos = true }) {
         {conPlatillos
           ? "Toca el + de cada platillo y te armamos el mensaje."
           : "Abre el chat y dinos qué se te antoja."}
-        {pedido.pedidos.nota ? ` ${pedido.pedidos.nota}` : ""}
+        {letraChicaDe(pedido.pedidos) ? ` ${letraChicaDe(pedido.pedidos)}` : ""}
       </span>
     </p>
   );

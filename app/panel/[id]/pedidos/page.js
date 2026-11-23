@@ -10,7 +10,7 @@ import { ListaPedidos } from "./lista";
 export const metadata = { title: "Pedidos — Menú Abierto" };
 
 const COLUMNAS =
-  "id, code, status, status_at, origin, customer_name, customer_phone, delivery, address, lat, lng, notes, details, items, total_cents, currency, created_at";
+  "id, code, status, status_at, origin, customer_name, customer_phone, delivery, address, lat, lng, notes, details, items, total_cents, currency, delivery_fee_cents, eta_minutes, distance_m, created_at";
 
 // Los pedidos que llegan por el asistente de WhatsApp, para atenderlos. La
 // pantalla se refresca sola cada pocos segundos: se deja abierta en la

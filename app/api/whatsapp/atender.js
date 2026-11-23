@@ -86,6 +86,9 @@ async function guardarPedido(supabase, restauranteId, pedido, cliente) {
         libre: pedido.libre,
         lineas: pedido.lineas,
         clave: pedido.clave,
+        envio: pedido.envio,
+        minutos: pedido.minutos,
+        distancia: pedido.distancia,
       }),
     );
     if (!error) return { codigo };
@@ -100,6 +103,30 @@ async function guardarPedido(supabase, restauranteId, pedido, cliente) {
   return null;
 }
 
+// Cuando el cliente comparte su ubicación, a cuántos metros está del local
+// (#97). La mide la base para que las coordenadas del restaurante no salgan de
+// ella. Si no se puede —el local no tiene su punto, o la consulta falla— el
+// asistente cobra la zona más cara como estimado, y el pedido sigue.
+async function conDistancia(supabase, restauranteId, m) {
+  if (m.tipo !== "ubicacion") return m;
+  const lat = Number(m.ubicacion?.lat);
+  const lng = Number(m.ubicacion?.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return m;
+  try {
+    const { data, error } = await supabase.rpc("distancia_de_entrega", {
+      p_restaurant: restauranteId,
+      p_lat: lat,
+      p_lng: lng,
+    });
+    if (error) throw error;
+    const metros = data == null ? NaN : Number(data);
+    return Number.isFinite(metros) ? { ...m, ubicacion: { ...m.ubicacion, distanciaM: metros } } : m;
+  } catch (e) {
+    console.error("asistente: no se pudo medir la distancia", e?.message);
+    return m;
+  }
+}
+
 async function atenderMensaje(supabase, linea, m, ahora) {
   const clave = m.cliente.telefono ?? m.cliente.usuario;
   if (!linea || !clave || fueraDeTiempo(m.momento, ahora.getTime())) return;
@@ -111,7 +138,7 @@ async function atenderMensaje(supabase, linea, m, ahora) {
   if (error) throw error;
   if (!nuevo) return;
 
-  const [datos, { data: chat, error: sinChat }] = await Promise.all([
+  const [datos, { data: chat, error: sinChat }, entrada] = await Promise.all([
     cargar(linea.restaurants?.slug ?? ""),
     supabase
       .from("whatsapp_chats")
@@ -119,6 +146,7 @@ async function atenderMensaje(supabase, linea, m, ahora) {
       .eq("restaurant_id", linea.restaurant_id)
       .eq("customer", clave)
       .maybeSingle(),
+    conDistancia(supabase, linea.restaurant_id, m),
     // Las palomitas azules no pueden tumbar la respuesta.
     marcarLeido(linea.phone_number_id, m.id).catch(() => null),
   ]);
@@ -138,7 +166,7 @@ async function atenderMensaje(supabase, linea, m, ahora) {
   const resultado = responder({
     ficha,
     chat: { estado: chat?.state, nombre, pausadoHasta: chat?.paused_until, nuevo: !chat },
-    entrada: m,
+    entrada,
     ahora,
   });
 

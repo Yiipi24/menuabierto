@@ -10751,3 +10751,53 @@ a.publicacion-nombre:hover { text-decoration: underline; }
   line-height: 1.5;
   color: var(--ink-soft);
 }
+
+/* ---------- envío a domicilio (#97) ---------- */
+
+/* Dentro del bloque de pedidos por WhatsApp del editor. */
+.envio { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+.envio-titulo { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+
+.envio-zonas { border: 0; padding: 0; margin: 10px 0 0; min-width: 0; }
+
+.envio-zonas legend { font-size: 14.5px; font-weight: 600; padding: 0; margin-bottom: 4px; }
+
+/* Tres columnas —hasta, costo, tiempo— y un renglón por zona. */
+.envio-tabla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 10px;
+  margin-top: 8px;
+}
+
+.envio-cabeza { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+
+/* Los mismos campos que el resto del editor (`.campo input`), un poco más
+   angostos para que quepan tres por renglón en un teléfono. */
+.envio-tabla input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.envio-tabla input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.envio-llevar { margin-top: 14px; max-width: 18em; }
+
+/* En el panel de pedidos: el envío y el tiempo prometido, bajo el total. */
+.pedido-envio { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+.envio-aviso { color: var(--accent-hondo); }
+
+.envio-aviso a { color: inherit; font-weight: 600; }

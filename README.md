@@ -627,6 +627,40 @@ restaurante con la carta solo en PDF recibe el pedido como texto libre.
   de octubre de 2026 Meta cobra las respuestas pasadas las primeras mil del mes
   por número, a la tarifa de utilidad del país.
 
+### Envío, mínimo y tiempos
+
+En el editor, dentro de "Pedidos por WhatsApp", el dueño pone sus reglas de
+envío (#97). Viven en `restaurants` (`delivery_min_cents`,
+`delivery_free_from_cents`, `delivery_zones`, `pickup_minutes`) y las aplica
+`lib/envio.js`, que es puro y tiene pruebas:
+
+- **Pedido mínimo a domicilio** y **envío gratis desde** un monto.
+- **Hasta tres zonas por radio** desde el punto del local, cada una con su
+  costo y su tiempo (`[{ max_km, fee_cents, minutes }]`). La última puede ir sin
+  distancia ("más lejos"); una sola sin distancia es un envío fijo.
+- **Tiempo para llevar.**
+
+El asistente:
+
+- No pregunta la dirección de un pedido a domicilio por debajo del mínimo:
+  dice cuánto falta y ofrece agregar más o pedir para llevar.
+- Con zonas por radio, pide primero la ubicación del clip. La distancia la
+  mide la base, en línea recta (`distancia_de_entrega`, solo para
+  `service_role`), así que las coordenadas del local no salen de ella.
+- Más lejos de la última zona, lo dice y ofrece llevar u otra ubicación.
+- Con la dirección escrita y sin ubicación, cobra la zona más cara como
+  estimado ("Lo confirmamos con tu dirección") e invita a mandar la
+  ubicación; si llega en el resumen, el envío se vuelve exacto.
+- El resumen suma "Envío: $30 (2.4 km)" al total y dice cuánto tarda. Al
+  confirmar se vuelven a aplicar las reglas, por si cambiaron.
+
+El pedido guarda lo prometido (`orders.delivery_fee_cents`, `eta_minutes`,
+`distance_m`); el panel de pedidos lo enseña, y el aviso de "aceptado" dice
+"llega en unos 35 minutos". `total_cents` sigue siendo solo de los platillos:
+las estadísticas de ventas no cuentan envíos. Las reglas también salen, en una
+oración, junto al botón de pedir de la ficha y de la carta, para todos los
+planes. Sin reglas, todo funciona como antes.
+
 ### Conectar un restaurante
 
 Una vez, para el sitio:
