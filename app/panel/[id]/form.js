@@ -12,6 +12,8 @@ import {
   serviciosDe,
 } from "../../../lib/servicios";
 import { MAX_NOTA, telefonoLegible, telefonoWhatsapp } from "../../../lib/whatsapp";
+import { camposDeEnvio } from "../../../lib/envio";
+import EnvioDomicilio from "./envio";
 import { IconoRed } from "../../redes-iconos";
 import { IconoPago } from "../../pagos-iconos";
 import { IconoServicio } from "../../servicios-iconos";
@@ -118,6 +120,9 @@ export default function EditarForm({
   // dueño escribe "8112345678" y aquí se le confirma que eso es +52 81 1234
   // 5678. Es el mismo normalizador que corre en el servidor.
   const telefonoPedidos = telefonoWhatsapp(pedidos.telefono);
+  // El envío solo se lee al abrir: sus campos no dependen de nada más del
+  // formulario, y van sin estado (`defaultValue`).
+  const [camposEnvio] = useState(() => camposDeEnvio(restaurante));
   // El costo va aparte del servicio porque es su letra chica: aparece cuando
   // el estacionamiento se marca y desaparece —vacío— cuando se desmarca.
   const [costoEstacionamiento, setCostoEstacionamiento] = useState(
@@ -513,6 +518,14 @@ export default function EditarForm({
                guardado lo borraría. */
             <input type="hidden" name="whatsapp_phone" value={pedidos.telefono} />
           )}
+
+          <EnvioDomicilio
+            campos={camposEnvio}
+            visible={pedidos.activo}
+            domicilio={servicios.has("domicilio")}
+            conAsistente={Boolean(numeroAsistente)}
+            sinPunto={coords?.lat == null || coords?.lng == null}
+          />
         </fieldset>
 
         <h2 className="sub" id="direccion">Dirección</h2>

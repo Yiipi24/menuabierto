@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { pesos } from "../../../../lib/precios";
+import { distanciaLegible, minutosLegibles } from "../../../../lib/envio";
 import { cuentaDe, estadoDePedido, lineasGuardadas, pedidoAbierto, siguientesEstados } from "../../../../lib/pedidos";
 import { hace } from "../../../../lib/social";
 import { enlaceWhatsapp, entregaDe, renglonDePedido, telefonoLegible } from "../../../../lib/whatsapp";
@@ -90,6 +91,7 @@ function TarjetaPedido({ id, pedido }) {
             <>
               {" · "}
               {pedido.address || "Ubicación compartida"}
+              {pedido.distance_m != null ? ` (${distanciaLegible(pedido.distance_m)})` : null}
               {mapa ? (
                 <>
                   {" · "}
@@ -112,10 +114,22 @@ function TarjetaPedido({ id, pedido }) {
       ) : null}
       {pedido.details ? <p className="pedido-libre">&ldquo;{pedido.details}&rdquo;</p> : null}
 
+      {/* El envío y el tiempo que se le dijeron al cliente al confirmar (#97). */}
+      {pedido.delivery_fee_cents != null ? (
+        <p className="pedido-envio">
+          Envío: {pedido.delivery_fee_cents ? pesos(pedido.delivery_fee_cents, moneda) : "gratis"}
+        </p>
+      ) : null}
       {cuenta.alguno ? (
         <p className="pedido-total">
-          Total aproximado: <strong>{pesos(pedido.total_cents ?? cuenta.total, moneda)}</strong>
+          Total aproximado:{" "}
+          <strong>{pesos((pedido.total_cents ?? cuenta.total) + (pedido.delivery_fee_cents ?? 0), moneda)}</strong>
           {cuenta.completo ? null : <span> (hay platillos sin precio)</span>}
+        </p>
+      ) : null}
+      {pedido.eta_minutes ? (
+        <p className="pedido-envio">
+          Le dijimos que {pedido.delivery === "domicilio" ? "llega" : "está listo"} en {minutosLegibles(pedido.eta_minutes)} desde que lo aceptes.
         </p>
       ) : null}
       {pedido.notes ? <p className="pedido-nota">Nota: {pedido.notes}</p> : null}

@@ -270,6 +270,9 @@ test("la fila respeta lo que la base va a comprobar", () => {
     total_cents: 5000,
     currency: "MXN",
     confirmation_key: "wamid.confirmacion",
+    delivery_fee_cents: null,
+    eta_minutes: null,
+    distance_m: null,
   });
 
   const rara = filaDePedido({

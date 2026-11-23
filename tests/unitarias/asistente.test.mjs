@@ -193,6 +193,10 @@ test("un pedido completo con las listas, a domicilio y con nota", () => {
     ubicacion: null,
     nota: "sin cebolla porfa",
     clave: null,
+    // Sin reglas de envío del dueño, nada que cobrar ni prometer.
+    envio: null,
+    minutos: null,
+    distancia: null,
   });
   // El chat queda limpio; si guardar falla, vuelve a la confirmación.
   assert.equal(fin.estado.paso, null);
