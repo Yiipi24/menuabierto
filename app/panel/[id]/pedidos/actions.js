@@ -91,10 +91,18 @@ export async function cambiarEstadoPedido(_prevState, formData) {
   revalidatePath(`/panel/${id}`);
 
   const hecho = `Pedido ${fila.code}: ${estadoDePedido(fila.status).nombre.toLowerCase()}.`;
+  // El tiempo prometido al confirmar va en el aviso de "aceptado" (#97). La
+  // función de la base no lo devuelve; se lee aparte, solo cuando hace falta.
+  let minutos = null;
+  if (fila.status === "aceptado") {
+    const { data: prometido } = await supabase.from("orders").select("eta_minutes").eq("id", fila.id).maybeSingle();
+    minutos = prometido?.eta_minutes ?? null;
+  }
   const texto = avisoDeEstado({
     status: fila.status,
     codigo: fila.code,
     entrega: fila.delivery,
+    minutos,
     telefono: String(restaurante.phone ?? "").trim() || null,
     resena: fila.status === "entregado" ? await enlaceDeResena(supabase, fila.id) : null,
   });

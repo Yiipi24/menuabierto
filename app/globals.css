@@ -157,10 +157,20 @@ a { color: inherit; }
 @media (max-width: 640px) {
   .nav-links a.hide-sm { display: none; }
   .nav-links { gap: 14px; }
+  /* "Crea tu cuenta" en un solo renglón: partido, el botón era un círculo. */
+  .nav-links .btn { white-space: nowrap; }
   /* El enlace a las novedades se queda con su campana: la palabra completa no
      cabe junto al botón de crear cuenta y lo empujaba a un segundo renglón. */
   .nav-avisos-texto { display: none; }
 
+}
+
+/* Por debajo de 360 px (un iPhone SE de los primeros) el logo y el botón no
+   caben con el margen de 24 px: el margen baja a 16 y el botón se encoge un
+   poco, en vez de partirse o de empujar la página de lado. */
+@media (max-width: 359px) {
+  .nav-inner { padding: 0 16px; gap: 10px; }
+  .nav-links .btn { padding-inline: 12px; font-size: 13px; }
 }
 
 /* ---------- botones ---------- */
@@ -10742,3 +10752,86 @@ a.publicacion-nombre:hover { text-decoration: underline; }
 .ayuda-final h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
 
 .ayuda-final p { color: var(--ink-soft); margin: 0 0 14px; }
+
+/* ---------- objetivos táctiles ---------- */
+
+/* WCAG 2.2, 2.5.8: lo que se toca por sí solo, fuera de una oración, mide al
+   menos 24 px de alto (#98, criterio 4 del tablero). Estos enlaces de texto
+   sueltos medían 21–23 px a 360 px. Crecen por dentro, con relleno vertical,
+   y no con `inline-flex`: `.btn-texto` sale en 46 lugares, y cambiarle el
+   display activaría márgenes que hoy no aplican. Los que van dentro de un
+   párrafo quedan como están: la norma los exceptúa. */
+.nav-links a:not(.btn),
+.btn-texto,
+.ficha-volver,
+.footer-enlaces a,
+.categorias-cabeza a,
+.promo-enlace,
+.ayuda-enlaces a {
+  padding-block: 3px;
+}
+
+/* El campo de búsqueda: la etiqueta ya mide 54 px y lo enfoca al tocarla, pero
+   el input medía 23. Que ocupe todo el alto de su caja. */
+.buscador-campo input { align-self: stretch; }
+
+/* La leyenda de la moneda al pie de la carta (#98). */
+.carta-leyenda {
+  margin: 18px auto 8px;
+  padding: 0 16px;
+  max-width: 34em;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ---------- envío a domicilio (#97) ---------- */
+
+/* Dentro del bloque de pedidos por WhatsApp del editor. */
+.envio { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+.envio-titulo { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+
+.envio-zonas { border: 0; padding: 0; margin: 10px 0 0; min-width: 0; }
+
+.envio-zonas legend { font-size: 14.5px; font-weight: 600; padding: 0; margin-bottom: 4px; }
+
+/* Tres columnas —hasta, costo, tiempo— y un renglón por zona. */
+.envio-tabla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 10px;
+  margin-top: 8px;
+}
+
+.envio-cabeza { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+
+/* Los mismos campos que el resto del editor (`.campo input`), un poco más
+   angostos para que quepan tres por renglón en un teléfono. */
+.envio-tabla input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.envio-tabla input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.envio-llevar { margin-top: 14px; max-width: 18em; }
+
+/* En el panel de pedidos: el envío y el tiempo prometido, bajo el total. */
+.pedido-envio { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+.envio-aviso { color: var(--accent-hondo); }
+
+.envio-aviso a { color: inherit; font-weight: 600; }

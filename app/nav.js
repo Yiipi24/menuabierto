@@ -47,10 +47,11 @@ export default async function Nav({ landing = false }) {
               Para restaurantes
             </Link>
           ) : (
-            // En un teléfono con sesión, este sitio de la fila se lo queda
-            // "Novedades": el logo ya lleva a la búsqueda y los dos juntos
-            // partían el botón de crear cuenta en tres renglones.
-            <Link className={usuario ? "hide-sm" : undefined} href="/">
+            // En un teléfono "Buscar" se va, con sesión o sin ella: el logo ya
+            // lleva a la búsqueda. Con sesión, su sitio se lo queda
+            // "Novedades"; sin sesión, el botón de crear cuenta, que a 360 px
+            // se partía en tres renglones y quedaba como un círculo (#98).
+            <Link className="hide-sm" href="/">
               Buscar
             </Link>
           )}

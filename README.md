@@ -650,6 +650,40 @@ restaurante con la carta solo en PDF recibe el pedido como texto libre.
   de octubre de 2026 Meta cobra las respuestas pasadas las primeras mil del mes
   por número, a la tarifa de utilidad del país.
 
+### Envío, mínimo y tiempos
+
+En el editor, dentro de "Pedidos por WhatsApp", el dueño pone sus reglas de
+envío (#97). Viven en `restaurants` (`delivery_min_cents`,
+`delivery_free_from_cents`, `delivery_zones`, `pickup_minutes`) y las aplica
+`lib/envio.js`, que es puro y tiene pruebas:
+
+- **Pedido mínimo a domicilio** y **envío gratis desde** un monto.
+- **Hasta tres zonas por radio** desde el punto del local, cada una con su
+  costo y su tiempo (`[{ max_km, fee_cents, minutes }]`). La última puede ir sin
+  distancia ("más lejos"); una sola sin distancia es un envío fijo.
+- **Tiempo para llevar.**
+
+El asistente:
+
+- No pregunta la dirección de un pedido a domicilio por debajo del mínimo:
+  dice cuánto falta y ofrece agregar más o pedir para llevar.
+- Con zonas por radio, pide primero la ubicación del clip. La distancia la
+  mide la base, en línea recta (`distancia_de_entrega`, solo para
+  `service_role`), así que las coordenadas del local no salen de ella.
+- Más lejos de la última zona, lo dice y ofrece llevar u otra ubicación.
+- Con la dirección escrita y sin ubicación, cobra la zona más cara como
+  estimado ("Lo confirmamos con tu dirección") e invita a mandar la
+  ubicación; si llega en el resumen, el envío se vuelve exacto.
+- El resumen suma "Envío: $30 (2.4 km)" al total y dice cuánto tarda. Al
+  confirmar se vuelven a aplicar las reglas, por si cambiaron.
+
+El pedido guarda lo prometido (`orders.delivery_fee_cents`, `eta_minutes`,
+`distance_m`); el panel de pedidos lo enseña, y el aviso de "aceptado" dice
+"llega en unos 35 minutos". `total_cents` sigue siendo solo de los platillos:
+las estadísticas de ventas no cuentan envíos. Las reglas también salen, en una
+oración, junto al botón de pedir de la ficha y de la carta, para todos los
+planes. Sin reglas, todo funciona como antes.
+
 ### Conectar un restaurante
 
 Una vez, para el sitio:
@@ -822,6 +856,27 @@ tal cual, para adornos y barras, y su versión legible en cada fondo
 (`--menu-acento-en-claro` y `--menu-acento-en-oscuro`, de `colorLegible`). La
 carta usa la que toca en `--menu-acento-texto`. Una paleta nueva que no se lea
 rompe `plantillas-contraste.test.mjs`, no la carta.
+
+## La carta a 360 px: objetivos táctiles y moneda
+
+- **Objetivos de 24 px.** Lo que se toca por sí solo —"Buscar", los "Volver…",
+  "Ya tengo cuenta", los enlaces del pie, de la portada y de `/ayuda`— mide al
+  menos 24 px de alto a 360 px (WCAG 2.2, 2.5.8). Crecen con relleno vertical
+  y no cambiando su `display`, que en `.btn-texto` movería márgenes en medio
+  panel. Los enlaces dentro de un párrafo quedan como están: la norma los
+  exceptúa. El título de una tarjeta mide menos, pero su `::after` cubre la
+  tarjeta entera, que es lo que se toca.
+- **La moneda.** Debajo de la última carta, `leyendaDePrecios()`
+  (`lib/menus-publicos.js`) dice "Precios en pesos mexicanos (MXN), con IVA
+  incluido, como los publica el restaurante." Solo si hay platillos con precio
+  en una carta digital: una de archivo trae los suyos dentro del PDF. El
+  editor del menú le pide al dueño capturar el precio final, con IVA, que es lo
+  que la ley pide enseñar. Los datos estructurados ya llevaban
+  `priceCurrency`.
+- **`/explorar`** es una redirección permanente (308) en `next.config.js`, con
+  la query intacta. Antes era una página con `redirect()`, que respondía 307
+  con el cascarón de la portada y su mismo título. Ya no se cierra en
+  `robots.js`: así los buscadores siguen la redirección de los enlaces viejos.
 
 ## Fotos: tamaño y peso
 

@@ -8,6 +8,7 @@ import { geocodificar, mismaDireccion } from "../../../lib/geocodificar";
 import { estadoValido } from "../../../lib/estados";
 import { conEsquema, redValida } from "../../../lib/redes";
 import { MAX_NOTA, telefonoWhatsapp } from "../../../lib/whatsapp";
+import { leerEnvioDelFormulario } from "../../../lib/envio";
 import { formasDePagoDe } from "../../../lib/pagos";
 import {
   costoDeEstacionamiento,
@@ -149,6 +150,11 @@ export async function guardarRestaurante(_prevState, formData) {
   const pedidos = leerPedidos(formData);
   if (pedidos.error) return { status: "error", message: pedidos.error };
 
+  // El envío y los tiempos (#97). Se guardan aunque los pedidos estén
+  // apagados: los campos viajan escondidos, como el número.
+  const envio = leerEnvioDelFormulario(formData);
+  if (envio.error) return { status: "error", message: envio.error };
+
   const { error } = await supabase
     .from("restaurants")
     .update({
@@ -170,6 +176,7 @@ export async function guardarRestaurante(_prevState, formData) {
       whatsapp_orders: pedidos.activo,
       whatsapp_phone: pedidos.telefono,
       whatsapp_note: pedidos.nota,
+      ...envio.valores,
     })
     .eq("id", id);
 

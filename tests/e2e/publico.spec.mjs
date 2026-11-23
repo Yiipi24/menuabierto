@@ -71,6 +71,12 @@ test("la ayuda se ve sin cuenta, con el correo y las preguntas como datos estruc
   await expect(page.locator('footer a[href="/ayuda"]')).toBeVisible();
 });
 
+test("/explorar lleva a la portada con un 308, con su búsqueda", async ({ request }) => {
+  const respuesta = await request.get("/explorar?q=tacos&vista=mapa", { maxRedirects: 0 });
+  expect(respuesta.status()).toBe(308);
+  expect(respuesta.headers().location).toMatch(/\/\?q=tacos&vista=mapa$/);
+});
+
 test("una ficha publicada y su carta responden", async ({ page, request }) => {
   const ruta = await primeraFichaPublicada(request);
   test.skip(!ruta, "No hay fichas publicadas en el sitemap.");

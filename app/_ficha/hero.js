@@ -4,7 +4,7 @@ import ComoLlegar from "./como-llegar";
 import { BotonGuardar } from "../medir";
 import { IconoDestacado } from "../destacados";
 import { IconoPin } from "./iconos";
-import { mensajeDeContacto } from "../../lib/whatsapp";
+import { letraChicaDe, mensajeDeContacto } from "../../lib/whatsapp";
 import { urlDelSitio } from "../../lib/sitio";
 import { propsDeFoto } from "../../lib/imagenes";
 
@@ -91,7 +91,7 @@ export default function Hero({
             ) : null}
             <BotonGuardar slug={slug} nombre={r.name} />
           </div>
-          {pedidos?.nota ? <p className="hero-pedir-nota">{pedidos.nota}</p> : null}
+          {letraChicaDe(pedidos) ? <p className="hero-pedir-nota">{letraChicaDe(pedidos)}</p> : null}
 
           {destacados.length ? (
             <ul className="hero-destacados">
