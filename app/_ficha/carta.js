@@ -8,12 +8,15 @@ import {
   PedidoProvider,
 } from "./pedido";
 import { propsDeFoto } from "../../lib/imagenes";
+import { leyendaDePrecios } from "../../lib/menus-publicos";
 
 // El marcado de la carta vive aparte porque la ficha ya no la pinta: ahora la
 // enseña la página /menu, y el día que vuelva a hacer falta en otro lado no hay
 // que copiarla.
 
 export default function Carta({ menus, restaurante, destacados = [], pedidos = null, slug = "", url = "" }) {
+  const leyenda = leyendaDePrecios(menus);
+
   if (!menus.length) {
     return (
       <p className="ficha-vacio">
@@ -96,6 +99,9 @@ export default function Carta({ menus, restaurante, destacados = [], pedidos = n
           )}
         </section>
       ))}
+
+      {/* En qué moneda están los precios, debajo de la última carta (#98). */}
+      {leyenda ? <p className="carta-leyenda">{leyenda}</p> : null}
 
       <BarraPedido />
     </PedidoProvider>

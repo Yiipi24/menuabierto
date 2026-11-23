@@ -18,7 +18,6 @@ const PRIVADAS = [
   "/sin-conexion",
   "/novedades",
   "/avisos",
-  "/explorar",
 ];
 
 export default function robots() {
