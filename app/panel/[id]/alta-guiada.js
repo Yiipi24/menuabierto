@@ -17,6 +17,7 @@ export default function AltaGuiada({ id, lista, avance, publicado, tieneMenus })
     carta: { href: `/panel/${id}/menus`, texto: "Ir a los menús" },
     qr: { href: `/panel/${id}/qr`, texto: "Ver y descargar el QR" },
     publicar: { href: "#publicar", texto: "Publicar arriba" },
+    google: { href: `/panel/${id}/qr#google`, texto: "Ver cómo hacerlo" },
   };
 
   return (

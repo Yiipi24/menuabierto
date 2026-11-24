@@ -26,7 +26,7 @@ const completa = {
   fotos: [{ is_visible: true }],
   menus: [{ id: "m1", kind: "digital", is_visible: true }],
   platillos: [{ id: "p1", menu_id: "m1" }],
-  pasos: ["alta_creada", "menu_creado", "qr_descargado", "ficha_publicada"],
+  pasos: ["alta_creada", "menu_creado", "qr_descargado", "ficha_publicada", "google_enlazado"],
 };
 
 const listo = (lista, clave) => lista.find((p) => p.clave === clave).listo;
@@ -35,15 +35,15 @@ test("una ficha recién creada tiene todo pendiente y avisa de carta y direcció
   const lista = pasosDeAlta(vacia);
   assert.deepEqual(
     lista.map((p) => p.clave),
-    ["direccion", "horario", "foto", "carta", "qr", "publicar"],
+    ["direccion", "horario", "foto", "carta", "qr", "publicar", "google"],
   );
-  assert.deepEqual(avanceDeAlta(lista), { listos: 0, total: 6, completa: false });
+  assert.deepEqual(avanceDeAlta(lista), { listos: 0, total: 7, completa: false });
   assert.deepEqual(faltanParaPublicar(lista), ["Dirección con su punto en el mapa", "Tu carta, con platillos"]);
 });
 
 test("una ficha completa y publicada no tiene pendientes", () => {
   const lista = pasosDeAlta(completa);
-  assert.deepEqual(avanceDeAlta(lista), { listos: 6, total: 6, completa: true });
+  assert.deepEqual(avanceDeAlta(lista), { listos: 7, total: 7, completa: true });
   assert.deepEqual(faltanParaPublicar(lista), []);
 });
 
@@ -56,6 +56,8 @@ test("cada paso se marca solo con lo que ya hay", () => {
   assert.equal(listo(pasosDeAlta({ ...vacia, fotos: [{ is_visible: true }] }), "foto"), true);
   // El QR se marca con el paso del embudo, no con nada de la ficha.
   assert.equal(listo(pasosDeAlta({ ...vacia, pasos: ["qr_descargado"] }), "qr"), true);
+  // Y Google, con el paso que marca el dueño.
+  assert.equal(listo(pasosDeAlta({ ...vacia, pasos: ["google_enlazado"] }), "google"), true);
 });
 
 test("la carta cuenta si hay un menú visible con platillos o con su archivo", () => {
@@ -72,7 +74,7 @@ test("la carta cuenta si hay un menú visible con platillos o con su archivo", (
 });
 
 test("el catálogo del embudo es cerrado", () => {
-  assert.deepEqual(PASOS_DEL_EMBUDO, ["alta_creada", "menu_creado", "qr_descargado", "ficha_publicada"]);
+  assert.deepEqual(PASOS_DEL_EMBUDO, ["alta_creada", "menu_creado", "qr_descargado", "ficha_publicada", "google_enlazado"]);
   assert.equal(pasoValido("qr_descargado"), true);
   assert.equal(pasoValido("cualquier_cosa"), false);
 });

@@ -741,7 +741,8 @@ tu ficha"**, con su avance (`app/panel/[id]/alta-guiada.js`):
 3. al menos una foto visible;
 4. la carta: un menú visible con platillos, o con su archivo;
 5. el QR descargado;
-6. publicada.
+6. publicada;
+7. la carta en Google Maps.
 
 Cada paso se marca solo y lleva a su sección. Quién decide qué está listo es
 `pasosDeAlta()` en `lib/alta.js`, una función pura con pruebas. La lista
@@ -756,7 +757,7 @@ desaparece cuando todo está listo.
   todos modos" (`app/panel/[id]/boton-publicar.js`).
 - **El embudo** vive en `alta_pasos`: una fila por ficha y paso, con la
   primera vez que se dio. Los pasos son `alta_creada`, `menu_creado`,
-  `qr_descargado` y `ficha_publicada`. Los anotan las acciones del panel
+  `qr_descargado`, `ficha_publicada` y `google_enlazado`. Los anotan las acciones del panel
   (`registrarPaso`, que nunca truena) con la sesión del dueño; la RLS solo deja
   leer y agregar en fichas propias. El QR se anota al bajar el PNG o el SVG,
   porque es lo único de la lista que no se deduce de la ficha. Para contar:
@@ -767,6 +768,19 @@ desaparece cuando todo está listo.
 
   Una ficha sembrada del DENUE que alguien reclama no pasa por
   `crearRestaurante`, así que no anota `alta_creada`; sus otros pasos sí.
+- **La carta en Google Maps** (#100). La pantalla del QR (`/panel/<id>/qr#google`)
+  da el enlace de la carta para copiar y los tres pasos del Perfil de Negocio:
+  Editar perfil, la sección de contacto y el enlace del menú. Es el enlace de
+  la carta y no el del QR: el del QR anota una visita y deja un pase para
+  reseña verificada, y quien llega desde Maps no estuvo en la mesa. Google no
+  avisa cuando el enlace queda puesto, así que el dueño lo marca con "Ya la
+  puse en Google" (`marcarCartaEnGoogle`), que anota `google_enlazado`.
+  `/ayuda#google` lo explica también.
+
+  El siguiente nivel —que el menú y los precios se actualicen solos en Maps,
+  como socio de menús de Google (feeds del Actions Center) o con la API de Mi
+  Negocio y permiso del dueño— no se ha solicitado: pasa por una revisión de
+  Google y es otro proyecto.
 
 ## Ayuda y soporte
 

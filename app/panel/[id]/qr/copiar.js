@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 // quien le hace las lonas, o lo pega en su bio. Copiarlo a mano de una
 // pantalla —siete caracteres sin sentido, sin mayúsculas, sin la o ni el uno—
 // es donde se equivoca.
-export default function CopiarEnlace({ url }) {
+export default function CopiarEnlace({ url, idNodo = "qr-enlace" }) {
   const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function CopiarEnlace({ url }) {
     } catch {
       // Safari sin permiso de portapapeles: se selecciona el texto para que
       // el copiar de siempre funcione, que es mejor que un botón muerto.
-      const nodo = document.getElementById("qr-enlace");
+      const nodo = document.getElementById(idNodo);
       if (!nodo) return;
       const rango = document.createRange();
       rango.selectNodeContents(nodo);
@@ -34,7 +34,7 @@ export default function CopiarEnlace({ url }) {
 
   return (
     <div className="qr-enlace">
-      <code id="qr-enlace">{url}</code>
+      <code id={idNodo}>{url}</code>
       <button type="button" className="btn-linea" onClick={copiar}>
         {copiado ? "Copiado" : "Copiar"}
       </button>

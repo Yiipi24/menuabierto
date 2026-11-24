@@ -165,6 +165,19 @@ export async function anotarQrDescargado(id) {
   revalidatePath(`/panel/${id}`);
 }
 
+// "Ya la puse en Google" (#100): Google no avisa cuando el dueño pega el
+// enlace de su carta en su Perfil de Negocio, así que lo marca él. Es un paso
+// del embudo como los demás: solo la primera vez, y nunca truena.
+export async function marcarCartaEnGoogle(formData) {
+  const id = String(formData.get("id") ?? "");
+  const supabase = await supabaseSession();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user) redirect("/entrar");
+  await registrarPaso(supabase, id, "google_enlazado");
+  revalidatePath(`/panel/${id}`);
+  revalidatePath(`/panel/${id}/qr`);
+}
+
 export async function borrarRestaurante(formData) {
   const supabase = await supabaseSession();
   const { data: auth } = await supabase.auth.getUser();
