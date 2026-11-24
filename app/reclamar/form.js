@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { buscarFichas, reclamarFicha } from "./actions";
+import AvisoCorto from "../aviso-corto";
 
 const busquedaInicial = { status: "idle", message: "", resultados: [] };
 const reclamoInicial = { status: "idle", message: "" };
@@ -112,6 +113,8 @@ export default function ReclamarForm({ fichaInicial = null }) {
             Revisamos cada solicitud a mano. Es lo que impide que un tercero se
             apropie del restaurante de alguien más.
           </p>
+
+          <AvisoCorto terminos para="solo para verificar que la ficha es tuya" />
 
           <button className="btn" type="submit" disabled={reclamando}>
             {reclamando ? "Enviando…" : "Enviar solicitud"}

@@ -64,6 +64,11 @@ export default async function Planes() {
         </section>
 
         <FormasDePago />
+
+        <p className="ayuda legal-pie">
+          Al contratar aceptas los <Link href="/terminos">Términos y condiciones</Link>. Cómo tratamos
+          tus datos está en el <Link href="/privacidad">Aviso de privacidad</Link>.
+        </p>
       </main>
     </>
   );

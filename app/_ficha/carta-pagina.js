@@ -10,7 +10,6 @@ import { urlDelSitio } from "../../lib/sitio";
 import { jsonLdCarta } from "../../lib/jsonld";
 import DatosEstructurados from "./datos-estructurados";
 import Imprimir from "./imprimir";
-import Pie from "../pie";
 
 // Una carta suelta se busca dentro de las visibles: si el dueño la ocultó o la
 // borró, el QR que ya está pegado en la barra da 404 en vez de enseñar algo
@@ -132,7 +131,6 @@ export default async function CartaPagina({ slug, menuId = null }) {
         />
       </main>
 
-      <Pie />
     </>
   );
 }

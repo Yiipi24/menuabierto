@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import Pie from "./pie";
 import RegistroPwa from "./pwa/registro";
 import { SITIO } from "../lib/sitio";
 import { imagenesDeCompartir } from "../lib/compartir";
@@ -53,6 +54,7 @@ export default function RootLayout({ children }) {
       <head>{almacenamiento ? <link rel="preconnect" href={almacenamiento} /> : null}</head>
       <body>
         {children}
+        <Pie />
         {/* Lo que hace el comensal —qué páginas ve, desde dónde llega— sin
             cookies ni identificar a nadie. El lado del restaurante ya se mide
             con restaurant_events; este es el otro lado. */}

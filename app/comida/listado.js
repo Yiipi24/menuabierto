@@ -22,7 +22,6 @@ import {
 } from "../../lib/zonas";
 import DatosEstructurados from "../_ficha/datos-estructurados";
 import Nav from "../nav";
-import Pie from "../pie";
 import Tarjeta from "../tarjeta";
 import { iconoCocina, tonoCocina } from "../cocinas";
 
@@ -347,7 +346,6 @@ export default async function Listado({ cocina: cocinaSlug, zona: zonaSlug = nul
         />
       </main>
 
-      <Pie />
 
       <DatosEstructurados
         datos={jsonLdListado({

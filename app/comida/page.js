@@ -6,7 +6,6 @@ import { SITIO, urlDelSitio } from "../../lib/sitio";
 import { catalogoComida, rutaCocina, rutaZona } from "../../lib/zonas";
 import DatosEstructurados from "../_ficha/datos-estructurados";
 import Nav from "../nav";
-import Pie from "../pie";
 import { iconoCocina, tonoCocina } from "../cocinas";
 
 // El índice de /comida: de qué se come y dónde. Es la página de la que cuelgan
@@ -123,7 +122,6 @@ export default async function ComidaPagina() {
         ) : null}
       </main>
 
-      <Pie />
 
       <DatosEstructurados
         datos={jsonLdListado({

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Nav from "../nav";
-import Pie from "../pie";
 import DatosEstructurados from "../_ficha/datos-estructurados";
 import ContactoDeSoporte from "./contacto";
 import { jsonLdPreguntas, preguntasFrecuentes } from "../../lib/soporte";
@@ -72,7 +71,6 @@ export default function Ayuda() {
           <ContactoDeSoporte />
         </section>
       </main>
-      <Pie />
     </>
   );
 }
