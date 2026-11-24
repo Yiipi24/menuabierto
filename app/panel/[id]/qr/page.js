@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseSession } from "../../../../lib/supabase";
-import { rutaFicha, rutaQr } from "../../../../lib/slug";
+import { rutaFicha, rutaMenu, rutaQr } from "../../../../lib/slug";
 import { urlAbsoluta } from "../../../../lib/url";
 import CabeceraPanel from "../../cabecera";
 import Qr from "../../../_ficha/qr";
 import QrDescarga from "../../../_ficha/qr-descarga";
 import CopiarEnlace from "./copiar";
 import { anotarQrDescargado } from "../../actions";
+import CartaEnGoogle from "./en-google";
 
 export const metadata = { title: "El QR de tu restaurante — Menú Abierto" };
 
@@ -41,6 +42,16 @@ export default async function QrDelRestaurante({ params }) {
 
   const ruta = rutaQr(restaurante.qr_code);
   const url = await urlAbsoluta(ruta);
+  // Para Google, el enlace de la carta y no el del QR: el del QR anota una
+  // visita y deja un pase para reseña verificada, y quien llega desde Maps
+  // no estuvo en la mesa (#100).
+  const urlCarta = await urlAbsoluta(rutaMenu(restaurante.slug));
+  const { data: enGoogle } = await supabase
+    .from("alta_pasos")
+    .select("paso")
+    .eq("restaurant_id", id)
+    .eq("paso", "google_enlazado")
+    .maybeSingle();
   const publicado = restaurante.status === "publicado";
   const sinMenu = !menus;
 
@@ -133,6 +144,8 @@ export default async function QrDelRestaurante({ params }) {
             </li>
           </ul>
         </section>
+
+        <CartaEnGoogle id={id} urlCarta={urlCarta} publicado={publicado} hecho={Boolean(enGoogle)} />
 
         <section className="panel-tarjeta qr-bloque">
           <h2>Y también sin QR</h2>
